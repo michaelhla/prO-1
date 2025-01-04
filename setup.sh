@@ -4,6 +4,15 @@
 python3 -m venv venv
 source venv/bin/activate
 
+# Install SWIG
+apt-get update
+apt-get install swig
+
+# Install Boost development libraries
+apt-get install libboost-all-dev
+
+pip install -U numpy vina
+
 # Install requirements
 pip install -r requirements.txt
 

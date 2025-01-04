@@ -10,13 +10,19 @@ from fpocket import fpocket
 from vina import Vina
 import tempfile
 from meeko import MoleculePreparation
+import requests
+import time
+import json
+import os
 
 
 class BindingEnergyCalculator:
-    def __init__(self, protein_model_path="facebook/esmfold-v1", device="cuda"):
+    def __init__(self, protein_model_path="facebook/esmfold-v1", device="cuda", email="your_email@example.com"):
         self.protein_model = self._load_protein_model(protein_model_path)
         self.device = device
         self.cached_structures = {}
+        self.email = email  # Required for CASTp API
+        self.castp_url = "http://sts.bioe.uic.edu/castp/api"
         
     def _load_protein_model(self, model_path):
         """Load ESMFold model for structure prediction"""
@@ -64,38 +70,116 @@ class BindingEnergyCalculator:
             pdbs.append(to_pdb(pred))
         return pdbs
 
-    def identify_active_site(self, pdb):
-        """Identify active site residues using multiple pocket detection methods
+    def identify_active_site(self, pdb_string):
+        """Identify active site residues using CASTp API and ProDy conservation analysis
         
-        Uses a combination of:
-        - fpocket: Fast and accurate pocket detection
-        - DSSP: Secondary structure identification
-        - ProDy: Protein dynamics and conservation analysis
+        Args:
+            pdb_string: PDB structure as a string
+            
+        Returns:
+            list: List of (chain_id, residue_number) tuples representing the active site
         """
-        # Run fpocket for pocket detection
-        pockets = fpocket(pdb)
+        # Create temporary PDB file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.pdb', delete=False) as temp_pdb:
+            temp_pdb.write(pdb_string)
+            temp_pdb_path = temp_pdb.name
+
+        try:
+            # Get conservation scores using ProDy
+            protein = prody.parsePDB(temp_pdb_path)
+            conservation = prody.conservationMatrix(protein)
+            
+            # Submit job to CASTp
+            job_id = self._submit_castp_job(temp_pdb_path)
+            
+            # Wait for results
+            pockets = self._get_castp_results(job_id)
+            
+            # Process results to get the best pocket considering both volume and conservation
+            best_pocket = self._process_castp_pockets(pockets, conservation, protein)
+            
+            return best_pocket
+            
+        finally:
+            # Cleanup
+            os.unlink(temp_pdb_path)
+
+    def _submit_castp_job(self, pdb_path):
+        """Submit a job to CASTp API"""
+        files = {'file': open(pdb_path, 'rb')}
+        data = {'email': self.email}
         
-        # Use DSSP to identify secondary structure elements
-        dssp_dict = dssp_dict_from_pdb_file(pdb)[0]
+        response = requests.post(f"{self.castp_url}/submit", files=files, data=data)
+        response.raise_for_status()
         
-        # Use ProDy for conservation analysis
-        protein = prody.parsePDB(pdb)
-        conservation = prody.conservationMatrix(protein)
+        result = response.json()
+        if result['status'] != 'success':
+            raise RuntimeError(f"Failed to submit CASTp job: {result['message']}")
+            
+        return result['job_id']
+
+    def _get_castp_results(self, job_id, max_attempts=30, delay=10):
+        """Poll CASTp API for results"""
+        for _ in range(max_attempts):
+            response = requests.get(f"{self.castp_url}/status/{job_id}")
+            response.raise_for_status()
+            
+            result = response.json()
+            if result['status'] == 'completed':
+                # Get pocket information
+                pocket_response = requests.get(f"{self.castp_url}/results/{job_id}")
+                pocket_response.raise_for_status()
+                return pocket_response.json()['pockets']
+            elif result['status'] == 'failed':
+                raise RuntimeError(f"CASTp job failed: {result['message']}")
+                
+            time.sleep(delay)
+            
+        raise TimeoutError("CASTp job timed out")
+
+    def _process_castp_pockets(self, pockets, conservation, protein):
+        """Process CASTp results to identify the best pocket, considering conservation
         
-        # Score pockets based on multiple criteria
+        Args:
+            pockets: List of pocket data from CASTp API
+            conservation: Conservation scores from ProDy
+            protein: ProDy protein object
+            
+        Returns:
+            list: List of (chain_id, residue_number) tuples for the best pocket
+        """
         scored_pockets = []
-        for pocket in pockets:
-            score = self._evaluate_pocket(
-                pocket,
-                conservation,
-                dssp_dict,
-                protein
-            )
-            scored_pockets.append((pocket, score))
         
-        # Return residues from top-scoring pocket
-        best_pocket = max(scored_pockets, key=lambda x: x[1])[0]
-        return self._get_pocket_residues(best_pocket)
+        for pocket in pockets:
+            # Get basic pocket properties
+            volume = float(pocket['volume'])
+            
+            # Get residues for this pocket
+            pocket_residues = []
+            for residue in pocket['residues']:
+                chain_id = residue['chain']
+                res_num = int(residue['residue_number'])
+                pocket_residues.append((chain_id, res_num))
+            
+            # Calculate average conservation score for pocket residues
+            conservation_scores = []
+            for chain_id, res_num in pocket_residues:
+                res_idx = protein.select(f'chain {chain_id} and resnum {res_num}').getResindices()[0]
+                conservation_scores.append(conservation[res_idx])
+            
+            avg_conservation = np.mean(conservation_scores)
+            
+            # Combined score (weighted average of normalized volume and conservation)
+            volume_score = volume / 1000  # Normalize volume
+            total_score = 0.6 * volume_score + 0.4 * avg_conservation
+            
+            scored_pockets.append((pocket_residues, total_score))
+        
+        if not scored_pockets:
+            raise ValueError("No pockets found in the structure")
+            
+        # Return residues from the highest scoring pocket
+        return max(scored_pockets, key=lambda x: x[1])[0]
 
     def calculate_binding_energy(self, protein_structure, ligand, active_site_residues):
         """Calculate binding energy between protein and ligand using AutoDock Vina
