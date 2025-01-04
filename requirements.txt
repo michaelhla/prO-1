@@ -1,0 +1,9 @@
+biopython>=1.79
+numpy>=1.21.0
+torch>=1.9.0
+transformers>=4.21.0
+prody>=2.0.0
+fpocket>=1.0.0
+vina>=1.2.0
+meeko>=0.4.0
+tqdm>=4.62.0

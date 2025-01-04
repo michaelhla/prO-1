@@ -67,29 +67,29 @@ class MCTS:
     def simulate(self, node):
         """Calculate reward for a given sequence node using binding energy calculations
     
-    Args:
-        node: Node object containing sequence and other properties
+        Args:
+            node: Node object containing sequence and other properties
+            
+        Returns:
+            float: Reward score based on binding energies across reaction pathway
+        """
+        # Get sequence from node
+        sequence = node.sequence
         
-    Returns:
-        float: Reward score based on binding energies across reaction pathway
-    """
-    # Get sequence from node
-    sequence = node.sequence
-    
-    # # Get reaction components (these should be defined/imported somewhere)
-    # reagent = get_reagent_structure()  # RDKit Mol object
-    # ts = get_transition_state()        # RDKit Mol object
-    # product = get_product_structure()  # RDKit Mol object
-    
-    # Calculate reward using our BindingEnergyCalculator
-    reward = calculate_reward(
-        sequence=sequence,
-        reagent=reagent,
-        ts=ts,
-        product=product
-    )
-    
-    return reward
+        # # Get reaction components (these should be defined/imported somewhere)
+        # reagent = get_reagent_structure()  # RDKit Mol object
+        # ts = get_transition_state()        # RDKit Mol object
+        # product = get_product_structure()  # RDKit Mol object
+        
+        # Calculate reward using our BindingEnergyCalculator
+        reward = calculate_reward(
+            sequence=sequence,
+            reagent=reagent,
+            ts=ts,
+            product=product
+        )
+        
+        return reward
 
     def backpropagate(self, node, reward):
         """Update statistics for all nodes up to root"""

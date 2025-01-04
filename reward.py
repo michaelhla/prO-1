@@ -1,11 +1,5 @@
 import Bio.PDB
-from alphafold.model import model
-from rdkit import Chem
-from rdkit.Chem import AllChem
 import numpy as np
-from openbabel import pybel
-import pymol
-from scipy.spatial.distance import cdist
 import torch
 from Bio.PDB.DSSP import dssp_dict_from_pdb_file
 from transformers import EsmForProteinFolding, AutoTokenizer
@@ -13,7 +7,6 @@ from transformers.models.esm.openfold_utils.protein import to_pdb, Protein as OF
 from transformers.models.esm.openfold_utils.feats import atom14_to_atom37
 import prody
 from fpocket import fpocket
-import os
 from vina import Vina
 import tempfile
 from meeko import MoleculePreparation
