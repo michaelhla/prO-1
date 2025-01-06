@@ -12,6 +12,7 @@ import requests
 import os
 import subprocess
 
+
 def test_vina():
     # Create a simple test PDB string
     # Download 1lyz.pdb from PDB
@@ -73,8 +74,25 @@ def test_vina():
 
 def convert_pdb_to_pdbqt(pdb_file, pdbqt_file):
     # Use Open Babel to convert PDB to PDBQT
+    metals = ['ZN', 'MG', 'FE']
     try:
         subprocess.run(['obabel', pdb_file, '-O', pdbqt_file, '-xr'], check=True)
+        # Print the PDBQT file contents and check for zinc
+        with open(pdbqt_file, 'r') as f:
+            contents = f.read()
+            # Process contents line by line
+            new_lines = []
+            for line in contents.split('\n'):
+                # Check if line contains any of the metals
+                if any(metal in line for metal in metals):
+                    # Replace +0.000 charge with +0.950 for metal atoms
+                    line = line.replace("+0.000", "+0.950")
+                    print(f"Found metal atom, modified charge: {line}")
+                new_lines.append(line)
+            
+            # Write modified contents back to file
+            with open(pdbqt_file, 'w') as f:
+                f.write('\n'.join(new_lines))
     except subprocess.CalledProcessError as e:
         print(f"Error converting PDB to PDBQT: {e}")
         raise
