@@ -71,77 +71,35 @@ class BindingEnergyCalculator:
         return pdbs
 
     def identify_active_site(self, pdb_string):
-        """Identify active site residues using CASTp API and ProDy conservation analysis
+        """Identify active site residues using DIYFpocket and ProDy conservation analysis
         
         Args:
-            pdb_string: PDB structure as a string
+            pdb_string: PDB file path
             
         Returns:
             list: List of (chain_id, residue_number) tuples representing the active site
         """
-        # Create temporary PDB file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.pdb', delete=False) as temp_pdb:
-            temp_pdb.write(pdb_string)
-            temp_pdb_path = temp_pdb.name
 
         try:
             # Get conservation scores using ProDy
-            protein = prody.parsePDB(temp_pdb_path)
+            protein = prody.parsePDB(pdb_string)
             conservation = prody.conservationMatrix(protein)
             
-            # Submit job to CASTp
-            job_id = self._submit_castp_job(temp_pdb_path)
-            
-            # Wait for results
-            pockets = self._get_castp_results(job_id)
+            # Use DIYFpocket to detect pockets
+            fpocket = DIYFpocket()
+            pockets = fpocket.detect_pockets(pdb_string)
             
             # Process results to get the best pocket considering both volume and conservation
-            best_pocket = self._process_castp_pockets(pockets, conservation, protein)
+            best_pocket = self._process_pockets(pockets, conservation, protein)
             
             return best_pocket
             
-        finally:
-            # Cleanup
-            os.unlink(temp_pdb_path)
 
-    def _submit_castp_job(self, pdb_path):
-        """Submit a job to CASTp API"""
-        files = {'file': open(pdb_path, 'rb')}
-        data = {'email': self.email}
-        
-        response = requests.post(f"{self.castp_url}/submit", files=files, data=data)
-        response.raise_for_status()
-        
-        result = response.json()
-        if result['status'] != 'success':
-            raise RuntimeError(f"Failed to submit CASTp job: {result['message']}")
-            
-        return result['job_id']
-
-    def _get_castp_results(self, job_id, max_attempts=30, delay=10):
-        """Poll CASTp API for results"""
-        for _ in range(max_attempts):
-            response = requests.get(f"{self.castp_url}/status/{job_id}")
-            response.raise_for_status()
-            
-            result = response.json()
-            if result['status'] == 'completed':
-                # Get pocket information
-                pocket_response = requests.get(f"{self.castp_url}/results/{job_id}")
-                pocket_response.raise_for_status()
-                return pocket_response.json()['pockets']
-            elif result['status'] == 'failed':
-                raise RuntimeError(f"CASTp job failed: {result['message']}")
-                
-            time.sleep(delay)
-            
-        raise TimeoutError("CASTp job timed out")
-
-    def _process_castp_pockets(self, pockets, conservation, protein):
-        """Process CASTp results to identify the best pocket, considering conservation
+    def _process_pockets(self, pockets, conservation, protein):
+        """Process DIYFpocket results to identify the best pocket, considering conservation
         
         Args:
-            pockets: List of pocket data from CASTp API
+            pockets: List of pocket data from DIYFpocket
             conservation: Conservation scores from ProDy
             protein: ProDy protein object
             
@@ -151,15 +109,10 @@ class BindingEnergyCalculator:
         scored_pockets = []
         
         for pocket in pockets:
-            # Get basic pocket properties
-            volume = float(pocket['volume'])
-            
             # Get residues for this pocket
             pocket_residues = []
-            for residue in pocket['residues']:
-                chain_id = residue['chain']
-                res_num = int(residue['residue_number'])
-                pocket_residues.append((chain_id, res_num))
+            for chain, _, resnum in pocket['residues']:
+                pocket_residues.append((chain, resnum))
             
             # Calculate average conservation score for pocket residues
             conservation_scores = []
@@ -169,9 +122,11 @@ class BindingEnergyCalculator:
             
             avg_conservation = np.mean(conservation_scores)
             
-            # Combined score (weighted average of normalized volume and conservation)
-            volume_score = volume / 1000  # Normalize volume
-            total_score = 0.6 * volume_score + 0.4 * avg_conservation
+            # Combined score (weighted average of fpocket score and conservation)
+            total_score = (
+                0.6 * pocket['score'] +  # DIYFpocket's comprehensive scoring
+                0.4 * avg_conservation   # Conservation score
+            )
             
             scored_pockets.append((pocket_residues, total_score))
         
@@ -181,11 +136,11 @@ class BindingEnergyCalculator:
         # Return residues from the highest scoring pocket
         return max(scored_pockets, key=lambda x: x[1])[0]
 
-    def calculate_binding_energy(self, protein_structure, ligand, active_site_residues):
+    def calculate_binding_energy(self, pdb_file, ligand, active_site_residues):
         """Calculate binding energy between protein and ligand using AutoDock Vina
         
         Args:
-            protein_structure: PDB structure string
+            pdb_file: PDB file path
             ligand: RDKit Mol object
             active_site_residues: List of (chain_id, residue_number) tuples
         
@@ -193,19 +148,17 @@ class BindingEnergyCalculator:
             float: Binding energy score from Vina (kcal/mol)
         """
         # Create temporary files for Vina input
-        with tempfile.NamedTemporaryFile(suffix='.pdb') as protein_file, \
-             tempfile.NamedTemporaryFile(suffix='.pdbqt') as ligand_file:
+        with tempfile.NamedTemporaryFile(suffix='.pdbqt') as ligand_file:
             
-            # Save protein structure
-            protein_file.write(protein_structure.encode())
-            protein_file.flush()
+            # Use provided PDB file path directly
+            protein_file_path = pdb_file
             
             # Convert ligand to PDBQT format
             self._mol_to_pdbqt(ligand, ligand_file.name)
             
             # Initialize Vina
             v = Vina(sf_name='vina')
-            v.set_receptor(protein_file.name)
+            v.set_receptor(protein_file_path)
             v.set_ligand_from_file(ligand_file.name)
             
             # Calculate search box centered on active site

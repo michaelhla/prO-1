@@ -1,1 +1,3 @@
 venv
+*.pdb
+__pycache__
