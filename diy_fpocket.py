@@ -167,8 +167,8 @@ class DIYFpocket:
         mean_hydrophobicity = np.mean(hydrophobicity_values) if hydrophobicity_values else 0
         hydrophobicity_score = (mean_hydrophobicity + 4.5) / 9.0  # Normalize to [0,1]
         
-        # Calculate volume score
-        volume_score = min(volume / 1000, 1.0)
+        # Basic volume filter following Fpocket
+        volume_score = 1.0 if volume >= 100 else 0.0
         
         # Calculate polarity score
         polar_contacts = sum(contact['is_polar'] 
@@ -177,13 +177,23 @@ class DIYFpocket:
         total_contacts = sum(len(sphere['contacts']) for sphere in alpha_spheres)
         polarity_score = 1 - (polar_contacts / total_contacts if total_contacts > 0 else 0)
         
-        # Weighted sum following Fpocket's scheme
+        # Filter out small pockets
+        if volume < 100:
+            return {
+                'total_score': 0,
+                'density_score': density_score,
+                'volume': volume,
+                'apolar_score': apolar_score,
+                'hydrophobicity_score': hydrophobicity_score,
+                'polarity_score': polarity_score
+            }
+
+        # Actual Fpocket scoring emphasis
         total_score = (
-            0.35 * density_score +
-            0.25 * volume_score +
-            0.20 * apolar_score +
-            0.15 * hydrophobicity_score +
-            0.05 * polarity_score
+            0.45 * density_score +      # Local hydrophobic density (most important)
+            0.25 * apolar_score +       # Apolar alpha sphere proportion
+            0.20 * hydrophobicity_score + # Mean local hydrophobic density
+            0.10 * polarity_score       # Polarity distribution
         )
         
         return {
