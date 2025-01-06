@@ -6,7 +6,7 @@ from transformers import EsmForProteinFolding, AutoTokenizer
 from transformers.models.esm.openfold_utils.protein import to_pdb, Protein as OFProtein
 from transformers.models.esm.openfold_utils.feats import atom14_to_atom37
 import prody
-from fpocket import fpocket
+from diy_fpocket import DIYFpocket
 from vina import Vina
 import tempfile
 from meeko import MoleculePreparation
@@ -17,20 +17,19 @@ import os
 
 
 class BindingEnergyCalculator:
-    def __init__(self, protein_model_path="facebook/esmfold-v1", device="cuda", email="your_email@example.com"):
-        self.protein_model = self._load_protein_model(protein_model_path)
+    def __init__(self, protein_model_path="facebook/esmfold_v1", device="cuda"):
+        self.protein_model = self._load_protein_model(protein_model_path, device)
         self.device = device
         self.cached_structures = {}
-        self.email = email  # Required for CASTp API
-        self.castp_url = "http://sts.bioe.uic.edu/castp/api"
+
         
-    def _load_protein_model(self, model_path):
+    def _load_protein_model(self, model_path, device):
         """Load ESMFold model for structure prediction"""
         model = EsmForProteinFolding.from_pretrained(model_path)
-        model = model.to(self.device)
+        model = model.to(device)
         return model
 
-    def predict_structure(self, sequence, model_path="facebook/esmfold-v1"):
+    def predict_structure(self, sequence, model_path="facebook/esmfold_v1"):
         """Predict protein structure using ESMFold"""
         if sequence in self.cached_structures:
             return self.cached_structures[sequence]
@@ -93,7 +92,9 @@ class BindingEnergyCalculator:
             best_pocket = self._process_pockets(pockets, conservation, protein)
             
             return best_pocket
-            
+        except Exception as e:
+            print(f"Error identifying active site: {e}")
+            return None
 
     def _process_pockets(self, pockets, conservation, protein):
         """Process DIYFpocket results to identify the best pocket, considering conservation
@@ -136,40 +137,51 @@ class BindingEnergyCalculator:
         # Return residues from the highest scoring pocket
         return max(scored_pockets, key=lambda x: x[1])[0]
 
-    def calculate_binding_energy(self, pdb_file, ligand, active_site_residues):
+    def calculate_binding_energy(self, pdb_file, ligand, active_site_residues, k=2):
         """Calculate binding energy between protein and ligand using AutoDock Vina
         
         Args:
             pdb_file: PDB file path
-            ligand: RDKit Mol object
+            ligand: SMILES string
             active_site_residues: List of (chain_id, residue_number) tuples
         
         Returns:
             float: Binding energy score from Vina (kcal/mol)
         """
         # Create temporary files for Vina input
-        with tempfile.NamedTemporaryFile(suffix='.pdbqt') as ligand_file:
+        with tempfile.NamedTemporaryFile(suffix='.pdbqt') as ligand_file, \
+             tempfile.NamedTemporaryFile(suffix='.pdbqt') as receptor_file:
             
-            # Use provided PDB file path directly
-            protein_file_path = pdb_file
+            # Convert PDB to PDBQT for the receptor
+            convert_pdb_to_pdbqt(pdb_file, receptor_file.name)
             
             # Convert ligand to PDBQT format
-            self._mol_to_pdbqt(ligand, ligand_file.name)
+            convert_smiles_to_pdbqt(ligand, ligand_file.name)
+            
+            # Get active site coordinates
+            structure = Bio.PDB.PDBParser().get_structure("protein", pdb_file)
+            coords = []
+            for chain_id, res_num in active_site_residues:
+                residue = structure[0][chain_id][res_num]
+                if "CA" in residue:
+                    coords.append(residue["CA"].get_coord())
+            coords = np.array(coords)
+            
+            # Calculate box center and size
+            center = coords.mean(axis=0)
+            size = coords.max(axis=0) - coords.min(axis=0) + 1.0  # Add 8Å padding
             
             # Initialize Vina
             v = Vina(sf_name='vina')
-            v.set_receptor(protein_file_path)
+            v.set_receptor(receptor_file.name)
+            v.compute_vina_maps(center=center.tolist(), box_size=size.tolist())
             v.set_ligand_from_file(ligand_file.name)
-            
-            # Calculate search box centered on active site
-            center, size = self._get_binding_box(active_site_residues)
-            v.compute_vina_maps(center=center, box_size=size)
             
             # Generate and score poses
             energy_scores = v.dock(exhaustiveness=8, n_poses=10)
             
-            # Return best score (most negative energy)
-            return min(energy_scores)
+            # Take average of top k binding energies (first element of each pose's energy array)
+            return np.mean([pose[0] for pose in energy_scores[:k]])
 
     def _get_binding_box(self, active_site_residues):
         """Calculate binding box dimensions from active site residues
@@ -197,19 +209,19 @@ class BindingEnergyCalculator:
         
         return center.tolist(), size.tolist()
 
-    def _mol_to_pdbqt(self, mol, output_file):
-        """Convert RDKit molecule to PDBQT format
+    # def _mol_to_pdbqt(self, mol, output_file):
+    #     """Convert RDKit molecule to PDBQT format
         
-        Args:
-            mol: RDKit Mol object
-            output_file: Path to save PDBQT file
-        """
-        # Prepare molecule (add hydrogens, charges, etc)
-        preparator = MoleculePreparation()
-        preparator.prepare(mol)
+    #     Args:
+    #         mol: RDKit Mol object
+    #         output_file: Path to save PDBQT file
+    #     """
+    #     # Prepare molecule (add hydrogens, charges, etc)
+    #     preparator = MoleculePreparation()
+    #     preparator.prepare(mol)
         
-        # Write PDBQT file
-        preparator.write_pdbqt_file(output_file)
+    #     # Write PDBQT file
+    #     preparator.write_pdbqt_file(output_file)
 
     def _evaluate_pocket(self, pocket, conservation, dssp_dict, protein):
         """Score a pocket based on multiple criteria
@@ -274,15 +286,60 @@ class BindingEnergyCalculator:
         
         return residues
 
-def calculate_reward(sequence, reagent, ts, product, id_active_site=None):
+def convert_pdb_to_pdbqt(pdb_file, pdbqt_file):
+    # Use Open Babel to convert PDB to PDBQT
+    metals = ['ZN', 'MG', 'FE']
+    try:
+        subprocess.run(['obabel', pdb_file, '-O', pdbqt_file, '-xr'], check=True)
+        # Print the PDBQT file contents and check for zinc
+        with open(pdbqt_file, 'r') as f:
+            contents = f.read()
+            # Process contents line by line
+            new_lines = []
+            for line in contents.split('\n'):
+                # Check if line contains any of the metals
+                if any(metal in line for metal in metals):
+                    # Replace +0.000 charge with +0.950 for metal atoms
+                    line = line.replace("+0.000", "+0.950")
+                    print(f"Found metal atom, modified charge: {line}")
+                new_lines.append(line)
+            
+            # Write modified contents back to file
+            with open(pdbqt_file, 'w') as f:
+                f.write('\n'.join(new_lines))
+    except subprocess.CalledProcessError as e:
+        print(f"Error converting PDB to PDBQT: {e}")
+        raise
+
+def convert_smiles_to_pdbqt(smiles, pdbqt_file):
+    # Generate 3D structure from SMILES
+    mol = Chem.MolFromSmiles(smiles)
+    mol = Chem.AddHs(mol)
+    AllChem.EmbedMolecule(mol)
+    AllChem.MMFFOptimizeMolecule(mol)
+
+    # Write to a temporary PDB file
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.pdb', delete=False) as pdb_file:
+        Chem.MolToPDBFile(mol, pdb_file.name)
+        pdb_file_path = pdb_file.name
+
+    # Convert PDB to PDBQT using Open Babel
+    try:
+        subprocess.run(['obabel', '-ipdb', pdb_file_path, '-opdbqt', '-O', pdbqt_file, '-h'], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error converting PDB to PDBQT: {e}")
+        raise
+        
+def calculate_reward(sequence, reagent, product, ts=None, id_active_site=None):
     """
     Calculate overall reward based on binding energies across reaction pathway
     
     Args:
         sequence: Protein sequence string
-        reagent: RDKit Mol object of reagent
-        ts: RDKit Mol object of transition state
-        product: RDKit Mol object of product
+        reagent: SMILES string of reagent
+        product: SMILES string of product
+        ts: Optional SMILES string of transition state
+        id_active_site: Optional pre-identified active site residues
     
     Returns:
         float: Reward score based on binding energies and reaction profile
@@ -306,12 +363,6 @@ def calculate_reward(sequence, reagent, ts, product, id_active_site=None):
         active_site_residues
     )
     
-    ts_energy = calculator.calculate_binding_energy(
-        protein_structure,
-        ts,
-        active_site_residues
-    )
-    
     product_energy = calculator.calculate_binding_energy(
         protein_structure,
         product,
@@ -319,15 +370,24 @@ def calculate_reward(sequence, reagent, ts, product, id_active_site=None):
     )
     
     # Calculate reward based on energy profile
-    # We want:
-    # 1. Strong TS binding (stabilization of transition state)
-    # 2. Moderate reagent binding (not too strong to prevent product release)
-    # 3. Weaker product binding (to facilitate product release)
-    
-    reward = (
-        -ts_energy * 2.0 +  # Heavily weight TS stabilization
-        -abs(reagent_energy + 5.0) +  # Penalize too strong/weak reagent binding
-        -abs(product_energy + 2.0)    # Prefer slightly weaker product binding
-    )
+    if ts is not None:
+        # Include transition state in scoring if provided
+        ts_energy = calculator.calculate_binding_energy(
+            protein_structure,
+            ts,
+            active_site_residues
+        )
+        
+        reward = (
+            -ts_energy * 2.0 +  # Heavily weight TS stabilization
+            -abs(reagent_energy + 5.0) +  # Penalize too strong/weak reagent binding
+            -abs(product_energy + 2.0)    # Prefer slightly weaker product binding
+        )
+    else:
+        # Score based on just reagent and product binding if no TS provided
+        reward = (
+            -abs(reagent_energy + 5.0) +  # Penalize too strong/weak reagent binding
+            -abs(product_energy + 2.0)    # Prefer slightly weaker product binding
+        )
     
     return reward
