@@ -38,6 +38,7 @@ def test_lysozyme_active_site():
             if ('A', 'ASP', 52) in residues and ('A', 'GLU', 35) in residues:
                 active_site_found = True
                 print(f"Active site found in pocket with score {pocket['score']:.2f}")
+                print(pocket)
                 break
         
         assert active_site_found, "Failed to identify known active site residues (Asp52 and Glu35)"

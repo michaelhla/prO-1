@@ -191,7 +191,8 @@ class BindingEnergyCalculator:
             v.set_ligand_from_file(ligand_file.name)
             
             # Generate and score poses
-            energy_scores = v.dock(exhaustiveness=8, n_poses=10)
+            v.dock(exhaustiveness=8, n_poses=10)
+            energy_scores = v.energies()
             
             # Take average of top k binding energies (first element of each pose's energy array)
             return np.mean([pose[0] for pose in energy_scores[:k]])
@@ -221,83 +222,6 @@ class BindingEnergyCalculator:
         size = coords.max(axis=0) - coords.min(axis=0) + 8.0  # Add 8Å padding
         
         return center.tolist(), size.tolist()
-
-    # def _mol_to_pdbqt(self, mol, output_file):
-    #     """Convert RDKit molecule to PDBQT format
-        
-    #     Args:
-    #         mol: RDKit Mol object
-    #         output_file: Path to save PDBQT file
-    #     """
-    #     # Prepare molecule (add hydrogens, charges, etc)
-    #     preparator = MoleculePreparation()
-    #     preparator.prepare(mol)
-        
-    #     # Write PDBQT file
-    #     preparator.write_pdbqt_file(output_file)
-
-    def _evaluate_pocket(self, pocket, conservation, dssp_dict, protein):
-        """Score a pocket based on multiple criteria
-        
-        Criteria:
-        1. Pocket volume and depth
-        2. Conservation scores of residues
-        3. Secondary structure elements
-        4. Physicochemical properties
-        """
-        # Calculate geometric score
-        volume_score = pocket.volume / 1000  # Normalize volume
-        
-        # Conservation score
-        pocket_residues = self._get_pocket_residues(pocket)
-        conservation_score = np.mean([conservation[res] for res in pocket_residues])
-        
-        # Secondary structure score (prefer mixed alpha/beta)
-        ss_types = [dssp_dict[res]['ss'] for res in pocket_residues]
-        ss_diversity = len(set(ss_types)) / len(ss_types)
-        
-        # Combine scores (weights can be adjusted)
-        total_score = (0.4 * volume_score + 
-                      0.4 * conservation_score +
-                      0.2 * ss_diversity)
-        
-        return total_score
-
-    def _get_pocket_residues(self, pocket):
-        """Extract residue IDs from a pocket object
-        
-        Args:
-            pocket: fpocket Pocket object containing pocket information
-            
-        Returns:
-            list: List of residue IDs in the format (chain_id, residue_number)
-        """
-        residues = []
-        
-        # fpocket stores residues in pocket.residues
-        # Each residue has attributes: chain, number, name
-        for residue in pocket.residues:
-            res_id = (residue.chain, residue.number)
-            residues.append(res_id)
-            
-        # Get neighboring residues within 4Å of pocket center
-        pocket_center = pocket.center_of_mass
-        structure = Bio.PDB.PDBParser().get_structure("protein", self.tmp_pdb)
-        
-        for chain in structure.get_chains():
-            for residue in chain:
-                # Calculate distance from residue CA to pocket center
-                if "CA" in residue:
-                    ca_pos = residue["CA"].get_coord()
-                    distance = np.linalg.norm(ca_pos - pocket_center)
-                    
-                    # Include residues within cutoff
-                    if distance < 4.0:
-                        res_id = (chain.id, residue.id[1])
-                        if res_id not in residues:
-                            residues.append(res_id)
-        
-        return residues
 
 def convert_pdb_to_pdbqt(pdb_file, pdbqt_file):
     # Use Open Babel to convert PDB to PDBQT
@@ -343,7 +267,7 @@ def convert_smiles_to_pdbqt(smiles, pdbqt_file):
         print(f"Error converting PDB to PDBQT: {e}")
         raise
         
-def calculate_reward(sequence, reagent, product, ts=None, id_active_site=None):
+def calculate_reward(sequence, reagent, product, ts=None, id_active_site=None, alpha=2.0):
     """
     Calculate overall reward based on binding energies across reaction pathway
     
@@ -366,7 +290,6 @@ def calculate_reward(sequence, reagent, product, ts=None, id_active_site=None):
     # Identify active site
     if id_active_site is None:
         active_site_residues = calculator.identify_active_site(protein_structure)
-        print('active site: ', active_site_residues)
     else:
         active_site_residues = id_active_site
     
@@ -399,9 +322,10 @@ def calculate_reward(sequence, reagent, product, ts=None, id_active_site=None):
         )
     else:
         # Score based on just reagent and product binding if no TS provided
+        # Calculate reward
         reward = (
-            -abs(reagent_energy + 5.0) +  # Penalize too strong/weak reagent binding
-            -abs(product_energy + 2.0)    # Prefer slightly weaker product binding
+            (alpha * (reagent_energy)) +  # Weight by energy ratio
+            (product_energy)                     # Direct comparison for product
         )
     
     return reward
