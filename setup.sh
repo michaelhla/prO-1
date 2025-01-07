@@ -11,6 +11,10 @@ apt-get install swig
 # Install Boost development libraries
 apt-get install libboost-all-dev
 
+# Install Open Babel
+apt install openbabel
+
+# Install requirements
 pip install -U numpy vina
 
 # Install requirements

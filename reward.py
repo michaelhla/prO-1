@@ -14,6 +14,10 @@ import requests
 import time
 import json
 import os
+import subprocess
+from rdkit import Chem
+from rdkit.Chem import AllChem
+
 
 
 class BindingEnergyCalculator:
@@ -25,7 +29,16 @@ class BindingEnergyCalculator:
         
     def _load_protein_model(self, model_path, device):
         """Load ESMFold model for structure prediction"""
-        model = EsmForProteinFolding.from_pretrained(model_path)
+        # Check if model is already cached locally
+        local_path = '/root/prO-1/model_cache/'
+        if os.path.exists(local_path):
+            model = EsmForProteinFolding.from_pretrained(local_path)
+        else:
+            # Download and cache the model
+            model = EsmForProteinFolding.from_pretrained(model_path)
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
+            model.save_pretrained(local_path)
+            
         if device == "cuda":
             model = model.cuda()
         return model
@@ -37,9 +50,14 @@ class BindingEnergyCalculator:
             
         # Run ESMFold prediction
         tokenizer = AutoTokenizer.from_pretrained(model_path)
-        tokenized_input = tokenizer([sequence], return_tensors="pt", add_special_tokens=False)['input_ids']
+        tokenized_input = tokenizer(
+            [sequence], 
+            return_tensors="pt", 
+            add_special_tokens=False, 
+        )['input_ids']
         if self.device == "cuda":
             tokenized_input = tokenized_input.cuda()
+
         with torch.no_grad():
             output = self.protein_model(tokenized_input)
 
@@ -50,7 +68,7 @@ class BindingEnergyCalculator:
         self.cached_structures[sequence] = predicted_structure
         return predicted_structure
     
-    def convert_outputs_to_pdb(outputs):
+    def convert_outputs_to_pdb(self, outputs):
         final_atom_positions = atom14_to_atom37(outputs["positions"][-1], outputs)
         outputs = {k: v.to("cpu").numpy() for k, v in outputs.items()}
         final_atom_positions = final_atom_positions.cpu().numpy()
@@ -70,10 +88,20 @@ class BindingEnergyCalculator:
                 chain_index=outputs["chain_index"][i] if "chain_index" in outputs else None,
             )
             pdbs.append(to_pdb(pred))
-        return pdbs
-
+        # Create directory for PDB files if it doesn't exist
+        output_dir = "predicted_structures"
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Write each PDB to a separate file
+        pdb_files = []
+        for i, pdb in enumerate(pdbs):
+            pdb_path = os.path.join(output_dir, f"structure_{i}.pdb")
+            with open(pdb_path, "w") as f:
+                f.write(pdb)
+            pdb_files.append(pdb_path)
+        return pdb_files
     def identify_active_site(self, pdb_string):
-        """Identify active site residues using DIYFpocket and ProDy conservation analysis
+        """Identify active site residues using DIYFpocket
         
         Args:
             pdb_string: PDB file path
@@ -81,31 +109,24 @@ class BindingEnergyCalculator:
         Returns:
             list: List of (chain_id, residue_number) tuples representing the active site
         """
-
         try:
-            # Get conservation scores using ProDy
-            protein = prody.parsePDB(pdb_string)
-            conservation = prody.conservationMatrix(protein)
-            
             # Use DIYFpocket to detect pockets
             fpocket = DIYFpocket()
             pockets = fpocket.detect_pockets(pdb_string)
             
-            # Process results to get the best pocket considering both volume and conservation
-            best_pocket = self._process_pockets(pockets, conservation, protein)
+            # Process results to get the best pocket
+            best_pocket = self._process_pockets(pockets)
             
             return best_pocket
         except Exception as e:
             print(f"Error identifying active site: {e}")
             return None
 
-    def _process_pockets(self, pockets, conservation, protein):
-        """Process DIYFpocket results to identify the best pocket, considering conservation
+    def _process_pockets(self, pockets):
+        """Process DIYFpocket results to identify the best pocket based on score
         
         Args:
             pockets: List of pocket data from DIYFpocket
-            conservation: Conservation scores from ProDy
-            protein: ProDy protein object
             
         Returns:
             list: List of (chain_id, residue_number) tuples for the best pocket
@@ -118,19 +139,8 @@ class BindingEnergyCalculator:
             for chain, _, resnum in pocket['residues']:
                 pocket_residues.append((chain, resnum))
             
-            # Calculate average conservation score for pocket residues
-            conservation_scores = []
-            for chain_id, res_num in pocket_residues:
-                res_idx = protein.select(f'chain {chain_id} and resnum {res_num}').getResindices()[0]
-                conservation_scores.append(conservation[res_idx])
-            
-            avg_conservation = np.mean(conservation_scores)
-            
-            # Combined score (weighted average of fpocket score and conservation)
-            total_score = (
-                0.6 * pocket['score'] +  # DIYFpocket's comprehensive scoring
-                0.4 * avg_conservation   # Conservation score
-            )
+            # Use fpocket score directly
+            total_score = pocket['score']
             
             scored_pockets.append((pocket_residues, total_score))
         
@@ -351,11 +361,12 @@ def calculate_reward(sequence, reagent, product, ts=None, id_active_site=None):
     calculator = BindingEnergyCalculator(device="cuda")
     
     # Predict protein structure
-    protein_structure = calculator.predict_structure(sequence)
+    protein_structure = calculator.predict_structure(sequence)[0]
     
     # Identify active site
     if id_active_site is None:
         active_site_residues = calculator.identify_active_site(protein_structure)
+        print('active site: ', active_site_residues)
     else:
         active_site_residues = id_active_site
     
