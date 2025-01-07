@@ -26,7 +26,8 @@ class BindingEnergyCalculator:
     def _load_protein_model(self, model_path, device):
         """Load ESMFold model for structure prediction"""
         model = EsmForProteinFolding.from_pretrained(model_path)
-        model = model.to(device)
+        if device == "cuda":
+            model = model.cuda()
         return model
 
     def predict_structure(self, sequence, model_path="facebook/esmfold_v1"):
@@ -37,6 +38,8 @@ class BindingEnergyCalculator:
         # Run ESMFold prediction
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         tokenized_input = tokenizer([sequence], return_tensors="pt", add_special_tokens=False)['input_ids']
+        if self.device == "cuda":
+            tokenized_input = tokenized_input.cuda()
         with torch.no_grad():
             output = self.protein_model(tokenized_input)
 
