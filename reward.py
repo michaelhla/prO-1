@@ -323,9 +323,7 @@ def calculate_reward(sequence, reagent, product, ts=None, id_active_site=None, a
     else:
         # Score based on just reagent and product binding if no TS provided
         # Calculate reward
-        reward = (
-            (alpha * (reagent_energy)) +  # Weight by energy ratio
-            (product_energy)                     # Direct comparison for product
-        )
+        # simply delta between reagent and product binding
+        reward = - (reagent_energy - product_energy)
     
     return reward

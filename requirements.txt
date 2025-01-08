@@ -1,7 +1,6 @@
 biopython>=1.79
 torch>=1.9.0
 transformers>=4.21.0
-prody>=2.0.0
 meeko>=0.4.0
 tqdm>=4.62.0
 scikit-learn

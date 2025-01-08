@@ -57,8 +57,8 @@ def generate(label, model, special_tokens, device, tokenizer, num_sequences=20, 
 if __name__=='__main__':
     device = torch.device("cuda") # Replace with 'cpu' if you don't have a GPU - but it will be slow
     print('Reading pretrained model and tokenizer')
-    tokenizer = AutoTokenizer.from_pretrained('/path/to/zymCTRL/') # change to ZymCTRL location
-    model = GPT2LMHeadModel.from_pretrained('/path/to/zymCTRL').to(device) # change to ZymCTRL location
+    tokenizer = AutoTokenizer.from_pretrained('AI4PD/ZymCTRL')
+    model = GPT2LMHeadModel.from_pretrained('AI4PD/ZymCTRL').to(device)
     special_tokens = ['<start>', '<end>', '<|endoftext|>','<pad>',' ', '<sep>']
 
     # change to the appropriate EC classes
@@ -71,6 +71,6 @@ if __name__=='__main__':
             for index, (sequence, perplexity) in enumerate(sequences):
                 # Sequences will be saved with the name of the label followed by the batch index,
                 # and the order of the sequence in that batch.           
-                fn = open(f"/path/to/folder/{label}_{i}_{index}.fasta", "w")
+                fn = open(f"/root/prO-1/zym_outputs/{label}_{i}_{index}.fasta", "w")
                 fn.write(f'>{label}_{i}_{index}\t{perplexity}\n{sequence}')
                 fn.close()
