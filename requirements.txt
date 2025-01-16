@@ -4,3 +4,7 @@ transformers>=4.21.0
 meeko>=0.4.0
 tqdm>=4.62.0
 scikit-learn
+pandas
+openai
+openpyxl
+python-dotenv

@@ -2,7 +2,7 @@ import json
 import requests
 from typing import Dict, List, Optional
 from tqdm import tqdm 
-
+import os
 def get_uniprot_sequence(accession: str, db: str = 'uniprot') -> Optional[str]:
     """Fetch protein sequence from UniProt or SwissProt API
     
@@ -65,7 +65,17 @@ def extract_kinetics(entry: Dict, protein_id: str) -> Dict:
 def transform_brenda_data(data: Dict) -> Dict:
     """Transform BRENDA JSON data into new structure"""
     transformed_data = {}
-        
+
+    # Try to load brenda sequence data if available
+    try:
+        import pandas as pd
+        if os.path.exists('syn_data/brenda_seq.xlsx'):
+            brenda_seq_df = pd.read_excel('syn_data/brenda_seq.xlsx')
+        print(brenda_seq_df.head())
+    except Exception as e:
+        brenda_seq_df = None
+        print(e)
+    
     for ec_number, entry in tqdm(data.items()):
         # Get protein accessions if available
         proteins = entry.get('proteins', {})
@@ -79,7 +89,10 @@ def transform_brenda_data(data: Dict) -> Dict:
                 continue
             accession = (protein_info[0]['accessions'][0], protein_info[0]['source'])
                 
-            sequence = get_uniprot_sequence(accession[0], accession[1])
+            if brenda_seq_df is not None:
+                sequence = brenda_seq_df.loc[brenda_seq_df['From'] == accession[0], 'Sequence'].iloc[0] if not brenda_seq_df.loc[brenda_seq_df['From'] == accession[0], 'Sequence'].empty else None
+            else:
+                sequence = get_uniprot_sequence(accession[0], accession[1])
             if not sequence:
                 continue
                 

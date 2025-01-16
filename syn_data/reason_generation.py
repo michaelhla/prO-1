@@ -7,6 +7,10 @@ import random
 from Bio.Substitution import BLOSUM62
 import openai
 import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
+
 ## use 4o mini to generate reasoning for each mutation step 
 ## generate mutations by sampling from the inverse BLOSUM matrix 
 ## create SFT dataset by sampling from the reasoning steps 
@@ -38,7 +42,7 @@ def sample_mutation(sequence: str, blosum: BLOSUM62) -> Tuple[str, int, str]:
 def generate_reasoning(sequence: str, mutation: Tuple[str, int, str]) -> str:
     """Generate reasoning for a mutation using OpenAI API"""
     orig_aa, pos, new_aa = mutation
-    prompt = f"""Explain why mutating position {pos} from {orig_aa} to {new_aa} in the sequence {sequence} could be beneficial given the objective of improving activity. Keep your explanation concise and to the point."""
+    prompt = f"""An expert protein engineer selected this mutation to optimize the activity of this enzyme. Explain why mutating position {pos} from {orig_aa} to {new_aa} in the sequence {sequence} could be beneficial. Keep your explanation concise and to the point."""
     
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -52,8 +56,8 @@ def generate_reasoning(sequence: str, mutation: Tuple[str, int, str]) -> str:
     
     reasoning = response.choices[0].message.content
     return reasoning
-def create_datasets(sequences: List[str], num_mutations: int = 1000):
-    """Create SFT and preference datasets in OpenAI format"""
+def create_reasoning(sequences: List[str], num_mutations: int = 1000):
+    """Create reasoning for each mutation"""
     blosum = BLOSUM62()
     
     mutation_data = []
@@ -82,10 +86,15 @@ def create_datasets(sequences: List[str], num_mutations: int = 1000):
         json.dump(mutation_data, f, indent=2)
 
 if __name__ == "__main__":
-    # Load initial sequences from BRENDA
-    from brenda_clean import load_sequences
-    sequences = load_sequences()
+    # Load transformed BRENDA data
+    with open('data/brenda_2023_1.json', 'r') as f:
+        transformed_data = json.load(f)
     
+    # Extract sequences from transformed data
+    sequences = [entry['sequence'] for entry in transformed_data.values() if 'sequence' in entry]
+    
+    sequences = [sequences[0]]
+
     # Generate datasets targeting 50M tokens
-    create_datasets(sequences, num_mutations=25000) # Assuming ~2000 tokens per example
+    create_reasoning(sequences, num_mutations=3) # Assuming ~2000 tokens per example
 
