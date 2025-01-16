@@ -24,17 +24,15 @@ def get_uniprot_sequence(accession: str, db: str = 'uniprot') -> Optional[str]:
 
 def extract_reaction_components(reaction_list: List[Dict], protein_id: str) -> Dict[str, List[str]]:
     """Extract unique substrates and products from reaction list for specific protein"""
-    substrates = set()
-    products = set()
+    reactions = []
     for reaction in reaction_list:
         # Only include reactions associated with this protein
         if protein_id in reaction.get('proteins', []):
-            substrates.update(reaction.get('educts', []))
-            products.update(reaction.get('products', []))
-    return {
-        'substrates': list(substrates),
-        'products': list(products)
-    }
+            reactions.append({
+                'substrates': reaction.get('educts', []),
+                'products': reaction.get('products', [])
+            })
+    return reactions
 
 def extract_kinetics(entry: Dict, protein_id: str) -> Dict:
     """Extract kinetics-related information for specific protein"""
@@ -162,15 +160,16 @@ def transform_brenda_data(data: Dict) -> Dict:
     return transformed_data
 
 
-# Test run with first 50 EC IDs
 input_file = 'data/brenda_2023_1.json'
-with open(input_file) as f:
-    data = json.load(f)['data']
-    # Get first 50 EC IDs
-    test_ec_ids = list(data.keys())[:50]
-    test_data = {ec_id: data[ec_id] for ec_id in test_ec_ids}
+# with open(input_file) as f:
+#     data = json.load(f)['data']
+#     # Get first 50 EC IDs
+#     test_ec_ids = list(data.keys())[:50]
+#     test_data = {ec_id: data[ec_id] for ec_id in test_ec_ids}
 
-transformed = transform_brenda_data(test_data)
+data = json.load(open(input_file))['data']
+
+transformed = transform_brenda_data(data)
 
 # Save test data to file
 with open('test_transformed_brenda.json', 'w') as f:

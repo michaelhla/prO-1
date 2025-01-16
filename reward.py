@@ -150,7 +150,7 @@ class BindingEnergyCalculator:
         # Return residues from the highest scoring pocket
         return max(scored_pockets, key=lambda x: x[1])[0]
 
-    def calculate_binding_energy(self, pdb_file, ligand, active_site_residues, k=2):
+    def calculate_binding_energy(self, pdb_file, ligands, active_site_residues, k=2):
         """Calculate binding energy between protein and ligand using AutoDock Vina
         
         Args:
@@ -162,14 +162,19 @@ class BindingEnergyCalculator:
             float: Binding energy score from Vina (kcal/mol)
         """
         # Create temporary files for Vina input
-        with tempfile.NamedTemporaryFile(suffix='.pdbqt') as ligand_file, \
-             tempfile.NamedTemporaryFile(suffix='.pdbqt') as receptor_file:
+        ligand_files = []
+        try:
+            # Create receptor file
+            receptor_file = tempfile.NamedTemporaryFile(suffix='.pdbqt')
             
             # Convert PDB to PDBQT for the receptor
             convert_pdb_to_pdbqt(pdb_file, receptor_file.name)
             
-            # Convert ligand to PDBQT format
-            convert_smiles_to_pdbqt(ligand, ligand_file.name)
+            # Create temporary files for each ligand
+            for ligand in ligands:
+                ligand_file = tempfile.NamedTemporaryFile(suffix='.pdbqt')
+                convert_smiles_to_pdbqt(ligand, ligand_file.name)
+                ligand_files.append(ligand_file)
             
             # Get active site coordinates
             structure = Bio.PDB.PDBParser().get_structure("protein", pdb_file)
@@ -188,7 +193,10 @@ class BindingEnergyCalculator:
             v = Vina(sf_name='vina')
             v.set_receptor(receptor_file.name)
             v.compute_vina_maps(center=center.tolist(), box_size=size.tolist())
-            v.set_ligand_from_file(ligand_file.name)
+            
+            # Set all ligands at once
+            ligand_file_names = [f.name for f in ligand_files]
+            v.set_ligand_from_file(ligand_file_names)
             
             # Generate and score poses
             v.dock(exhaustiveness=8, n_poses=10)
@@ -196,6 +204,12 @@ class BindingEnergyCalculator:
             
             # Take average of top k binding energies (first element of each pose's energy array)
             return np.mean([pose[0] for pose in energy_scores[:k]])
+            
+        finally:
+            # Clean up temporary files
+            receptor_file.close()
+            for f in ligand_files:
+                f.close()
 
     def _get_binding_box(self, active_site_residues):
         """Calculate binding box dimensions from active site residues
@@ -267,14 +281,14 @@ def convert_smiles_to_pdbqt(smiles, pdbqt_file):
         print(f"Error converting PDB to PDBQT: {e}")
         raise
         
-def calculate_reward(sequence, reagent, product, ts=None, id_active_site=None, alpha=2.0):
+def calculate_reward(sequence, reagents, products, ts=None, id_active_site=None, alpha=2.0):
     """
     Calculate overall reward based on binding energies across reaction pathway
     
     Args:
         sequence: Protein sequence string
-        reagent: SMILES string of reagent
-        product: SMILES string of product
+        reagents: List of SMILES strings of reagents
+        products: List of SMILES strings of products
         ts: Optional SMILES string of transition state
         id_active_site: Optional pre-identified active site residues
     
@@ -296,13 +310,13 @@ def calculate_reward(sequence, reagent, product, ts=None, id_active_site=None, a
     # Calculate binding energies for each state
     reagent_energy = calculator.calculate_binding_energy(
         protein_structure, 
-        reagent,
+        reagents,
         active_site_residues
     )
     
     product_energy = calculator.calculate_binding_energy(
         protein_structure,
-        product,
+        products,
         active_site_residues
     )
     
