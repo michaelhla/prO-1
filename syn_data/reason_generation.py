@@ -81,7 +81,7 @@ USER: {enzyme_prompt}
 
 HISTORY: {previous_context}
 
-Provide reasoning for why mutating position {pos} from {orig_aa} to {new_aa} next could be beneficial.  ****REMEMBER TO USE YOUR KNOWLEDGE OF THIS SPECIFIC ENZYME AND REACTION****. Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS."""
+Provide reasoning for why mutating position {pos} from {orig_aa} to {new_aa} next could be beneficial.  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT****. Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS."""
     
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -110,7 +110,8 @@ def generate_initial_mutations(sequence: str, n_mutations: int = None) -> Tuple[
         # Keep sampling until we get an unused position
         while True:
             orig_aa, pos, new_aa = sample_mutation(sequence)
-            if pos not in positions_used:
+            # Skip if position contains methionine or would mutate to methionine
+            if pos not in positions_used and orig_aa != 'M' and new_aa != 'M':
                 break
         
         positions_used.add(pos)
@@ -131,8 +132,8 @@ def generate_incorrect_mutations(sequence: str, correct_pos: int, correct_aa: st
             incorrect_mutations.append((pos, orig_aa, new_aa))
             break
     
-    # Generate 2-3 mutations at other positions
-    n_other = random.randint(2, 3)
+    # Generate 2 mutations at other positions
+    n_other = 2
     while len(incorrect_mutations) < n_other + 1:
         orig_aa, pos, new_aa = sample_mutation(sequence)
         if pos not in positions_used:
@@ -258,9 +259,6 @@ For each mutation you propose, provide clear, scientific reasoning for why the m
                 current_seq = current_seq[:pos] + orig_target_aa + current_seq[pos+1:]
             
             dataset["traces"].append(trace)
-            # Exit after first sequence as example
-            if len(dataset["traces"]) >= 1:
-                break
             
     # Save dataset
     Path("data").mkdir(exist_ok=True)
@@ -271,7 +269,18 @@ if __name__ == "__main__":
     # Load transformed BRENDA data
     with open('data/transformed_brenda.json', 'r') as f:
         transformed_data = json.load(f)
-
     
+    # Filter to keep only one protein per EC number while preserving data structure
+    seen_ec_numbers = set()
+    filtered_data = {}
+    
+    for uniprot_id, protein_data in transformed_data.items():
+        ec_number = protein_data["ec_number"]
+        if ec_number not in seen_ec_numbers:
+            seen_ec_numbers.add(ec_number)
+            filtered_data[uniprot_id] = protein_data
+    
+    transformed_data = filtered_data
+
     create_mutation_traces(transformed_data, n_traces=2, n_mutations=3)  # n per sequence
 
