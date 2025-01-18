@@ -53,3 +53,27 @@ def calculate_lm_reward(reasonings: list[str]) -> float:
         
     except:
         return []  # Return empty list if parsing fails
+
+def sft(json_file: str, output_file: str):
+    with open(json_file, 'r') as file:
+        data = json.load(file)
+        
+    for entry in data:
+        entry['steps'] = calculate_lm_reward(entry['steps'])
+        
+    with open(output_file, 'w') as file:
+        json.dump(data, file, indent=4)
+
+
+def preference_finetuning(json_file: str, output_file: str):
+    with open(json_file, 'r') as file:
+        data = json.load(file)
+        
+    for entry in data:
+        entry['steps'] = calculate_lm_reward(entry['steps'])
+        
+    with open(output_file, 'w') as file:
+        json.dump(data, file, indent=4)
+
+
+
