@@ -62,7 +62,7 @@ def sample_mutation(sequence: str) -> Tuple[str, int, str]:
     new_aa = np.random.choice(valid_aas, p=probs)
     return orig_aa, pos, new_aa
 
-def generate_reasoning(sequence: str, mutation: Tuple[str, int, str], enzyme_prompt: str, previous_steps: List[dict] = None) -> str:
+def generate_reasoning(sequence: str, mutation: Tuple[str, int, str], enzyme_prompt: str, previous_steps: List[dict] = None, correct_mutation: bool = True) -> str:
     """Generate reasoning for a mutation using OpenAI API"""
     orig_aa, pos, new_aa = mutation
     
@@ -81,10 +81,12 @@ USER: {enzyme_prompt}
 
 HISTORY: {previous_context}
 
-Provide reasoning for why mutating position {pos} from {orig_aa} to {new_aa} next could be beneficial.  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT****. Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS."""
+Provide reasoning for why mutating position {pos} from {orig_aa} to {new_aa} next could be beneficial.  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. USE YOUR KNOWLEDGE OF SCIENTFIC LITERATURE.**** Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS."""
     
+    # Use regular gpt-4o for correct mutations, mini for incorrect
+    model = "gpt-4o" if correct_mutation else "gpt-4o-mini"
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=model,
         messages=[
             {"role": "system", "content": "You are an expert protein engineer with years of experience optimizing protein activity with rational design."},
             {"role": "user", "content": prompt}
@@ -230,7 +232,7 @@ For each mutation you propose, provide clear, scientific reasoning for why the m
             for pos, orig_target_aa, current_aa in mutations:
                 # Generate reasoning for correct mutation
                 mutation = (current_aa, pos, orig_target_aa)
-                reasoning = generate_reasoning(current_seq, mutation, enzyme_prompt, previous_steps)
+                reasoning = generate_reasoning(current_seq, mutation, enzyme_prompt, previous_steps, correct_mutation=True)
                 
                 # Generate incorrect mutations
                 incorrect_mutations = generate_incorrect_mutations(current_seq, pos, orig_target_aa)
@@ -248,7 +250,7 @@ For each mutation you propose, provide clear, scientific reasoning for why the m
                             "position": p,
                             "from_aa": orig,
                             "to_aa": new,
-                            "reasoning": generate_reasoning(current_seq, (orig, p, new), enzyme_prompt, previous_steps)
+                            "reasoning": generate_reasoning(current_seq, (orig, p, new), enzyme_prompt, previous_steps, correct_mutation=False)
                         }
                         for p, orig, new in incorrect_mutations
                     ]
