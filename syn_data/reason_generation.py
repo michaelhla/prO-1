@@ -259,8 +259,12 @@ For each mutation you propose, provide clear, scientific reasoning for why the m
                 previous_steps.append(step)
                 trace["steps"].append(step)
                 current_seq = current_seq[:pos] + orig_target_aa + current_seq[pos+1:]
+                break
             
             dataset["traces"].append(trace)
+            break
+        break
+            
             
     # Save dataset
     Path("data").mkdir(exist_ok=True)

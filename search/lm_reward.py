@@ -1,15 +1,3 @@
-## clean the synthetically generated data into the format for openai finetuning api.
-# we pass in reasoning tuples with mutation details, reasoning, and sequence
-# we want the prompt (from our brenda json), and then the steps taken by the model on that mutation
-# get the model to output "the next mutation" with reasoning
-## randomly sample for the reasoning step to take
-## allow for preference finetuning and SFT modes 
-
-import openai
-import json
-import os
-
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def calculate_lm_reward(reasonings: list[str]) -> float:
     """Calculate reward for a list of reasonings using language model
@@ -53,27 +41,3 @@ def calculate_lm_reward(reasonings: list[str]) -> float:
         
     except:
         return []  # Return empty list if parsing fails
-
-def sft(json_file: str, output_file: str):
-    with open(json_file, 'r') as file:
-        data = json.load(file)
-        
-    for entry in data:
-        entry['steps'] = calculate_lm_reward(entry['steps'])
-        
-    with open(output_file, 'w') as file:
-        json.dump(data, file, indent=4)
-
-
-def preference_finetuning(json_file: str, output_file: str):
-    with open(json_file, 'r') as file:
-        data = json.load(file)
-        
-    for entry in data:
-        entry['steps'] = calculate_lm_reward(entry['steps'])
-        
-    with open(output_file, 'w') as file:
-        json.dump(data, file, indent=4)
-
-
-
