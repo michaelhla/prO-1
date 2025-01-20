@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "description": "Protein mutation traces dataset with correct and incorrect paths",
+    "n_traces": 2,
+    "n_mutations": 3
+  },
+  "traces": [
+    {
+      "enzyme_id": "Q8L3C9",
+      "original_sequence": "MLPKTMKAAVIREFGSLLKIEEVEVKRPGRNEILVKVIASGVCHTDLHAVEGDWPVKPKMPLIPGHEAVGYVVAVGQEVKNVKEGDAVGVPWLYSACGGCDQCITGWETLCDTQQNGGYSVDGGFAEYVIADARYVGLLPSNVNFMEMAPILCAGVTVYKGLKETEVKPGEWVAISGIGGLGHVAVQYAKAMGMHVAAIDVADDKLDLAKKLGADLVVNAKNQNPGEFLKKEVGGMHGALITAVSPIAFKQGLETLRRKGTMALNGLPPGNFDLSIFDTVLNRITIRGSIVGTRKDMKEAIEFAVEGKVKATVTPAKLENINEVFDKMKKGQIEGRVVLEIAKA",
+      "perturbed_sequence": "MLPKTMKAAVIREFGSLLKIEEVEVKRPGQNEILVKVIASGVCHTDLHAVEGDWPVKPKMPLIPGHEAVGYVVAVGQEVKNVKEGDAVGVPWLYSACGGCDQCITGWETLCDTQQNGGYSVDGGFAEYIIADARYVGLLPSNVNFMEMAPILCAGVTVYKGLKETEVKPGEWVAISGIGGLGHVAVQYAKAMGMHVAAIDVADDKLDLAKKLGADLVVNAKNQNPGEFLKKEVGGMHGALITAVSPIAFNQGLETLRRKGTMALNGLPPGNFDLSIFDTVLNRITIRGSIVGTRKDMKEAIEFAVEGKVKATVTPAKLENINEVFDKMKKGQIEGRVVLEIAKA",
+      "initial_mutations": [
+        [
+          128,
+          "V",
+          "I"
+        ],
+        [
+          249,
+          "K",
+          "N"
+        ],
+        [
+          29,
+          "R",
+          "Q"
+        ]
+      ],
+      "prompt": "You are an expert protein engineer. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: \n\nENZYME NAME: alcohol dehydrogenase\nEC NUMBER: 1.1.1.1\nENZYME SEQUENCE: MLPKTMKAAVIREFGSLLKIEEVEVKRPGRNEILVKVIASGVCHTDLHAVEGDWPVKPKMPLIPGHEAVGYVVAVGQEVKNVKEGDAVGVPWLYSACGGCDQCITGWETLCDTQQNGGYSVDGGFAEYVIADARYVGLLPSNVNFMEMAPILCAGVTVYKGLKETEVKPGEWVAISGIGGLGHVAVQYAKAMGMHVAAIDVADDKLDLAKKLGADLVVNAKNQNPGEFLKKEVGGMHGALITAVSPIAFKQGLETLRRKGTMALNGLPPGNFDLSIFDTVLNRITIRGSIVGTRKDMKEAIEFAVEGKVKATVTPAKLENINEVFDKMKKGQIEGRVVLEIAKA\nGENERAL INFORMATION: No additional information available\nSUBSTRATES: 1-nonanol, NAD+\nPRODUCTS: nonanal, NADH, H+\nMETALS/IONS: None\n\n\n\nPropose a few mutations that will optimize enzymatic activity given the substrates and products above. For each proposed mutation, explain your reasoning and consider:\n1. How the mutation affects protein structure and function\n2. The chemical properties of the amino acids and substrates/products\n3. The position's importance in the protein sequence\n\nFor each mutation you propose, provide clear, scientific reasoning for why the mutation would be beneficial, ****USE YOUR KNOWLEDGE OF THIS SPECIFIC ENZYME AND REACTION****. Keep your response to under 100 words.",
+      "enzyme_data": {
+        "name": null,
+        "ec_number": "1.1.1.1",
+        "organism": null,
+        "substrates": [
+          "1-nonanol",
+          "NAD+"
+        ],
+        "products": [
+          "nonanal",
+          "NADH",
+          "H+"
+        ],
+        "metal_ions": [
+          "None"
+        ],
+        "engineering": []
+      },
+      "steps": [
+        {
+          "current_sequence": "MLPKTMKAAVIREFGSLLKIEEVEVKRPGQNEILVKVIASGVCHTDLHAVEGDWPVKPKMPLIPGHEAVGYVVAVGQEVKNVKEGDAVGVPWLYSACGGCDQCITGWETLCDTQQNGGYSVDGGFAEYIIADARYVGLLPSNVNFMEMAPILCAGVTVYKGLKETEVKPGEWVAISGIGGLGHVAVQYAKAMGMHVAAIDVADDKLDLAKKLGADLVVNAKNQNPGEFLKKEVGGMHGALITAVSPIAFNQGLETLRRKGTMALNGLPPGNFDLSIFDTVLNRITIRGSIVGTRKDMKEAIEFAVEGKVKATVTPAKLENINEVFDKMKKGQIEGRVVLEIAKA",
+          "correct_mutation": {
+            "position": 128,
+            "from_aa": "I",
+            "to_aa": "V",
+            "reasoning": "Mutating position 128 from isoleucine (I) to valine (V) could be beneficial for alcohol dehydrogenase because both amino acids are hydrophobic, minimizing disruption to the protein core. Valine is smaller, potentially increasing flexibility in the active site and allowing better accommodation of the bulkier 1-nonanol substrate. Literature suggests that subtle changes in enzyme active site dynamics can enhance substrate binding and turnover rate, optimizing activity towards longer-chain alcohols like 1-non"
+          },
+          "incorrect_mutations": [
+            {
+              "position": 128,
+              "from_aa": "I",
+              "to_aa": "L",
+              "reasoning": "Mutating position 128 from Isoleucine (I) to Leucine (L) may enhance enzymatic activity by improving substrate binding and stabilizing the transition state. Leucine has a similar hydrophobic character but a longer side chain, which can create a more favorable binding pocket for the larger substrate, 1-nonanol. This modification could also enhance protein flexibility and conformational dynamics, essential for facilitating the catalytic process. The position is likely critical for maintaining the integrity of the"
+            },
+            {
+              "position": 27,
+              "from_aa": "P",
+              "to_aa": "T",
+              "reasoning": "Mutating position 27 from Proline (P) to Threonine (T) may enhance enzymatic activity by introducing a hydroxyl group that can facilitate hydrogen bonding with the substrate, 1-nonanol. This modification could stabilize the transition state during the oxidation process, potentially improving the enzyme's affinity for the substrate. Proline's rigid structure can limit flexibility; replacing it with threonine may allow for better conformational changes required for substrate binding and product release. This position's importance"
+            },
+            {
+              "position": 15,
+              "from_aa": "S",
+              "to_aa": "C",
+              "reasoning": "Mutating position 15 from Serine (S) to Cysteine (C) could enhance the catalytic efficiency of alcohol dehydrogenase by introducing a thiol group that may participate in stabilizing the transition state during the oxidation of 1-nonanol to nonanal. The thiol can form transient interactions with the substrate, potentially lowering the activation energy. Additionally, Cysteine\u2019s side chain can undergo redox reactions, which might facilitate electron transfer processes involving NAD+. This position is"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
