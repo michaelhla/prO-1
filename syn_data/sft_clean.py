@@ -86,7 +86,7 @@ def sft(json_file: str, output_file: str):
     # Create fine-tuning job
     job = client.fine_tuning.jobs.create(
         training_file=response.id,
-        model="gpt-4o",
+        model="gpt-4o-mini-2024-07-18",
         method={
             "type": "supervised",
         }
@@ -95,7 +95,9 @@ def sft(json_file: str, output_file: str):
     print(f"Created fine-tuning job: {job.id}")
     return job.id
 
-
+if __name__ == "__main__":
+    job_id = sft("data/mutation_traces.json", "data/mutation_traces.jsonl")
+    print(f"Fine-tuning job created: {job_id}")
 
 
 

@@ -4,3 +4,4 @@ __pycache__
 model_cache
 data/brenda_2023_1.json
 .env
+syn_data/brenda_seq.xlsx

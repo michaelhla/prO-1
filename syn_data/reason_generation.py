@@ -7,6 +7,9 @@ from Bio.Align import substitution_matrices
 import openai
 import os
 from dotenv import load_dotenv
+from tqdm import tqdm
+
+
 
 load_dotenv()  # Load environment variables from .env file
 blosum62 = substitution_matrices.load("BLOSUM62")
@@ -80,10 +83,10 @@ USER: {enzyme_prompt}
 
 HISTORY: {previous_context}
 
-Provide reasoning for why mutating position {pos} from {orig_aa} to {new_aa} next could be beneficial.  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. USE YOUR KNOWLEDGE OF SCIENTFIC LITERATURE.**** Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS."""
+Provide reasoning for why mutating position {pos} from {orig_aa} to {new_aa} next could be beneficial.  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS."""
     
     # Use regular gpt-4o for correct mutations, mini for incorrect
-    model = "gpt-4o" if correct_mutation else "gpt-4o-mini"
+    model = "gpt-4o-mini"
     response = client.chat.completions.create(
         model=model,
         messages=[
@@ -91,7 +94,7 @@ Provide reasoning for why mutating position {pos} from {orig_aa} to {new_aa} nex
             {"role": "user", "content": prompt}
         ],
         temperature=0.7,
-        max_tokens=100
+        max_tokens=200
     )
     
     reasoning = response.choices[0].message.content
@@ -111,8 +114,8 @@ def generate_initial_mutations(sequence: str, n_mutations: int = None) -> Tuple[
         # Keep sampling until we get an unused position
         while True:
             orig_aa, pos, new_aa = sample_mutation(sequence)
-            # Skip if position contains methionine or would mutate to methionine
-            if pos not in positions_used and orig_aa != 'M' and new_aa != 'M':
+            # Skip if position contains methionine or would mutate to methionine or original is cysteine
+            if pos not in positions_used and orig_aa != 'M' and new_aa != 'M' and orig_aa != 'C':
                 break
         
         positions_used.add(pos)
@@ -258,11 +261,8 @@ For each mutation you propose, provide clear, scientific reasoning for why the m
                 previous_steps.append(step)
                 trace["steps"].append(step)
                 current_seq = current_seq[:pos] + orig_target_aa + current_seq[pos+1:]
-                break
             
             dataset["traces"].append(trace)
-            break
-        break
             
             
     # Save dataset
@@ -279,11 +279,29 @@ if __name__ == "__main__":
     seen_ec_numbers = set()
     filtered_data = {}
     
-    for uniprot_id, protein_data in transformed_data.items():
-        ec_number = protein_data["ec_number"]
-        if ec_number not in seen_ec_numbers:
-            seen_ec_numbers.add(ec_number)
-            filtered_data[uniprot_id] = protein_data
+    # First collect all proteins with engineering data
+    proteins_with_engineering = {
+        uniprot_id: data for uniprot_id, data in transformed_data.items() 
+        if data.get("engineering") and len(data["engineering"]) > 0
+    }
+    
+    # Group by EC number
+    ec_to_proteins = {}
+    for uniprot_id, data in proteins_with_engineering.items():
+        ec = data["ec_number"]
+        if ec not in ec_to_proteins:
+            ec_to_proteins[ec] = []
+        ec_to_proteins[ec].append((uniprot_id, data))
+    
+    # Sample 50 EC numbers if available, otherwise take all
+    sampled_ec_numbers = random.sample(list(ec_to_proteins.keys()), 
+                                     min(50, len(ec_to_proteins)))
+    
+    # Take one random protein from each sampled EC number
+    filtered_data = {}
+    for ec in sampled_ec_numbers:
+        uniprot_id, data = random.choice(ec_to_proteins[ec])
+        filtered_data[uniprot_id] = data
     
     transformed_data = filtered_data
 
