@@ -5,7 +5,6 @@ from Bio.PDB.DSSP import dssp_dict_from_pdb_file
 from transformers import EsmForProteinFolding, AutoTokenizer
 from transformers.models.esm.openfold_utils.protein import to_pdb, Protein as OFProtein
 from transformers.models.esm.openfold_utils.feats import atom14_to_atom37
-import prody
 from diy_fpocket import DIYFpocket
 from vina import Vina
 import tempfile
@@ -281,7 +280,7 @@ def convert_smiles_to_pdbqt(smiles, pdbqt_file):
         print(f"Error converting PDB to PDBQT: {e}")
         raise
         
-def calculate_reward(sequence, reagents, products, ts=None, id_active_site=None, alpha=2.0):
+def calculate_reward(sequence, reagents, products, ts=None, id_active_site=None, alpha=2.0, calculator=None):
     """
     Calculate overall reward based on binding energies across reaction pathway
     
@@ -296,7 +295,9 @@ def calculate_reward(sequence, reagents, products, ts=None, id_active_site=None,
         float: Reward score based on binding energies and reaction profile
     """
     # Initialize calculator
-    calculator = BindingEnergyCalculator(device="cuda")
+    if calculator is None:
+        calculator = BindingEnergyCalculator(device="cuda")
+    
     
     # Predict protein structure
     protein_structure = calculator.predict_structure(sequence)[0]

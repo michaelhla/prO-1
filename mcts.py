@@ -1,9 +1,17 @@
+
 import numpy as np
 from collections import defaultdict
-from reward import calculate_reward
-from zymctrl import generate
+from tqdm import tqdm
 import math
-from heapq import heappush, heappushpop, nlargest    
+from heapq import heappush, heappushpop, nlargest   
+import openai
+import dotenv
+import os
+import random
+from reward import BindingEnergyCalculator, calculate_reward
+dotenv.load_dotenv()
+
+openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class MCTSNode:
     def __init__(self, sequence="", score=0, parent=None, mutation="", reasoning=""):
@@ -43,7 +51,7 @@ class MCTS:
         self.substrates = substrates
         self.products = products
         self.metal_ions = metal_ions
-
+        self.calculator = calculator
     def parse_response(self, response_text):
         """Parse OpenAI response for mutations and reasoning"""
         mutations = []
@@ -54,11 +62,17 @@ class MCTS:
         
         for line in lines:
             if '%%MUTATION_' in line:
-                mutation = line.split('%%MUTATION_')[1].split('%%')[0]
-                mutations.append(mutation)
+                # Extract the actual mutation (e.g., "V55I")
+                parts = line.split(':', 1) if '%%MUTATION_' in line else None
+                if len(parts) == 2:
+                    mutation = parts[1].strip()
+                    mutations.append(mutation)
             if '%%REASONING_' in line:
-                reasoning = line.split('%%REASONING_')[1].split('%%')[0]
-                reasonings.append(reasoning)
+                # Extract the actual reasoning text
+                parts = line.split(':', 1) if '%%REASONING_' in line else None
+                if len(parts) == 2:
+                    reasoning = parts[1].strip()
+                    reasonings.append(reasoning)
                 
         return list(zip(mutations, reasonings))
 
@@ -73,7 +87,7 @@ class MCTS:
         
         # Construct prompt for OpenAI
         messages = [
-            {"role": "system", "content": "You are an expert protein engineer with years of experience optimizing protein activity with rational design. \nWhenever the user inputs \"<CONTINUE>\", SELECT the next mutations to make and REASON in the FORMAT: \n\n%%MUTATION_i%%: [Original AA][Position][New AA]\n%%REASONING_i%%: Reasoning\n\nKeep your response to under 100 words. select at most 1 mutation(s).  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS. If there are no further optimizations to make, return <DONE> with no explanation."},
+            {"role": "system", "content": "You are an expert protein engineer with years of experience optimizing protein activity with rational design. \nWhenever the user inputs \"<CONTINUE>\", SELECT the next mutations to make and REASON in the FORMAT: \n\n%%MUTATION_i%%: [Original AA][Position][New AA]\n%%REASONING_i%%: Reasoning\n\nKeep your response to under 100 words. select at most 1 mutation(s).  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS. MAKE SURE THE RESIDUE INDEX AND VALUE ARE CORRECT. If there are no further optimizations to make, return <DONE> with no explanation."},
             {"role": "user", "content": self.initial_prompt}
         ]
 
@@ -93,7 +107,7 @@ class MCTS:
         response = self.openai_client.chat.completions.create(
             model="ft:gpt-4o-mini-2024-07-18:harvard-university::AruHbq4C",
             messages=messages,
-            temperature=1.5,  # High temperature for more exploration
+            temperature=1.0,  # High temperature for more exploration
             max_tokens=1000
         )
         
@@ -101,7 +115,7 @@ class MCTS:
         
         # Check if we've reached a leaf node (model returns DONE)
         if "<DONE>" in response_content:
-            reward = calculate_reward(sequence=node.sequence, reagents=self.substrates, products=self.products)
+            reward = calculate_reward(sequence=node.sequence, reagents=self.substrates, products=self.products, calculator=self.calculator)
             node.reward_calculated = True
             
             # Store in best_leaves if good enough
@@ -111,6 +125,7 @@ class MCTS:
                 heappushpop(self.best_leaves, (reward, node))
                 
             self.backpropagate(node, reward)
+            print(f"Node {node.mutation} has reward {reward}")
             return node
             
         # Parse single mutation and reasoning
@@ -150,9 +165,18 @@ class MCTS:
         pos = int(mutation[1:-1]) - 1  # Convert to 0-based indexing
         new_aa = mutation[-1]
         
-        # Verify original AA matches sequence
+        # Verify original AA matches sequence and track failures
+        if not hasattr(self, 'mutation_check_failures'):
+            self.mutation_check_failures = 0
+        if not hasattr(self, 'total_mutations'):
+            self.total_mutations = 0
+            
+        self.total_mutations += 1
         if base_sequence[pos] != orig_aa:
-            raise ValueError(f"Original AA {orig_aa} does not match sequence at position {pos}")
+            self.mutation_check_failures += 1
+            print(f"Warning: Original AA {orig_aa} does not match sequence at position {pos} "
+                  f"({(self.mutation_check_failures/self.total_mutations)*100:.1f}% failure rate)")
+            new_aa = base_sequence[pos]  # Use original AA instead
             
         # Create new sequence with mutation
         mutated_sequence = base_sequence[:pos] + new_aa + base_sequence[pos+1:]
@@ -174,14 +198,39 @@ class MCTS:
         return exploitation + self.exploration_weight * exploration
 
     def select(self, node):
-        """Select the most promising node to explore"""
-        if not node.children:
-            return node
+        """Select the most promising node to explore with backtracking"""
+        current = node
+        path = []
+        
+        while current.children:
+            # Get all children's UCT scores
+            scores = [(child, self.uct_score(child, current.visits)) 
+                     for child in current.children]
             
-        return self.select(max(
-            node.children,
-            key=lambda child: self.uct_score(child, node.visits)
-        ))
+            # Sort by UCT score
+            scores.sort(key=lambda x: x[1], reverse=True)
+            
+            # Probabilistic selection among top candidates
+            top_k = min(3, len(scores))  # Consider top 3 choices
+            probs = np.array([0.5, 0.3, 0.2][:top_k])  # Probability distribution
+            probs = probs / probs.sum()  # Normalize if less than 3 choices
+            
+            # Select child based on probability distribution
+            selected_idx = np.random.choice(top_k, p=probs)
+            current = scores[selected_idx][0]
+            path.append(current)
+            
+            # Random chance to backtrack
+            if random.random() < 0.1 and path:  # 10% chance to backtrack
+                backtrack_steps = random.randint(1, len(path))
+                for _ in range(backtrack_steps):
+                    path.pop()
+                if path:
+                    current = path[-1]
+                else:
+                    current = node  # Back to root
+        
+        return current
 
     def backpropagate(self, node, reward):
         """Update statistics for all nodes up to root"""
@@ -194,19 +243,27 @@ class MCTS:
         """Modified MCTS loop that returns k best leaf nodes found"""
         current_node = self.root
         
-        for _ in range(num_iterations):
+        for _ in tqdm(range(num_iterations), desc="MCTS iterations"):
             selected_node = self.select(current_node)
-            if selected_node.visits > 0:
+            
+            if selected_node.visits == 0:  # If node hasn't been visited, expand it
                 new_node = self.expand(selected_node, label)
-                current_node = new_node
+                reward = self.simulate(new_node)  # Simulate from the new node
+                self.backpropagate(new_node, reward)  # Backpropagate the reward
+                current_node = self.root  # Reset to root for next iteration
+            else:  # If node has been visited, continue search from there
+                current_node = selected_node
 
         # Return k best leaves found during search
+        if not self.best_leaves:
+            return []
+            
         best_k_leaves = nlargest(self.passes, self.best_leaves)
         return [(node.sequence, reward, node.mutation, node.reasoning) 
                 for reward, node in best_k_leaves]
 
 def run_mcts_optimization(label, openai_client, device, 
-                         num_iterations=100, exploration_weight=1.0, smiles=False):
+                         num_iterations=100, exploration_weight=1.0, calculator=None):
     """Wrapper function to run MCTS optimization"""
     sequence = "MSHHWGYGKHNGPEHWHKDFPIAKGERQSPVDIDTHTAKYDPSLKPLSVSYDQATSLRILNNGHAFNVEFDDSQDKAVLKGGPLDGTYRLIQFHFHWGSLDGQGSEHTVDKKKYAAELHLVHWNTKYGDFGKAVQQPDGLAVLGIFLKVGSAKPGLQKVVDVLDSIKTKGKSADFTNFDPRGLLPESLDYWTYPGSRTTPPLLECVTWIVLKEPISVSSEQVLKFRKLNFNGEGEPEELMVDNWRPAQPLKNRQIKASFK"
     ec_number = "4.2.1.1"
@@ -235,6 +292,11 @@ Propose a few mutations that will optimize enzymatic activity given the substrat
 
 For each mutation you propose, provide clear, scientific reasoning for why the mutation would be beneficial, ****USE YOUR KNOWLEDGE OF THIS SPECIFIC ENZYME AND REACTION****. Keep your response to under 100 words."""
 
-    mcts = MCTS(openai_client, initial_prompt, sequence, device, exploration_weight, substrates, products, metal_ions)
+    mcts = MCTS(openai_client, initial_prompt, sequence, device, exploration_weight, passes=5, substrates=substrates, products=products, metal_ions=metal_ions, calculator=calculator)
     best_sequences = mcts.search(label, num_iterations)
+    print(best_sequences)
     return best_sequences
+
+if __name__ == "__main__":
+    calculator = BindingEnergyCalculator(device="cuda")
+    run_mcts_optimization("test", openai_client, device='cuda', calculator=calculator)
