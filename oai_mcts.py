@@ -1,4 +1,3 @@
-
 import numpy as np
 from collections import defaultdict
 from tqdm import tqdm
@@ -38,7 +37,7 @@ class MCTSNode:
         return list(reversed(history))  # Return in chronological order
 
 class MCTS:
-    def __init__(self, openai_client, initial_prompt, base_sequence, device, exploration_weight=1.0, passes=5, substrates=[], products=[], metal_ions=[]):
+    def __init__(self, openai_client, initial_prompt, base_sequence, device, exploration_weight=1.0, passes=5, substrates=[], products=[], metal_ions=[], calculator=None):
         self.openai_client = openai_client
         self.initial_prompt = initial_prompt
         self.base_sequence = base_sequence
@@ -52,6 +51,7 @@ class MCTS:
         self.products = products
         self.metal_ions = metal_ions
         self.calculator = calculator
+
     def parse_response(self, response_text):
         """Parse OpenAI response for mutations and reasoning"""
         mutations = []
@@ -103,60 +103,63 @@ class MCTS:
                     "content": "<CONTINUE>"
                 })
 
-        # Call OpenAI API with high temperature for exploration
-        response = self.openai_client.chat.completions.create(
-            model="ft:gpt-4o-mini-2024-07-18:harvard-university::AruHbq4C",
-            messages=messages,
-            temperature=1.0,  # High temperature for more exploration
-            max_tokens=1000
-        )
-        
-        response_content = response.choices[0].message.content
-        
-        # Check if we've reached a leaf node (model returns DONE)
-        if "<DONE>" in response_content:
-            reward = calculate_reward(sequence=node.sequence, reagents=self.substrates, products=self.products, calculator=self.calculator)
-            node.reward_calculated = True
-            
-            # Store in best_leaves if good enough
-            if len(self.best_leaves) < self.passes:
-                heappush(self.best_leaves, (reward, node))
-            elif reward > self.best_leaves[0][0]:  # Better than worst best leaf
-                heappushpop(self.best_leaves, (reward, node))
-                
-            self.backpropagate(node, reward)
-            print(f"Node {node.mutation} has reward {reward}")
-            return node
-            
-        # Parse single mutation and reasoning
-        mutations_and_reasoning = self.parse_response(response_content)
-        
-        # Create single child node
-        if mutations_and_reasoning:
-            mutation, reasoning = mutations_and_reasoning[0]
-            mutated_sequence = self.apply_mutation(self.base_sequence, mutation)
-            
-            # Check if this sequence already exists
-            existing_node = self.find_existing_node(mutated_sequence)
-            if existing_node:
-                # Add edge to existing node if it's not already a child
-                if existing_node not in node.children:
-                    node.children.append(existing_node)
-                return existing_node
-            
-            # Create new node if sequence doesn't exist
-            child = MCTSNode(
-                sequence=mutated_sequence,
-                score=0,
-                parent=node,
-                mutation=mutation,
-                reasoning=reasoning
+        new_node = None
+        while new_node is None: 
+            # Call OpenAI API with high temperature for exploration
+            response = self.openai_client.chat.completions.create(
+                model="ft:gpt-4o-mini-2024-07-18:harvard-university::AruHbq4C",
+                messages=messages,
+                temperature=1.0,  # High temperature for more exploration
+                max_tokens=200
             )
-            node.children.append(child)
-            self.sequence_to_node[mutated_sequence] = child  # Add to dictionary
-            return child
-        
-        return node
+            
+            response_content = response.choices[0].message.content
+            
+            # Check if we've reached a leaf node (model returns DONE)
+            if "<DONE>" in response_content:
+                reward = calculate_reward(sequence=node.sequence, reagents=self.substrates, products=self.products, calculator=self.calculator)
+                node.reward_calculated = True
+                
+                # Store in best_leaves if good enough
+                if len(self.best_leaves) < self.passes:
+                    heappush(self.best_leaves, (reward, node))
+                elif reward > self.best_leaves[0][0]:  # Better than worst best leaf
+                    heappushpop(self.best_leaves, (reward, node))
+                    
+                self.backpropagate(node, reward)
+                print(f"Node {node.mutation} has reward {reward}")
+                return node
+                
+            # Parse single mutation and reasoning
+            mutations_and_reasoning = self.parse_response(response_content)
+            
+            # Create single child node
+            if mutations_and_reasoning:
+                mutation, reasoning = mutations_and_reasoning[0]
+                mutated_sequence = self.apply_mutation(self.base_sequence, mutation)
+                if mutated_sequence == -1: 
+                    print(f"Mutation {mutation} failed")
+                    continue
+                
+                # Check if this sequence already exists
+                existing_node = self.find_existing_node(mutated_sequence)
+                if existing_node:
+                    # Add edge to existing node if it's not already a child
+                    if existing_node not in node.children:
+                        node.children.append(existing_node)
+                    return existing_node
+                
+                # Create new node if sequence doesn't exist
+                child = MCTSNode(
+                    sequence=mutated_sequence,
+                    score=0,
+                    parent=node,
+                    mutation=mutation,
+                    reasoning=reasoning
+                )
+                node.children.append(child)
+                self.sequence_to_node[mutated_sequence] = child  # Add to dictionary
+                return child
 
     def apply_mutation(self, base_sequence, mutation):
         """Apply mutation string to base sequence"""
@@ -164,14 +167,21 @@ class MCTS:
         orig_aa = mutation[0]
         pos = int(mutation[1:-1]) - 1  # Convert to 0-based indexing
         new_aa = mutation[-1]
-        
+
         # Verify original AA matches sequence and track failures
         if not hasattr(self, 'mutation_check_failures'):
             self.mutation_check_failures = 0
         if not hasattr(self, 'total_mutations'):
             self.total_mutations = 0
-            
+
         self.total_mutations += 1
+        
+        # Check if position is valid
+        if pos < 0 or pos >= len(base_sequence):
+            print(f"Warning: Position {pos} is out of bounds for sequence length {len(base_sequence)}")
+            self.mutation_check_failures += 1
+            return -1
+
         if base_sequence[pos] != orig_aa:
             self.mutation_check_failures += 1
             print(f"Warning: Original AA {orig_aa} does not match sequence at position {pos} "
@@ -198,38 +208,30 @@ class MCTS:
         return exploitation + self.exploration_weight * exploration
 
     def select(self, node):
-        """Select the most promising node to explore with backtracking"""
+        """Select node using pure UCT selection, including parent as an option"""
         current = node
-        path = []
+        max_depth = 50  # Safety limit
+        depth = 0
         
-        while current.children:
-            # Get all children's UCT scores
-            scores = [(child, self.uct_score(child, current.visits)) 
-                     for child in current.children]
+        while depth < max_depth:
+            depth += 1
             
-            # Sort by UCT score
-            scores.sort(key=lambda x: x[1], reverse=True)
+            # Get all possible moves (children and parent)
+            possible_moves = list(current.children)
+            if current.parent:  # Add parent as a possible move if it exists
+                possible_moves.append(current.parent)
             
-            # Probabilistic selection among top candidates
-            top_k = min(3, len(scores))  # Consider top 3 choices
-            probs = np.array([0.5, 0.3, 0.2][:top_k])  # Probability distribution
-            probs = probs / probs.sum()  # Normalize if less than 3 choices
+            # If no moves available (at root with no children), return current
+            if not possible_moves:
+                return current
+                
+            # Calculate UCT scores for all possible moves
+            scores = [(move, self.uct_score(move, current.visits)) 
+                     for move in possible_moves]
             
-            # Select child based on probability distribution
-            selected_idx = np.random.choice(top_k, p=probs)
-            current = scores[selected_idx][0]
-            path.append(current)
+            # Select move with highest UCT score
+            current = max(scores, key=lambda x: x[1])[0]
             
-            # Random chance to backtrack
-            if random.random() < 0.1 and path:  # 10% chance to backtrack
-                backtrack_steps = random.randint(1, len(path))
-                for _ in range(backtrack_steps):
-                    path.pop()
-                if path:
-                    current = path[-1]
-                else:
-                    current = node  # Back to root
-        
         return current
 
     def backpropagate(self, node, reward):
@@ -246,13 +248,14 @@ class MCTS:
         for _ in tqdm(range(num_iterations), desc="MCTS iterations"):
             selected_node = self.select(current_node)
             
-            if selected_node.visits == 0:  # If node hasn't been visited, expand it
+            if selected_node.visits == 0 or not selected_node.children:
                 new_node = self.expand(selected_node, label)
-                reward = self.simulate(new_node)  # Simulate from the new node
-                self.backpropagate(new_node, reward)  # Backpropagate the reward
-                current_node = self.root  # Reset to root for next iteration
-            else:  # If node has been visited, continue search from there
-                current_node = selected_node
+                if new_node:  # Only simulate and backpropagate if expansion succeeded
+                    reward = self.simulate(new_node)
+                    self.backpropagate(new_node, reward)
+                    current_node = new_node
+            else:
+                current_node = selected_node  # Continue from where we left off
 
         # Return k best leaves found during search
         if not self.best_leaves:
