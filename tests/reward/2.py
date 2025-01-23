@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-# from reward import calculate_reward, BindingEnergyCalculator
+from reward import calculate_reward, BindingEnergyCalculator
 import pandas as pd
 from pathlib import Path
 
@@ -57,59 +57,67 @@ def process_mutation_files():
     
     return base_sequence, data_dir
 
-# def calculate_rewards(base_sequence, data_dir):
-#     # Get processed mutation files
-#     csv_files = list((data_dir / "processed_mutations").glob("*.csv"))
+def calculate_rewards(base_sequence, data_dir):
+
+    reaction_dict = {'moclobemide': {'reagents': ['C1=CC(=CC=C1C(=O)O)Cl', 'C1COCCN1CCN', 'C1=NC(=C2C(=N1)N(C=N2)[C@H]3[C@@H]([C@@H]([C@H](O3)COP(=O)(O)OP(=O)(O)OP(=O)(O)O)O)O)N'], 'products': ['C1COCCN1CCNC(=O)C2=CC=C(C=C2)Cl', '[O-]P(=O)([O-])[O-]', 'C1=NC(=C2C(=N1)N(C=N2)[C@H]3[C@@H]([C@@H]([C@H](O3)COP(=O)(O)OP(=O)(O)O)O)O)N']}}
+
+    # Get processed mutation files
+    csv_files = list((data_dir / "processed_mutations").glob("*.csv"))
     
-#     results = []
-#     calculator = BindingEnergyCalculator()
+    results = []
+    calculator = BindingEnergyCalculator()
     
-#     for csv_file in csv_files:
-#         print(f"Processing {csv_file}")
+    for csv_file in csv_files:
+        drug_name = csv_file.stem.replace('_processed', '')
+        if drug_name not in reaction_dict:
+            continue
+        print(f"Processing {csv_file}")
         
-#         # Read mutations from CSV
-#         df = pd.read_csv(csv_file)
+        # Read mutations from CSV
+        df = pd.read_csv(csv_file)
         
-#         # Process each mutation
-#         for _, row in df.iterrows():
-#             mutation_list = eval(row["EVMutations"])  # Convert string to list of tuples
-#             activity = row["Activity"]
+        # Process each mutation
+        for _, row in df.iterrows():
+            mutation_list = eval(row["EVMutations"])  # Convert string to list of tuples
+            activity = row["Activity"]
             
-#             # Apply mutation to sequence
-#             # Assuming mutation is always 4 letters where first is original, 
-#             # Apply each mutation in sequence
-#             mutated_sequence = base_sequence
-#             for pos, orig, new in mutation_list:  # Changed mutations to mutation_list
-#                 # Verify original amino acid matches
-#                 if mutated_sequence[pos-1] != orig:
-#                     print(f"Warning: Expected {orig} at position {pos} but found {mutated_sequence[pos-1]}")
-#                     continue
-#                 # Apply mutation
-#                 mutated_sequence = mutated_sequence[:pos-1] + new + mutated_sequence[pos:]
+            # Apply mutation to sequence
+            # Assuming mutation is always 4 letters where first is original, 
+            # Apply each mutation in sequence
+            mutated_sequence = base_sequence
+            for pos, orig, new in mutation_list:  # Changed mutations to mutation_list
+                # Verify original amino acid matches
+                if mutated_sequence[pos-1] != orig:
+                    print(f"Warning: Expected {orig} at position {pos} but found {mutated_sequence[pos-1]}")
+                    continue
+                # Apply mutation
+                mutated_sequence = mutated_sequence[:pos-1] + new + mutated_sequence[pos:]
             
-#             # Calculate reward
-#             reward = calculate_reward(
-#                 sequence=mutated_sequence,
-#                 reagent="",  # Left blank as per instructions
-#                 product="",  # Left blank as per instructions
-#                 ts=None,
-#                 calculator=calculator
-#             )
+            # Calculate reward
+            reward = calculate_reward(
+                sequence=mutated_sequence,
+                reagent=reaction_dict[drug_name]['reagents'],  # Get first reagent for drug
+                product=reaction_dict[drug_name]['products'],  # Get first product for drug
+                ts=None,
+                calculator=calculator
+            )
             
-#             results.append({
-#                 "file": csv_file.name,
-#                 "mutation": mutation_list,
-#                 "original_activity": activity,
-#                 "calculated_reward": reward
-#             })
+            results.append({
+                "file": csv_file.name,
+                "mutation": mutation_list,
+                "original_activity": activity,
+                "calculated_reward": reward
+            })
     
-#     # Convert results to DataFrame for analysis
-#     results_df = pd.DataFrame(results)
-#     print("\nResults summary:")
-#     print(results_df.head())
+    # Convert results to DataFrame for analysis
+    results_df = pd.DataFrame(results)
+    print("\nResults summary:")
+    print(results_df.head())
     
-#     return results_df
+    return results_df
 
 if __name__ == "__main__":
-    base_sequence, data_dir = process_mutation_files()
-    # results_df = calculate_rewards(base_sequence, data_dir)
+    base_sequence = 'MGYARRVMDGIGEVAVTGAGGSVTGARLRHQVRLLAHALTEAGIPPGRGVACLHANTWRAIALRLAVQAIGCHYVGLRPTAAVTEQARAIAAADSAALVFEPSVEARAADLLERVSVPVVLSLGPTSRGRDILAASVPEGTPLRYREHPEGIAVVAFTSGTTGTPKGVAHSSTAMSACVDAAVSMYGRGPWRFLIPIPLSDLGGELAQCTLATGGTVVLLEEFQPDAVLEAIERERATHVFLAPNWLYQLAEHPALPRSDLSSLRRVVYGGAPAVPSRVAAARERMGAVLMQNYGTQEAAFIAALTPDDHARRELLTAVGRPLPHVEVEIRDDSGGTLPRGAVGEVWVRSPMTMSGYWRDPERTAQVLSGGWLRTGDVGTFDEDGHLHLTDRLQDIIIVEAYNVYSRRVEHVLTEHPDVRAAAVVGVPDPDSGEAVCAAVVVADGADPDPEHLRALVRDHLGDLHVPRRVEFVRSIPVTPAGKPDKVKVRTWFTD'
+    data_dir = Path("data/enzyme-activity")
+    # _, data_dir = process_mutation_files()
+    results_df = calculate_rewards(base_sequence, data_dir)
