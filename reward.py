@@ -201,8 +201,19 @@ class BindingEnergyCalculator:
             v.dock(exhaustiveness=8, n_poses=10)
             energy_scores = v.energies()
             
-            # Take average of top k binding energies (first element of each pose's energy array)
-            return np.mean([pose[0] for pose in energy_scores[:k]])
+            # Calculate average binding energy for each ligand separately
+            num_ligands = len(ligand_files)
+            poses_per_ligand = len(energy_scores) // num_ligands
+            
+            total_energy = 0
+            for i in range(num_ligands):
+                # Get scores for this ligand
+                ligand_scores = energy_scores[i * poses_per_ligand : (i + 1) * poses_per_ligand]
+                # Average of top k poses for this ligand
+                ligand_avg = np.mean([pose[0] for pose in ligand_scores[:k]])
+                total_energy += ligand_avg
+                
+            return total_energy
             
         finally:
             # Clean up temporary files
@@ -289,15 +300,14 @@ def calculate_reward(sequence, reagents, products, ts=None, id_active_site=None,
         reagents: List of SMILES strings of reagents
         products: List of SMILES strings of products
         ts: Optional SMILES string of transition state
-        id_active_site: Optional pre-identified active site residues
-    
-    Returns:
-        float: Reward score based on binding energies and reaction profile
+        id_active_site: Optional list of tuples (position, amino_acid) 
+                       e.g. [('45', 'ALA'), ('46', 'GLY')]
+        alpha: Weight factor for transition state contribution
+        calculator: Optional pre-initialized BindingEnergyCalculator
     """
     # Initialize calculator
     if calculator is None:
         calculator = BindingEnergyCalculator(device="cuda")
-    
     
     # Predict protein structure
     protein_structure = calculator.predict_structure(sequence)[0]
@@ -306,7 +316,8 @@ def calculate_reward(sequence, reagents, products, ts=None, id_active_site=None,
     if id_active_site is None:
         active_site_residues = calculator.identify_active_site(protein_structure)
     else:
-        active_site_residues = id_active_site
+        # Convert position strings to integers and assume chain 'A'
+        active_site_residues = [('A', int(pos)) for pos, _ in id_active_site]
     
     # Calculate binding energies for each state
     reagent_energy = calculator.calculate_binding_energy(

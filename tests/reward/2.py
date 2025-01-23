@@ -80,12 +80,14 @@ def calculate_rewards(base_sequence, data_dir):
         for _, row in df.iterrows():
             mutation_list = eval(row["EVMutations"])  # Convert string to list of tuples
             activity = row["Activity"]
-            
+            id_active_site = [(pos, new) for pos, _, new in mutation_list]
+
+        
             # Apply mutation to sequence
             # Assuming mutation is always 4 letters where first is original, 
             # Apply each mutation in sequence
             mutated_sequence = base_sequence
-            for pos, orig, new in mutation_list:  # Changed mutations to mutation_list
+            for pos, orig, new in mutation_list:
                 # Verify original amino acid matches
                 if mutated_sequence[pos-1] != orig:
                     print(f"Warning: Expected {orig} at position {pos} but found {mutated_sequence[pos-1]}")
@@ -99,7 +101,8 @@ def calculate_rewards(base_sequence, data_dir):
                 reagent=reaction_dict[drug_name]['reagents'],  # Get first reagent for drug
                 product=reaction_dict[drug_name]['products'],  # Get first product for drug
                 ts=None,
-                calculator=calculator
+                calculator=calculator, 
+                id_active_site=id_active_site,
             )
             
             results.append({
