@@ -37,7 +37,7 @@ class MCTSNode:
         return list(reversed(history))  # Return in chronological order
 
 class MCTS:
-    def __init__(self, openai_client, initial_prompt, base_sequence, device, exploration_weight=1.0, passes=5, substrates=[], products=[], metal_ions=[], calculator=None):
+    def __init__(self, openai_client, initial_prompt, base_sequence, device, exploration_weight=1.0, passes=5, substrates=[], products=[], metal_ions=[], calculator=None, active_site_residues=None):
         self.openai_client = openai_client
         self.initial_prompt = initial_prompt
         self.base_sequence = base_sequence
@@ -51,6 +51,7 @@ class MCTS:
         self.products = products
         self.metal_ions = metal_ions
         self.calculator = calculator
+        self.active_site_residues = active_site_residues  # Add active site residues parameter
 
     def parse_response(self, response_text):
         """Parse OpenAI response for mutations and reasoning"""
@@ -86,9 +87,10 @@ class MCTS:
         path_history = node.get_path_history()
         
         # Construct prompt for OpenAI
+        active_site_info = f"ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in self.active_site_residues])}"
         messages = [
-            {"role": "system", "content": "You are an expert protein engineer with years of experience optimizing protein activity with rational design. \nWhenever the user inputs \"<CONTINUE>\", SELECT the next mutations to make and REASON in the FORMAT: \n\n%%MUTATION_i%%: [Original AA][Position][New AA]\n%%REASONING_i%%: Reasoning\n\nKeep your response to under 100 words. select at most 1 mutation(s).  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS. MAKE SURE THE RESIDUE INDEX AND VALUE ARE CORRECT. If there are no further optimizations to make, return <DONE> with no explanation."},
-            {"role": "user", "content": self.initial_prompt}
+            {"role": "system", "content": "You are an expert protein engineer with years of experience optimizing protein activity with rational design. \nWhenever the user inputs \"<CONTINUE>\", SELECT the next mutations to make and REASON in the FORMAT: \n\n%%MUTATION_i%%: [Original AA][Position][New AA]\n%%REASONING_i%%: Reasoning\n\nKeep your response to under 100 words. select at most 1 mutation(s).  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS. MAKE SURE YOU ONLY MODIFY SPECIFIED ACTIVE SITE RESIDUES. If there are no further optimizations to make, return <DONE> with no explanation."},
+            {"role": "user", "content": f"{self.initial_prompt}\n{active_site_info}\nMutations are only allowed on the specified active site residues."}
         ]
 
         # Add previous steps as alternating assistant/user messages
@@ -266,7 +268,7 @@ class MCTS:
                 for reward, node in best_k_leaves]
 
 def run_mcts_optimization(label, openai_client, device, 
-                         num_iterations=100, exploration_weight=1.0, calculator=None):
+                         num_iterations=100, exploration_weight=1.0, calculator=None, active_site_residues=None):
     """Wrapper function to run MCTS optimization"""
     sequence = "MSHHWGYGKHNGPEHWHKDFPIAKGERQSPVDIDTHTAKYDPSLKPLSVSYDQATSLRILNNGHAFNVEFDDSQDKAVLKGGPLDGTYRLIQFHFHWGSLDGQGSEHTVDKKKYAAELHLVHWNTKYGDFGKAVQQPDGLAVLGIFLKVGSAKPGLQKVVDVLDSIKTKGKSADFTNFDPRGLLPESLDYWTYPGSRTTPPLLECVTWIVLKEPISVSSEQVLKFRKLNFNGEGEPEELMVDNWRPAQPLKNRQIKASFK"
     ec_number = "4.2.1.1"
@@ -295,11 +297,12 @@ Propose a few mutations that will optimize enzymatic activity given the substrat
 
 For each mutation you propose, provide clear, scientific reasoning for why the mutation would be beneficial, ****USE YOUR KNOWLEDGE OF THIS SPECIFIC ENZYME AND REACTION****. Keep your response to under 100 words."""
 
-    mcts = MCTS(openai_client, initial_prompt, sequence, device, exploration_weight, passes=5, substrates=substrates, products=products, metal_ions=metal_ions, calculator=calculator)
+    mcts = MCTS(openai_client, initial_prompt, sequence, device, exploration_weight, passes=5, substrates=substrates, products=products, metal_ions=metal_ions, calculator=calculator, active_site_residues=active_site_residues)
     best_sequences = mcts.search(label, num_iterations)
     print(best_sequences)
     return best_sequences
 
 if __name__ == "__main__":
     calculator = BindingEnergyCalculator(device="cuda")
-    run_mcts_optimization("test", openai_client, device='cuda', calculator=calculator)
+    active_site_residues = [('H', 64), ('H', 94), ('H', 119)]  # Example active site residues
+    run_mcts_optimization("test", openai_client, device='cuda', calculator=calculator, active_site_residues=active_site_residues)
