@@ -5,10 +5,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from reward import calculate_reward, BindingEnergyCalculator
 import pandas as pd
 from pathlib import Path
+import matplotlib.pyplot as plt
 
-def process_mutation_files():
+def process_mutation_files(base_sequence):
     # Base sequence from uniprot R4R1U5
-    base_sequence = "MGYARRVMDGIGEVAVTGAGGSVTGARLRHQVRLLAHALTEAGIPPGRGVACLHANTWRAIALRLAVQAIGCHYVGLRPTAAVTEQARAIAAADSAALVFEPSVEARAADLLERVSVPVVLSLGPTSRGRDILAASVPEGTPLRYREHPEGIAVVAFTSGTTGTPKGVAHSSTAMSACVDAAVSMYGRGPWRFLIPIPLSDLGGELAQCTLATGGTVVLLEEFQPDAVLEAIERERATHVFLAPNWLYQLAEHPALPRSDLSSLRRVVYGGAPAVPSRVAAARERMGAVLMQNYGTQEAAFIAALTPDDHARRELLTAVGRPLPHVEVEIRDDSGGTLPRGAVGEVWVRSPMTMSGYWRDPERTAQVLSGGWLRTGDVGTFDEDGHLHLTDRLQDIIIVEAYNVYSRRVEHVLTEHPDVRAAAVVGVPDPDSGEAVCAAVVVADGADPDPEHLRALVRDHLGDLHVPRRVEFVRSIPVTPAGKPDKVKVRTWFTD"
     
     # Get mutation files from zero-shot predictions
     data_dir = Path("data/enzyme-activity")
@@ -58,8 +58,8 @@ def process_mutation_files():
     return base_sequence, data_dir
 
 def calculate_rewards(base_sequence, data_dir):
-
-    reaction_dict = {'moclobemide': {'reagents': ['C1=CC(=CC=C1C(=O)O)Cl', 'C1COCCN1CCN', 'C1=NC(=C2C(=N1)N(C=N2)[C@H]3[C@@H]([C@@H]([C@H](O3)COP(=O)(O)OP(=O)(O)OP(=O)(O)O)O)O)N'], 'products': ['C1COCCN1CCNC(=O)C2=CC=C(C=C2)Cl', '[O-]P(=O)([O-])[O-]', 'C1=NC(=C2C(=N1)N(C=N2)[C@H]3[C@@H]([C@@H]([C@H](O3)COP(=O)(O)OP(=O)(O)O)O)O)N']}}
+    common_reagents = {'ATP': 'C1=NC(=C2C(=N1)N(C=N2)[C@H]3[C@@H]([C@@H]([C@H](O3)COP(=O)(O)OP(=O)(O)OP(=O)(O)O)O)O)N', 'PPi': '[O-]P(=O)([O-])[O-]', 'H2O': 'O', 'ADP': 'C1=NC(=C2C(=N1)N(C=N2)[C@H]3[C@@H]([C@@H]([C@H](O3)COP(=O)(O)OP(=O)(O)O)O)O)N' }
+    reaction_dict = {'moclobemide': {'reagents': ['C1=CC(=CC=C1C(=O)O)Cl', 'C1COCCN1CCN'], 'products': ['C1COCCN1CCNC(=O)C2=CC=C(C=C2)Cl', '[O-]P(=O)([O-])[O-]']}}
 
     # Get processed mutation files
     csv_files = list((data_dir / "processed_mutations").glob("*.csv"))
@@ -98,8 +98,8 @@ def calculate_rewards(base_sequence, data_dir):
             # Calculate reward
             reward = calculate_reward(
                 sequence=mutated_sequence,
-                reagent=reaction_dict[drug_name]['reagents'],  # Get first reagent for drug
-                product=reaction_dict[drug_name]['products'],  # Get first product for drug
+                reagents=reaction_dict[drug_name]['reagents'],  # Get first reagent for drug
+                products=reaction_dict[drug_name]['products'],  # Get first product for drug
                 ts=None,
                 calculator=calculator, 
                 id_active_site=id_active_site,
@@ -111,9 +111,30 @@ def calculate_rewards(base_sequence, data_dir):
                 "original_activity": activity,
                 "calculated_reward": reward
             })
+
+            print(f'MUTATION {mutation_list} - REWARD {reward} - ACTIVITY {activity}')
     
-    # Convert results to DataFrame for analysis
+    # Group results by file and save each to separate CSV
     results_df = pd.DataFrame(results)
+    for file_name, group_df in results_df.groupby('file'):
+        output_path = data_dir / 'results' / f'{file_name}_results.csv'
+        output_path.parent.mkdir(exist_ok=True)
+        group_df.to_csv(output_path, index=False)
+        print(f"\nSaved results for {file_name} to {output_path}")
+        
+        # Create scatter plot of activity vs reward
+        plt.figure(figsize=(10,6))
+        plt.scatter(group_df['original_activity'], group_df['calculated_reward'])
+        plt.xlabel('Experimental Activity')
+        plt.ylabel('Predicted Reward')
+        plt.title(f'Activity vs Predicted Reward for {file_name}')
+        
+        # Save plot
+        plot_path = data_dir / 'results' / f'{file_name}_correlation.png'
+        plt.savefig(plot_path)
+        plt.close()
+        print(f"Saved correlation plot to {plot_path}")
+    
     print("\nResults summary:")
     print(results_df.head())
     
@@ -122,5 +143,5 @@ def calculate_rewards(base_sequence, data_dir):
 if __name__ == "__main__":
     base_sequence = 'MGYARRVMDGIGEVAVTGAGGSVTGARLRHQVRLLAHALTEAGIPPGRGVACLHANTWRAIALRLAVQAIGCHYVGLRPTAAVTEQARAIAAADSAALVFEPSVEARAADLLERVSVPVVLSLGPTSRGRDILAASVPEGTPLRYREHPEGIAVVAFTSGTTGTPKGVAHSSTAMSACVDAAVSMYGRGPWRFLIPIPLSDLGGELAQCTLATGGTVVLLEEFQPDAVLEAIERERATHVFLAPNWLYQLAEHPALPRSDLSSLRRVVYGGAPAVPSRVAAARERMGAVLMQNYGTQEAAFIAALTPDDHARRELLTAVGRPLPHVEVEIRDDSGGTLPRGAVGEVWVRSPMTMSGYWRDPERTAQVLSGGWLRTGDVGTFDEDGHLHLTDRLQDIIIVEAYNVYSRRVEHVLTEHPDVRAAAVVGVPDPDSGEAVCAAVVVADGADPDPEHLRALVRDHLGDLHVPRRVEFVRSIPVTPAGKPDKVKVRTWFTD'
     data_dir = Path("data/enzyme-activity")
-    # _, data_dir = process_mutation_files()
+    # _, data_dir = process_mutation_files(base_sequence)
     results_df = calculate_rewards(base_sequence, data_dir)

@@ -4,15 +4,15 @@
 python3 -m venv venv
 source venv/bin/activate
 
-# Install SWIG
-apt-get update
-apt-get install swig
+# Install SWIG with automatic yes
+apt-get update -y
+apt-get install -y swig
 
-# Install Boost development libraries
-apt-get install libboost-all-dev
+# Install Boost development libraries with automatic yes
+apt-get install -y libboost-all-dev
 
-# Install Open Babel
-apt install openbabel
+# Install Open Babel with automatic yes
+apt install -y openbabel
 
 # Install requirements
 pip install -U numpy vina

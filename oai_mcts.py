@@ -89,7 +89,7 @@ class MCTS:
         # Construct prompt for OpenAI
         active_site_info = f"ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in self.active_site_residues])}"
         messages = [
-            {"role": "system", "content": "You are an expert protein engineer with years of experience optimizing protein activity with rational design. \nWhenever the user inputs \"<CONTINUE>\", SELECT the next mutations to make and REASON in the FORMAT: \n\n%%MUTATION_i%%: [Original AA][Position][New AA]\n%%REASONING_i%%: Reasoning\n\nKeep your response to under 100 words. select at most 1 mutation(s).  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS. MAKE SURE YOU ONLY MODIFY SPECIFIED ACTIVE SITE RESIDUES. If there are no further optimizations to make, return <DONE> with no explanation."},
+            {"role": "system", "content": "You are an expert protein engineer with years of experience optimizing protein activity with rational design. \nWhenever the user inputs \"<CONTINUE>\", SELECT the next mutations to make and REASON in the FORMAT: \n\n%%MUTATION_i%%: [Original AA][Position][New AA]\n%%REASONING_i%%: Reasoning\n\nKeep your response to under 100 words. select at most 1 mutation(s).  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS. ONLY MODIFY SPECIFIED ACTIVE SITE RESIDUES. If there are no further optimizations to make, return <DONE> with no explanation."},
             {"role": "user", "content": f"{self.initial_prompt}\n{active_site_info}\nMutations are only allowed on the specified active site residues."}
         ]
 
@@ -141,12 +141,11 @@ class MCTS:
                 mutated_sequence = self.apply_mutation(self.base_sequence, mutation)
                 if mutated_sequence == -1: 
                     print(f"Mutation {mutation} failed")
-                    continue
+                    return None
                 
                 # Check if this sequence already exists
                 existing_node = self.find_existing_node(mutated_sequence)
                 if existing_node:
-                    # Add edge to existing node if it's not already a child
                     if existing_node not in node.children:
                         node.children.append(existing_node)
                     return existing_node
@@ -160,7 +159,7 @@ class MCTS:
                     reasoning=reasoning
                 )
                 node.children.append(child)
-                self.sequence_to_node[mutated_sequence] = child  # Add to dictionary
+                self.sequence_to_node[mutated_sequence] = child
                 return child
 
     def apply_mutation(self, base_sequence, mutation):
@@ -209,56 +208,70 @@ class MCTS:
         exploration = math.sqrt(math.log(parent_visits) / node.visits)
         return exploitation + self.exploration_weight * exploration
 
-    def select(self, node):
-        """Select node using pure UCT selection, including parent as an option"""
-        current = node
-        max_depth = 50  # Safety limit
-        depth = 0
+    def select_next_move(self, node):
+        possible_moves = []
+        uct_scores = []
         
-        while depth < max_depth:
-            depth += 1
-            
-            # Get all possible moves (children and parent)
-            possible_moves = list(current.children)
-            if current.parent:  # Add parent as a possible move if it exists
-                possible_moves.append(current.parent)
-            
-            # If no moves available (at root with no children), return current
+        # Option 1: Move to parent
+        if node.parent:
+            possible_moves.append(("parent", node.parent))
+            uct_scores.append(self.uct_score(node.parent, node.visits))
+        
+        # Option 2: Move to existing child
+        for child in node.children:
+            possible_moves.append(("child", child))
+            uct_scores.append(self.uct_score(child, node.visits))
+        
+        # Option 3: Expand new child (always an option now)
+        possible_moves.append(("expand", None))
+        expansion_score = float('inf') if not node.children else max(uct_scores) if uct_scores else float('inf')
+        uct_scores.append(expansion_score)
+        
+        # If no moves possible (shouldn't happen), stay at current node
+        if not possible_moves:
+            return "stay", node
+        
+        # Select move with highest UCT score
+        best_idx = max(range(len(uct_scores)), key=lambda i: uct_scores[i])
+        move_type, next_node = possible_moves[best_idx]
+        
+        # If we chose to expand, do it now
+        if move_type == "expand":
+            new_node = self.expand(node, "label")  # You'll need to pass the appropriate label
+            if new_node:  # Expansion succeeded
+                return "expand", new_node
+            # If expansion failed, choose the next best move
+            possible_moves.pop(best_idx)
+            uct_scores.pop(best_idx)
             if not possible_moves:
-                return current
-                
-            # Calculate UCT scores for all possible moves
-            scores = [(move, self.uct_score(move, current.visits)) 
-                     for move in possible_moves]
-            
-            # Select move with highest UCT score
-            current = max(scores, key=lambda x: x[1])[0]
-            
-        return current
-
-    def backpropagate(self, node, reward):
-        """Update statistics for all nodes up to root"""
-        while node is not None:
-            node.visits += 1
-            node.total_reward += reward
-            node = node.parent
+                return "stay", node
+            best_idx = max(range(len(uct_scores)), key=lambda i: uct_scores[i])
+            move_type, next_node = possible_moves[best_idx]
+        
+        return move_type, next_node
 
     def search(self, label, num_iterations=100):
-        """Modified MCTS loop that returns k best leaf nodes found"""
+        """Modified MCTS loop using single-step selection"""
         current_node = self.root
         
         for _ in tqdm(range(num_iterations), desc="MCTS iterations"):
-            selected_node = self.select(current_node)
+            # Randomly restart from root occasionally
+            if random.random() < 0.3:
+                current_node = self.root
             
-            if selected_node.visits == 0 or not selected_node.children:
-                new_node = self.expand(selected_node, label)
-                if new_node:  # Only simulate and backpropagate if expansion succeeded
-                    reward = self.simulate(new_node)
-                    self.backpropagate(new_node, reward)
-                    current_node = new_node
-            else:
-                current_node = selected_node  # Continue from where we left off
-
+            # Select single next move
+            move_type, next_node = self.select_next_move(current_node)
+            
+            # Handle the move
+            if move_type == "expand":
+                # Node has already been created and visited during expansion
+                reward = self.simulate(next_node)
+                self.backpropagate(next_node, reward)
+                print(f"New node {next_node.mutation} created")
+            
+            # Update current node
+            current_node = next_node
+        
         # Return k best leaves found during search
         if not self.best_leaves:
             return []
@@ -266,6 +279,14 @@ class MCTS:
         best_k_leaves = nlargest(self.passes, self.best_leaves)
         return [(node.sequence, reward, node.mutation, node.reasoning) 
                 for reward, node in best_k_leaves]
+
+    def backpropagate(self, node, reward):
+        """Update statistics for all nodes from the given node back to root"""
+        current = node
+        while current is not None:
+            current.visits += 1  # Increment visit count
+            current.total_reward += reward
+            current = current.parent
 
 def run_mcts_optimization(label, openai_client, device, 
                          num_iterations=100, exploration_weight=1.0, calculator=None, active_site_residues=None):
@@ -282,13 +303,12 @@ def run_mcts_optimization(label, openai_client, device,
 
 ENZYME NAME: {name}
 EC NUMBER: {ec_number}
-ENZYME SEQUENCE: {sequence}
 GENERAL INFORMATION: {general_information}
 SUBSTRATES: {', '.join(substrates)}
 PRODUCTS: {', '.join(products)}
 METALS/IONS: {', '.join(metal_ions)}
 {known_mutations_text}
-
+ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in active_site_residues])}
 
 Propose a few mutations that will optimize enzymatic activity given the substrates and products above. For each proposed mutation, explain your reasoning and consider:
 1. How the mutation affects protein structure and function
