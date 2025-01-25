@@ -326,11 +326,14 @@ def calculate_reward(sequence, reagents, products, ts=None, id_active_site=None,
         active_site_residues
     )
     
-    product_energy = calculator.calculate_binding_energy(
-        protein_structure,
-        products,
-        active_site_residues
-    )
+    if products is not None:
+        product_energy = calculator.calculate_binding_energy(
+            protein_structure,
+            products,
+            active_site_residues
+        )
+    else:
+        product_energy = 0
     
     # Calculate reward based on energy profile
     if ts is not None:

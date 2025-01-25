@@ -23,6 +23,7 @@ class MCTSNode:
         self.mutation = mutation  # Store the mutation that led to this sequence
         self.reasoning = reasoning  # Store the reasoning for this mutation
         self.reward_calculated = False  # Flag to track if we've calculated the reward
+        self.done_reached = False ## flag to check if we have terminated at this node before
 
     def get_path_history(self):
         """Get the history of mutations and reasoning leading to this node"""
@@ -51,7 +52,7 @@ class MCTS:
         self.products = products
         self.metal_ions = metal_ions
         self.calculator = calculator
-        self.active_site_residues = active_site_residues  # Add active site residues parameter
+        self.active_site_residues = [('A', idx) for idx, _ in active_site_residues] if active_site_residues else None  # Convert to ('A', idx) format
 
     def parse_response(self, response_text):
         """Parse OpenAI response for mutations and reasoning"""
@@ -66,8 +67,14 @@ class MCTS:
                 # Extract the actual mutation (e.g., "V55I")
                 parts = line.split(':', 1) if '%%MUTATION_' in line else None
                 if len(parts) == 2:
-                    mutation = parts[1].strip()
-                    mutations.append(mutation)
+                    mutation_text = parts[1].strip()
+                    # Extract position and residue from format like "154V"
+                    import re
+                    match = re.match(r'(\d+)([A-Z])', mutation_text)
+                    if match:
+                        position = match.group(1)
+                        residue = match.group(2)
+                        mutations.append(f"{position}{residue}")
             if '%%REASONING_' in line:
                 # Extract the actual reasoning text
                 parts = line.split(':', 1) if '%%REASONING_' in line else None
@@ -85,11 +92,12 @@ class MCTS:
         """Generate a new child using OpenAI API with high temperature sampling"""
         # Get previous mutations in the path
         path_history = node.get_path_history()
-        
+
+
         # Construct prompt for OpenAI
         active_site_info = f"ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in self.active_site_residues])}"
         messages = [
-            {"role": "system", "content": "You are an expert protein engineer with years of experience optimizing protein activity with rational design. \nWhenever the user inputs \"<CONTINUE>\", SELECT the next mutations to make and REASON in the FORMAT: \n\n%%MUTATION_i%%: [Original AA][Position][New AA]\n%%REASONING_i%%: Reasoning\n\nKeep your response to under 100 words. select at most 1 mutation(s).  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS. ONLY MODIFY SPECIFIED ACTIVE SITE RESIDUES. If there are no further optimizations to make, return <DONE> with no explanation."},
+            {"role": "system", "content": "You are an expert protein engineer with years of experience optimizing protein activity with rational design. \nWhenever the user inputs \"<CONTINUE>\", SELECT the next mutations to make and REASON in the FORMAT: \n\n%%MUTATION_i%%: [Position][New AA]\n%%REASONING_i%%: Reasoning\n\nKeep your response to under 100 words. select at most 1 mutation(s).  ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** Keep your explanation concise and focused on the scientific reasoning. ONLY OUTPUT THE TEXT REASONING, NO OTHER TEXT OR LABELS. ONLY MODIFY SPECIFIED ACTIVE SITE RESIDUES. If there are no further optimizations to make, return <DONE> with no explanation."},
             {"role": "user", "content": f"{self.initial_prompt}\n{active_site_info}\nMutations are only allowed on the specified active site residues."}
         ]
 
@@ -111,16 +119,19 @@ class MCTS:
             response = self.openai_client.chat.completions.create(
                 model="ft:gpt-4o-mini-2024-07-18:harvard-university::AruHbq4C",
                 messages=messages,
-                temperature=1.0,  # High temperature for more exploration
+                temperature=1.3,  # High temperature for more exploration
                 max_tokens=200
             )
             
             response_content = response.choices[0].message.content
+            print(response_content)
             
             # Check if we've reached a leaf node (model returns DONE)
             if "<DONE>" in response_content:
-                reward = calculate_reward(sequence=node.sequence, reagents=self.substrates, products=self.products, calculator=self.calculator)
+                print('node sequence: ', node.sequence)
+                reward = calculate_reward(sequence=str(node.sequence), reagents=self.substrates, products=self.products, calculator=self.calculator)
                 node.reward_calculated = True
+                node.done_reached = True
                 
                 # Store in best_leaves if good enough
                 if len(self.best_leaves) < self.passes:
@@ -138,10 +149,11 @@ class MCTS:
             # Create single child node
             if mutations_and_reasoning:
                 mutation, reasoning = mutations_and_reasoning[0]
-                mutated_sequence = self.apply_mutation(self.base_sequence, mutation)
-                if mutated_sequence == -1: 
+                try: 
+                    mutated_sequence = self.apply_mutation(self.base_sequence, mutation)
+                except Exception as e:
                     print(f"Mutation {mutation} failed")
-                    return None
+                    continue
                 
                 # Check if this sequence already exists
                 existing_node = self.find_existing_node(mutated_sequence)
@@ -165,8 +177,7 @@ class MCTS:
     def apply_mutation(self, base_sequence, mutation):
         """Apply mutation string to base sequence"""
         # Extract original AA, position, and new AA from mutation string (e.g. "A123G")
-        orig_aa = mutation[0]
-        pos = int(mutation[1:-1]) - 1  # Convert to 0-based indexing
+        pos = int(mutation[0:-1]) - 1  # Convert to 0-based indexing
         new_aa = mutation[-1]
 
         # Verify original AA matches sequence and track failures
@@ -179,15 +190,16 @@ class MCTS:
         
         # Check if position is valid
         if pos < 0 or pos >= len(base_sequence):
+            print(mutation, pos)
             print(f"Warning: Position {pos} is out of bounds for sequence length {len(base_sequence)}")
             self.mutation_check_failures += 1
             return -1
 
-        if base_sequence[pos] != orig_aa:
-            self.mutation_check_failures += 1
-            print(f"Warning: Original AA {orig_aa} does not match sequence at position {pos} "
-                  f"({(self.mutation_check_failures/self.total_mutations)*100:.1f}% failure rate)")
-            new_aa = base_sequence[pos]  # Use original AA instead
+        # if base_sequence[pos] != orig_aa:
+        #     self.mutation_check_failures += 1
+        #     print(f"Warning: Original AA {orig_aa} does not match sequence at position {pos} "
+        #           f"({(self.mutation_check_failures/self.total_mutations)*100:.1f}% failure rate)")
+        #     new_aa = base_sequence[pos]  # Use original AA instead
             
         # Create new sequence with mutation
         mutated_sequence = base_sequence[:pos] + new_aa + base_sequence[pos+1:]
@@ -267,7 +279,7 @@ class MCTS:
                 # Node has already been created and visited during expansion
                 reward = self.simulate(next_node)
                 self.backpropagate(next_node, reward)
-                print(f"New node {next_node.mutation} created")
+                # print(f"New node {next_node.mutation} created")
             
             # Update current node
             current_node = next_node
@@ -291,13 +303,13 @@ class MCTS:
 def run_mcts_optimization(label, openai_client, device, 
                          num_iterations=100, exploration_weight=1.0, calculator=None, active_site_residues=None):
     """Wrapper function to run MCTS optimization"""
-    sequence = "MSHHWGYGKHNGPEHWHKDFPIAKGERQSPVDIDTHTAKYDPSLKPLSVSYDQATSLRILNNGHAFNVEFDDSQDKAVLKGGPLDGTYRLIQFHFHWGSLDGQGSEHTVDKKKYAAELHLVHWNTKYGDFGKAVQQPDGLAVLGIFLKVGSAKPGLQKVVDVLDSIKTKGKSADFTNFDPRGLLPESLDYWTYPGSRTTPPLLECVTWIVLKEPISVSSEQVLKFRKLNFNGEGEPEELMVDNWRPAQPLKNRQIKASFK"
-    ec_number = "4.2.1.1"
-    name = "Carbonic Anhydrase II"
-    general_information = "Carbonic anhydrase II (CA II) is an enzyme that catalyzes the reversible hydration of carbon dioxide to bicarbonate and the dehydration of bicarbonate to carbon dioxide. It is found in the erythrocytes of mammals and plays a crucial role in maintaining the pH of the blood. CA II is also known to be involved in the regulation of the respiratory system and the transport of carbon dioxide in the body."
-    substrates = ["O=C=O", "O"]
-    products = ["OC(=O)[O-]", "O"]
-    metal_ions = ["Zn2+"]
+    sequence = "MGYARRVMDGIGEVAVTGAGGSVTGARLRHQVRLLAHALTEAGIPPGRGVACLHANTWRAIALRLAVQAIGCHYVGLRPTAAVTEQARAIAAADSAALVFEPSVEARAADLLERVSVPVVLSLGPTSRGRDILAASVPEGTPLRYREHPEGIAVVAFTSGTTGTPKGVAHSSTAMSACVDAAVSMYGRGPWRFLIPIPLSDLGGELAQCTLATGGTVVLLEEFQPDAVLEAIERERATHVFLAPNWLYQLAEHPALPRSDLSSLRRVVYGGAPAVPSRVAAARERMGAVLMQNYGTQEAAFIAALTPDDHARRELLTAVGRPLPHVEVEIRDDSGGTLPRGAVGEVWVRSPMTMSGYWRDPERTAQVLSGGWLRTGDVGTFDEDGHLHLTDRLQDIIIVEAYNVYSRRVEHVLTEHPDVRAAAVVGVPDPDSGEAVCAAVVVADGADPDPEHLRALVRDHLGDLHVPRRVEFVRSIPVTPAGKPDKVKVRTWFTD"
+    ec_number = "6.3.1"
+    name = "amide bond synthetase"
+    general_information = "Amide bond synthetase is an enzyme that catalyzes the formation of amide bonds between a carbonyl group and an amine group. It is found in the liver of mammals and plays a crucial role in the synthesis of proteins."
+    substrates = ["C1=CC(=CC=C1C(=O)O)Cl", "C1COCCN1CCN"]
+    products = ["C1COCCN1CCNC(=O)C2=CC=C(C=C2)Cl", "[O-]P(=O)([O-])[O-]"]
+    metal_ions = []
     known_mutations_text = "None"
     initial_prompt = f"""You are an expert protein engineer. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
 
@@ -324,5 +336,5 @@ For each mutation you propose, provide clear, scientific reasoning for why the m
 
 if __name__ == "__main__":
     calculator = BindingEnergyCalculator(device="cuda")
-    active_site_residues = [('H', 64), ('H', 94), ('H', 119)]  # Example active site residues
+    active_site_residues = [(154, 'V'), (197, 'I'), (300, 'A'), (407, 'R')]  # Example active site residues
     run_mcts_optimization("test", openai_client, device='cuda', calculator=calculator, active_site_residues=active_site_residues)
