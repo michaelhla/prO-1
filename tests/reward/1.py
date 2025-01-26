@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from reward import calculate_reward
+from activity_reward import calculate_reward
 
 def test_calculate_reward():
     # Test protein sequence from 1HEA

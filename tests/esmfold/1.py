@@ -6,7 +6,7 @@ from transformers.models.esm.openfold_utils.protein import Protein as OFProtein
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from reward import BindingEnergyCalculator
+from activity_reward import BindingEnergyCalculator
 
 class TestESMFoldModel(unittest.TestCase):
     def setUp(self):

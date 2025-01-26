@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from reward import calculate_reward, BindingEnergyCalculator
+from activity_reward import calculate_reward, BindingEnergyCalculator
 import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt

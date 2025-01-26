@@ -7,7 +7,7 @@ import openai
 import dotenv
 import os
 import random
-from reward import BindingEnergyCalculator, calculate_reward
+from activity_reward import BindingEnergyCalculator, calculate_reward
 dotenv.load_dotenv()
 
 openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))

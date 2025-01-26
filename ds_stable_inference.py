@@ -39,16 +39,23 @@ def run_inference(sequence, active_site_residues, pdb_file=None, stability_score
 
     if device == "cuda":
         model = model.cuda()
+    # Define variables for prompt
+    name = "amide bond synthetase"
+    ec_number = "6.3.1"
+    general_information = "Amide bond synthetase is an enzyme that catalyzes the formation of amide bonds between a carbonyl group and an amine group. It is found in the liver of mammals and plays a crucial role in the synthesis of proteins."
+    substrates = ["C1=CC(=CC=C1C(=O)O)Cl", "C1COCCN1CCN"]
+    products = ["C1COCCN1CCNC(=O)C2=CC=C(C=C2)Cl", "[O-]P(=O)([O-])[O-]"]
+    metal_ions = []
 
     # Format prompt similar to MCTS
     prompt = f"""You are an expert protein engineer. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
 
-ENZYME NAME: amide bond synthetase
-EC NUMBER: 6.3.1
-GENERAL INFORMATION: Amide bond synthetase is an enzyme that catalyzes the formation of amide bonds between a carbonyl group and an amine group. It is found in the liver of mammals and plays a crucial role in the synthesis of proteins.
-SUBSTRATES: C1=CC(=CC=C1C(=O)O)Cl, C1COCCN1CCN
-PRODUCTS: C1COCCN1CCNC(=O)C2=CC=C(C=C2)Cl, [O-]P(=O)([O-])[O-]
-METALS/IONS: 
+ENZYME NAME: {name}
+EC NUMBER: {ec_number}
+GENERAL INFORMATION: {general_information}
+SUBSTRATES: {', '.join(substrates)}
+PRODUCTS: {', '.join(products)} 
+METALS/IONS: {', '.join(metal_ions)}
 ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in active_site_residues])}
 
 Propose a few mutations that will optimize enzymatic activity given the substrates and products above. For each proposed mutation, explain your reasoning and consider:

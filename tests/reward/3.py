@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
-from reward import calculate_reward, BindingEnergyCalculator
+from activity_reward import calculate_reward, BindingEnergyCalculator
 
 # Read the CSV file
 df = pd.read_csv('data.csv')
