@@ -14,8 +14,8 @@ apt-get install -y libboost-all-dev
 # Install Open Babel with automatic yes
 apt install -y openbabel
 
-# Install requirements
 pip install -U numpy vina
+pip install pyrosetta-installer
 
 # Install requirements
 pip install -r requirements.txt

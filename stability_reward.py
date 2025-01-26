@@ -4,7 +4,14 @@ from transformers import AutoTokenizer, EsmForProteinFolding
 from openfold.utils.protein import OFProtein
 from openfold.utils.rigid_utils import atom14_to_atom37
 from openfold.utils.pdb_utils import to_pdb
+import pyrosetta_installer
+pyrosetta_installer.install_pyrosetta()
 import pyrosetta
+pyrosetta.init()
+from pyrosetta import Pose
+from pyrosetta.rosetta.core.pose import make_pose_from_sequence
+from pyrosetta.rosetta.core.chemical import ResidueTypeSet, ChemicalManager
+from pyrosetta.rosetta.core.scoring import ScoreType
 
 class StabilityRewardCalculator:
     def __init__(self, protein_model_path="facebook/esmfold_v1", device="cuda"):
@@ -87,7 +94,7 @@ class StabilityRewardCalculator:
         return pdb_files
 
     def calculate_stability(self, sequence):
-        """Calculate stability score using Rosetta"""
+        """Calculate stability score using Rosetta with optimization"""
         # Get structure prediction
         pdb_file = self.predict_structure(sequence)
         
@@ -97,7 +104,20 @@ class StabilityRewardCalculator:
         # Create score function
         scorefxn = pyrosetta.get_fa_scorefxn()
         
-        # Calculate stability score
+        # Setup packer task for side chain optimization
+        task = pyrosetta.standard_packer_task(pose)
+        task.restrict_to_repacking()  # Only repack side chains, don't change sequence
+        
+        # Optimize side chain conformations
+        packer = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn, task)
+        packer.apply(pose)
+        
+        # Perform energy minimization
+        min_mover = pyrosetta.rosetta.protocols.minimization_packing.MinMover()
+        min_mover.score_function(scorefxn)
+        min_mover.apply(pose)
+        
+        # Calculate final stability score
         stability_score = scorefxn(pose)
         
         # Normalize score (lower scores are better in Rosetta)
