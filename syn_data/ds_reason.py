@@ -74,21 +74,25 @@ def generate_reasoning(sequence: str, mutations: List[Tuple[str, int, str]], enz
 
 USER: {enzyme_prompt}
 
-MUTATIONS TO REVERT:
+STARTING SEQUENCE: {sequence}
+
+MUTATIONS TO BE APPLIED:
 {mutations_text}
 
-Provide a detailed chain of reasoning for how to revert these mutations to restore optimal enzyme activity. For each mutation, explain the scientific rationale behind reverting it. ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTIFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** 
+FINAL SEQUENCE: {sequence}
 
-At the end of your response, list the final sequence of mutations in order, in the format:
-FINAL_SEQUENCE: mutation1,mutation2,mutation3
+Pretend you are a protein engineer optimizing the starting sequence and you have selected these mutations to optimize your enzyme. Knowing that these are the mutations/operations that should be applied, generate a chain of reasoning that applies these mutations resulting in the final sequence. Only generate reasoning using the mutations provided. For each mutation, explain the scientific rationale behind reverting it. ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTIFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** 
 
-Keep your explanation focused on the scientific reasoning."""
+At the end of your response, copy the final sequence, in the format:
+FINAL_SEQUENCE: ________ 
+
+"""
     
-    model = "gpt-4o-mini"
+    model = "gpt-4o"
     response = client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": "You are an expert protein engineer with years of experience optimizing protein activity with rational design."},
+            {"role": "system", "content": "You are an expert protein engineer with years of experience optimizing protein stability with rational design."},
             {"role": "user", "content": prompt}
         ],
         temperature=0.7,
@@ -143,7 +147,9 @@ def generate_insertion(sequence: str) -> Tuple[int, str]:
 
 
 def generate_initial_mutations(sequence: str, n_mutations: int = None) -> Tuple[str, List[Tuple[int, str, str]]]:
-    """Generate n_mutations random mutations from the original sequence"""
+    """Generate n_mutations random mutations from the original sequence.
+    Returns (perturbed_sequence, mutations) where mutations describe how to go from
+    perturbed sequence back to original sequence."""
     if n_mutations is None:
         n_mutations = random.randint(3, 5)
     
@@ -151,46 +157,60 @@ def generate_initial_mutations(sequence: str, n_mutations: int = None) -> Tuple[
     mutated_seq = sequence
     positions_used = set()
     
-    while len(mutations) < n_mutations:
-        # With 20% probability, do an insertion or deletion instead of substitution
+    # Store forward mutations temporarily
+    forward_mutations = []
+    
+    while len(forward_mutations) < n_mutations:
         if random.random() < 0.2:
-            if random.random() < 0.5:  # 50-50 chance of insertion vs deletion
+            if random.random() < 0.5:  # Insertion
                 pos, new_aa = generate_insertion(mutated_seq)
-                mutations.append((pos, '', new_aa))  # Empty orig_aa indicates insertion
+                # Store as forward mutation
+                forward_mutations.append(("insertion", pos, new_aa))
                 mutated_seq = mutated_seq[:pos] + new_aa + mutated_seq[pos:]
                 positions_used.add(pos)
-            else:
-                # Deletion: Sample a chunk to delete
-                # Delete between 1-5 amino acids
+            else:  # Deletion
                 deletion_length = random.randint(1, 5)
                 while True:
-                    # Sample starting position
                     pos = random.randint(0, len(mutated_seq)-deletion_length)
-                    # Get the chunk to delete
                     chunk = mutated_seq[pos:pos+deletion_length]
-                    # Don't delete if chunk contains M or C
                     if not any(aa in chunk for aa in ['M', 'C']) and \
                        not any(p in positions_used for p in range(pos, pos+deletion_length)):
                         break
                 
-                # Add each position in the deletion to mutations list
-                for i, aa in enumerate(chunk):
-                    mutations.append((pos+i, aa, ''))  # Empty new_aa indicates deletion
-                    positions_used.add(pos+i)
-                
-                # Delete the chunk
+                # Store as forward mutation
+                forward_mutations.append(("deletion", pos, chunk))
                 mutated_seq = mutated_seq[:pos] + mutated_seq[pos+deletion_length:]
+                for i in range(pos, pos+deletion_length):
+                    positions_used.add(i)
         else:
-            # Regular substitution mutation
+            # Regular substitution
             while True:
                 orig_aa, pos, new_aa = sample_mutation(sequence)
-                # Skip if position contains methionine or would mutate to methionine or original is cysteine
                 if pos not in positions_used and orig_aa != 'M' and new_aa != 'M' and orig_aa != 'C':
                     break
             
             positions_used.add(pos)
-            mutations.append((pos, orig_aa, new_aa))
+            forward_mutations.append(("substitution", pos, (orig_aa, new_aa)))
             mutated_seq = mutated_seq[:pos] + new_aa + mutated_seq[pos+1:]
+    
+    # Convert forward mutations to reverse mutations
+    offset = 0  # Track position changes due to insertions/deletions
+    for mut_type, pos, info in forward_mutations:
+        if mut_type == "insertion":
+            # For an insertion, we need to delete in reverse
+            adjusted_pos = pos + offset
+            mutations.append((adjusted_pos, info, ''))  # Delete the inserted amino acids
+            offset += len(info)
+        elif mut_type == "deletion":
+            # For a deletion, we need to insert in reverse
+            adjusted_pos = pos + offset
+            mutations.append((adjusted_pos, '', info))  # Insert the deleted chunk
+            offset -= len(info)
+        else:  # substitution
+            # For a substitution, swap the amino acids
+            orig_aa, new_aa = info
+            adjusted_pos = pos + offset
+            mutations.append((adjusted_pos, new_aa, orig_aa))
     
     return mutated_seq, mutations
 
