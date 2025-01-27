@@ -73,7 +73,7 @@ def generate_reasoning(perturbed_sequence: str, mutations: List[Tuple[str, int, 
     
     # Format mutations in standard notation
     formatted_mutations = []
-    for mut in mutations:
+    for mut in reversed(mutations):  # Reverse the mutations list
         pos = mut[0]
         if mut[1] == "ins":
             formatted_mutations.append(f"{perturbed_sequence[pos]}{pos+1}ins{mut[2]}")
@@ -92,12 +92,19 @@ PREVIOUS TASK: {enzyme_prompt}
 
 STARTING SEQUENCE: {perturbed_sequence}
 
-MUTATIONS TO BE APPLIED:
+MUTATIONS TO BE APPLIED (in order):
 {mutations_text}
 
 FINAL SEQUENCE: {initial_sequence}
 
-An expert protein engineer has selected these mutations to optimize the stability of the enzyme while keeping the function/activity of the enzyme unchanged. Knowing that these are the mutations/operations that should be applied, generate a chain of reasoning that applies these mutations in a logical order resulting in the final sequence. Only generate reasoning using the mutations provided. For each mutation, explain the scientific rationale behind reverting it. ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTIFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** 
+An expert protein engineer has selected these mutations to optimize the stability of the enzyme while keeping the function/activity of the enzyme unchanged. The mutations must be applied IN ORDER as listed above, as each mutation's position depends on the previous mutations being applied first. Generate a chain of reasoning that applies these mutations in the given order to reach the final sequence.
+
+For each mutation, explain:
+1. The scientific rationale behind reverting it
+2. How this specific change affects the protein's structure and stability
+3. Why this order of operations is necessary
+
+****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTIFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** 
 
 At the end of your response, copy the final sequence, in the format below, using $$ to enclose the sequence:
 %%FINAL_SEQUENCE%%: $$_______$$
@@ -207,19 +214,19 @@ def generate_initial_mutations(sequence: str, esm_model: ESM3InferenceClient, n_
     # Convert forward mutations to reverse mutations
     offset = 0  # Track position changes due to insertions/deletions
     for mut_type, pos, info in forward_mutations:
-        if mut_type == "insertion":
-            # For an insertion, we need to delete in reverse
+        if mut_type == "deletion":
+            # If we deleted sequence, we need to insert it back
             adjusted_pos = pos + offset
-            # Store as (pos, "ins", inserted_sequence)
+            # Store as (pos, "ins", sequence_to_insert)
             mutations.append((adjusted_pos, "ins", info))  # Format will be {pos}ins{info}
-            offset += len(info)
-        elif mut_type == "deletion":
-            # For a deletion, we need to insert in reverse
+            offset -= len(info)  # Position adjustment decreases after deletion
+        elif mut_type == "insertion":
+            # If we inserted sequence, we need to delete it
             adjusted_pos = pos + offset
             # Store as (start_pos, "del", end_pos)
             end_pos = adjusted_pos + len(info) - 1
             mutations.append((adjusted_pos, "del", end_pos))  # Format will be {start_aa}{start_pos}_{end_aa}{end_pos}del
-            offset -= len(info)
+            offset += len(info)  # Position adjustment increases after insertion
         else:  # substitution
             # For a substitution, swap the amino acids
             orig_aa, new_aa = info
