@@ -9,3 +9,4 @@ openai
 openpyxl
 python-dotenv
 matplotlib
+esm

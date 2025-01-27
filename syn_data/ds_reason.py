@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 import torch
 from transformers import AutoModelForMaskedLM, AutoTokenizer
+from huggingface_hub import login
+from esm.models.esm3 import ESM3
+from esm.sdk.api import ESM3InferenceClient, ESMProtein, GenerationConfig
 
 
 load_dotenv()  # Load environment variables from .env file
@@ -19,7 +22,7 @@ client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 valid_aa = [aa for aa in blosum62.keys() if aa != '*']
 
 
-## use 4o mini to generate reasoning for each mutation step 
+## use 4o to generate reasoning for each mutation step 
 ## generate mutations by sampling from the inverse BLOSUM matrix 
 ## create SFT dataset by sampling from the reasoning steps 
 ## get reward for each mutation and create preference dataset 
@@ -65,26 +68,39 @@ def sample_mutation(sequence: str) -> Tuple[str, int, str]:
     new_aa = np.random.choice(valid_aas, p=probs)
     return orig_aa, pos, new_aa
 
-def generate_reasoning(sequence: str, mutations: List[Tuple[str, int, str]], enzyme_prompt: str) -> str:
+def generate_reasoning(perturbed_sequence: str, mutations: List[Tuple[str, int, str]], enzyme_prompt: str, initial_sequence: str) -> str:
     """Generate reasoning for all mutations using OpenAI API"""
     
-    mutations_text = "\n".join([f"{orig_aa}{pos}{new_aa}" for orig_aa, pos, new_aa in mutations])
+    # Format mutations in standard notation
+    formatted_mutations = []
+    for mut in mutations:
+        pos = mut[0]
+        if mut[1] == "ins":
+            formatted_mutations.append(f"{perturbed_sequence[pos]}{pos+1}ins{mut[2]}")
+        elif mut[1] == "del":
+            start_pos = pos
+            end_pos = mut[2]
+            formatted_mutations.append(f"{perturbed_sequence[start_pos]}{start_pos+1}_{perturbed_sequence[end_pos]}{end_pos+1}del")
+        else:
+            orig_aa, new_aa = mut[1], mut[2]
+            formatted_mutations.append(f"{orig_aa}{pos+1}{new_aa}")
     
-    prompt = f"""Given the following task and sequence modifications:
+    mutations_text = "\n".join(formatted_mutations)
+    
+    prompt = f"""
+PREVIOUS TASK: {enzyme_prompt}
 
-USER: {enzyme_prompt}
-
-STARTING SEQUENCE: {sequence}
+STARTING SEQUENCE: {perturbed_sequence}
 
 MUTATIONS TO BE APPLIED:
 {mutations_text}
 
-FINAL SEQUENCE: {sequence}
+FINAL SEQUENCE: {initial_sequence}
 
-Pretend you are a protein engineer optimizing the starting sequence and you have selected these mutations to optimize your enzyme. Knowing that these are the mutations/operations that should be applied, generate a chain of reasoning that applies these mutations resulting in the final sequence. Only generate reasoning using the mutations provided. For each mutation, explain the scientific rationale behind reverting it. ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTIFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** 
+An expert protein engineer has selected these mutations to optimize the stability of the enzyme while keeping the function/activity of the enzyme unchanged. Knowing that these are the mutations/operations that should be applied, generate a chain of reasoning that applies these mutations in a logical order resulting in the final sequence. Only generate reasoning using the mutations provided. For each mutation, explain the scientific rationale behind reverting it. ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTIFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** 
 
-At the end of your response, copy the final sequence, in the format:
-FINAL_SEQUENCE: ________ 
+At the end of your response, copy the final sequence, in the format below, using $$ to enclose the sequence:
+%%FINAL_SEQUENCE%%: $$_______$$
 
 """
     
@@ -103,50 +119,45 @@ FINAL_SEQUENCE: ________
     print(reasoning)
     return reasoning
 
-def generate_insertion(sequence: str) -> Tuple[int, str]:
-    """Generate a random insertion position and sequence.
+def load_esm_model():
+    # Initialize ESM3 model
+    login(token=os.getenv("HUGGINGFACE_API_KEY"))
+    esm_model: ESM3InferenceClient = ESM3.from_pretrained("esm3_sm_open_v1").to("cuda" if torch.cuda.is_available() else "cpu")
+    return esm_model
+
+def generate_insertion(sequence: str, esm_model: ESM3InferenceClient) -> Tuple[int, str]:
+    """Generate a random insertion position and sequence using ESM3.
     Returns (position, new_aa_sequence)"""
     
     # Pick random position to insert
     pos = random.randint(0, len(sequence))
     
     # Generate random length of insertion (1-3 amino acids)
-    insert_length = random.randint(1, 3)
+    insert_length = random.randint(1, 10)
     
     # Create sequence with blanks for ESM to fill
     blank_seq = sequence[:pos] + '_' * insert_length + sequence[pos:]
     
-    # Load ESM model
-    model = AutoModelForMaskedLM.from_pretrained("facebook/esm2_t6_8M_UR50D")
-    tokenizer = AutoTokenizer.from_pretrained("facebook/esm2_t6_8M_UR50D")
+    # Create protein object and generate completion
+    protein = ESMProtein(sequence=blank_seq)
+    seq_prompt = esm_model.encode(protein)
+    completed_protein = esm_model.generate(
+        protein, 
+        GenerationConfig(
+            track="sequence", 
+            num_steps=8, 
+            temperature=0.7
+        )
+    )
     
-    # Tokenize sequence
-    inputs = tokenizer(blank_seq, return_tensors="pt")
+    # Extract the generated amino acids
+    completed_seq = completed_protein.sequence
+    new_aas = completed_seq[pos:pos+insert_length]
     
-    # Get model predictions
-    with torch.no_grad():
-        outputs = model(**inputs)
-        predictions = outputs.logits
-    
-    # Find positions of masked tokens
-    mask_positions = [i for i, c in enumerate(blank_seq) if c == '_']
-    
-    # Sample amino acids for each masked position
-    new_aas = ''
-    for mask_pos in mask_positions:
-        # Get probabilities for this position
-        token_probs = torch.softmax(predictions[0, mask_pos], dim=0)
-        
-        # Sample from probability distribution
-        token_id = torch.multinomial(token_probs, 1).item()
-        new_aa = tokenizer.decode([token_id])
-        
-        new_aas += new_aa
-        
     return pos, new_aas
 
 
-def generate_initial_mutations(sequence: str, n_mutations: int = None) -> Tuple[str, List[Tuple[int, str, str]]]:
+def generate_initial_mutations(sequence: str, esm_model: ESM3InferenceClient, n_mutations: int = None) -> Tuple[str, List[Tuple[int, str, str]]]:
     """Generate n_mutations random mutations from the original sequence.
     Returns (perturbed_sequence, mutations) where mutations describe how to go from
     perturbed sequence back to original sequence."""
@@ -163,7 +174,7 @@ def generate_initial_mutations(sequence: str, n_mutations: int = None) -> Tuple[
     while len(forward_mutations) < n_mutations:
         if random.random() < 0.2:
             if random.random() < 0.5:  # Insertion
-                pos, new_aa = generate_insertion(mutated_seq)
+                pos, new_aa = generate_insertion(mutated_seq, esm_model)
                 # Store as forward mutation
                 forward_mutations.append(("insertion", pos, new_aa))
                 mutated_seq = mutated_seq[:pos] + new_aa + mutated_seq[pos:]
@@ -199,18 +210,21 @@ def generate_initial_mutations(sequence: str, n_mutations: int = None) -> Tuple[
         if mut_type == "insertion":
             # For an insertion, we need to delete in reverse
             adjusted_pos = pos + offset
-            mutations.append((adjusted_pos, info, ''))  # Delete the inserted amino acids
+            # Store as (pos, "ins", inserted_sequence)
+            mutations.append((adjusted_pos, "ins", info))  # Format will be {pos}ins{info}
             offset += len(info)
         elif mut_type == "deletion":
             # For a deletion, we need to insert in reverse
             adjusted_pos = pos + offset
-            mutations.append((adjusted_pos, '', info))  # Insert the deleted chunk
+            # Store as (start_pos, "del", end_pos)
+            end_pos = adjusted_pos + len(info) - 1
+            mutations.append((adjusted_pos, "del", end_pos))  # Format will be {start_aa}{start_pos}_{end_aa}{end_pos}del
             offset -= len(info)
         else:  # substitution
             # For a substitution, swap the amino acids
             orig_aa, new_aa = info
             adjusted_pos = pos + offset
-            mutations.append((adjusted_pos, new_aa, orig_aa))
+            mutations.append((adjusted_pos, new_aa, orig_aa))  # Format remains {orig_aa}{pos}{new_aa}
     
     return mutated_seq, mutations
 
@@ -224,8 +238,10 @@ def create_mutation_traces(transformed_data: Dict[str, Dict], n_traces: int = 10
         },
         "traces": []
     }
+
+    esm_model = load_esm_model()
     
-    for enzyme_id, enzyme_data in transformed_data.items():
+    for enzyme_id, enzyme_data in tqdm(transformed_data.items(), desc="Creating mutation traces"):
         sequence = enzyme_data.get('sequence')
         if not sequence:
             continue
@@ -253,10 +269,11 @@ def create_mutation_traces(transformed_data: Dict[str, Dict], n_traces: int = 10
                 f"- {mut['mutation']}: {mut['effect']}\n" 
                 for mut in enzyme_data.get('engineering', [])
             ])
+
             
         for _ in range(n_traces):
             # Generate initial perturbed sequence
-            perturbed_seq, mutations = generate_initial_mutations(sequence, n_mutations)
+            perturbed_seq, mutations = generate_initial_mutations(sequence, esm_model, n_mutations)
             
             # Generate a prompt for this enzyme trace
             enzyme_prompt = f"""You are an expert protein engineer. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
@@ -270,10 +287,13 @@ PRODUCTS: {', '.join(products)}
 METALS/IONS: {', '.join(metal_ions)}
 {known_mutations_text}
 
-Propose mutations to optimize enzymatic activity given the substrates and products above. For each proposed mutation, explain your reasoning and consider:
-1. How the mutation affects protein structure and function
-2. The chemical properties of the amino acids and substrates/products
-3. The position's importance in the protein sequence"""
+Propose mutations to optimize the stability of the enzyme given the information above. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning and consider:
+1. How the mutation affects (or does not affect) protein structure
+2. How the mutation affects (or does not affect) protein function
+3. The chemical properties of the amino acids and substrates/products
+
+Remember to be specific to the enzyme and reaction specified in the prompt.
+"""
 
             trace = {
                 "enzyme_id": enzyme_id,
@@ -293,13 +313,13 @@ Propose mutations to optimize enzymatic activity given the substrates and produc
             }
             
             # Generate reasoning for all mutations
-            trace["reasoning"] = generate_reasoning(perturbed_seq, mutations, enzyme_prompt)
+            trace["reasoning"] = generate_reasoning(perturbed_seq, mutations, enzyme_prompt, sequence)
             
             dataset["traces"].append(trace)
             
     # Save dataset
     Path("data").mkdir(exist_ok=True)
-    with open("data/mutation_traces.json", "w") as f:
+    with open("data/cot_mutation_traces.json", "w") as f:
         json.dump(dataset, f, indent=2)
 
 if __name__ == "__main__":
@@ -325,9 +345,9 @@ if __name__ == "__main__":
             ec_to_proteins[ec] = []
         ec_to_proteins[ec].append((uniprot_id, data))
     
-    # Sample 50 EC numbers if available, otherwise take all
+    # Sample 100 EC numbers if available, otherwise take all
     sampled_ec_numbers = random.sample(list(ec_to_proteins.keys()), 
-                                     min(50, len(ec_to_proteins)))
+                                     min(100, len(ec_to_proteins)))
     
     # Take one random protein from each sampled EC number
     filtered_data = {}
