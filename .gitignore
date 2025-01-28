@@ -6,3 +6,4 @@ data/brenda_2023_1.json
 .env
 syn_data/brenda_seq.xlsx
 .DS_Store
+wandb/

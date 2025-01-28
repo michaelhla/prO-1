@@ -1,9 +1,8 @@
 import os
 import torch
 from transformers import AutoTokenizer, EsmForProteinFolding
-from openfold.utils.protein import OFProtein
-from openfold.utils.rigid_utils import atom14_to_atom37
-from openfold.utils.pdb_utils import to_pdb
+from transformers.models.esm.openfold_utils.protein import to_pdb, Protein as OFProtein
+from transformers.models.esm.openfold_utils.feats import atom14_to_atom37
 import pyrosetta_installer
 pyrosetta_installer.install_pyrosetta()
 import pyrosetta

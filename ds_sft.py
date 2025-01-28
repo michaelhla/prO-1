@@ -3,8 +3,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments,
 from datasets import Dataset
 import json
 from typing import Dict, List
+import wandb
+import os
+from dotenv import load_dotenv
 
-def load_sft_data(data_path: str) -> Dataset:
+# Load environment variables
+load_dotenv()
+
+def load_sft_data(data_path: str, tokenizer) -> Dataset:
     """Load and format SFT data from JSON file"""
     with open(data_path) as f:
         data = json.load(f)
@@ -12,22 +18,44 @@ def load_sft_data(data_path: str) -> Dataset:
     # Format data for training
     formatted_data = []
     for trace in data["traces"]:
-        # Format: SEQUENCE: {seq}\nMUTATION: {mut}\nREASONING: {reasoning}
-        text = f"SEQUENCE: {trace['sequence']}\n"
-        text += f"MUTATION: {trace['mutation']}\n" 
-        text += f"REASONING: {trace['reasoning']}\n"
-        formatted_data.append({"text": text})
+        # Format conversation with roles
+        text = "<SYSTEM>: You are an expert protein engineer with years of experience optimizing protein stability with rational design.\n"
+        text += f"<USER>: {trace['prompt']}\n"
+        text += """****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTIFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** 
+At the end of your response, copy the final sequence, in the format below, using $$ to enclose the sequence:
+%%FINAL_SEQUENCE%%: $$_______$$"""
+        text += f"<ASSISTANT>: {trace['reasoning']}\n"
+        
+        # Tokenize the text
+        tokenized = tokenizer(text, truncation=True, max_length=2048, padding="max_length")
+        formatted_data.append({
+            "input_ids": tokenized["input_ids"],
+            "attention_mask": tokenized["attention_mask"]
+        })
         
     return Dataset.from_list(formatted_data)
 
 def train_model():
+    # Check for GPU availability
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using device: {device}")
+    
+    if device == "cpu":
+        print("Warning: Training on CPU will be very slow. GPU is recommended.")
+    
+    # Login to wandb using API key from .env
+    wandb.login(key=os.getenv('WANDB_API_KEY'))
+    
+    # Initialize wandb
+    wandb.init(project="protein-sft", name="deepseek-sft")
+
     # Initialize model and tokenizer
-    model_name = "deepseek-ai/deepseek-coder-1.3b-base"
-    model = AutoModelForCausalLM.from_pretrained(model_name)
+    model_name = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
+    model = AutoModelForCausalLM.from_pretrained(model_name).to(device)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    # Load and process dataset
-    train_dataset = load_sft_data("mutation_traces.json")
+    # Load and process dataset with tokenizer
+    train_dataset = load_sft_data("data/cot_mutation_traces.json", tokenizer)
 
     # Set up training arguments
     training_args = TrainingArguments(
@@ -39,10 +67,10 @@ def train_model():
         warmup_steps=100,
         logging_steps=100,
         save_steps=500,
-        evaluation_strategy="steps",
-        eval_steps=500,
         save_total_limit=3,
         fp16=True,
+        report_to="wandb",
+        remove_unused_columns=True,
     )
 
     # Initialize trainer
@@ -58,6 +86,9 @@ def train_model():
     
     # Save final model
     trainer.save_model("./sft_final")
+    
+    # Close wandb run
+    wandb.finish()
 
 if __name__ == "__main__":
     train_model()

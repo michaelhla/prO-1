@@ -17,7 +17,7 @@ apt install -y openbabel
 pip install -U numpy vina
 pip install pyrosetta-installer
 
-# Install requirements
+# Install requirements, still need to add versions
 pip install -r requirements.txt
 
 git config --global user.email michaelhla@college.harvard.edu

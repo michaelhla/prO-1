@@ -99,11 +99,6 @@ FINAL SEQUENCE: {initial_sequence}
 
 An expert protein engineer has selected these mutations to optimize the stability of the enzyme while keeping the function/activity of the enzyme unchanged. The mutations must be applied IN ORDER as listed above, as each mutation's position depends on the previous mutations being applied first. Generate a chain of reasoning that applies these mutations in the given order to reach the final sequence.
 
-For each mutation, explain:
-1. The scientific rationale behind reverting it
-2. How this specific change affects the protein's structure and stability
-3. Why this order of operations is necessary
-
 ****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTIFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** 
 
 At the end of your response, copy the final sequence, in the format below, using $$ to enclose the sequence:
@@ -352,15 +347,26 @@ if __name__ == "__main__":
             ec_to_proteins[ec] = []
         ec_to_proteins[ec].append((uniprot_id, data))
     
-    # Sample 100 EC numbers if available, otherwise take all
+    # Sample 75 EC numbers to start, otherwise take all
     sampled_ec_numbers = random.sample(list(ec_to_proteins.keys()), 
-                                     min(100, len(ec_to_proteins)))
+                                     min(75, len(ec_to_proteins)))
     
     # Take one random protein from each sampled EC number
     filtered_data = {}
     for ec in sampled_ec_numbers:
         uniprot_id, data = random.choice(ec_to_proteins[ec])
         filtered_data[uniprot_id] = data
+
+    # Calculate median sequence length
+    sequence_lengths = [len(data['sequence']) for data in filtered_data.values()]
+    median_length = np.median(sequence_lengths)
+    length_threshold = median_length * 3
+
+    # Filter out sequences longer than threshold
+    filtered_data = {
+        uniprot_id: data for uniprot_id, data in filtered_data.items()
+        if len(data['sequence']) <= length_threshold
+    }
     
     transformed_data = filtered_data
 
