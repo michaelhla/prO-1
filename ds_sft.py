@@ -85,7 +85,10 @@ def train_model():
     trainer.train()
     
     # Save final model
-    trainer.save_model("./sft_final")
+    try:
+        trainer.save_model("/workspace/sft_final")
+    except:
+        trainer.save_model("./sft_final")
     
     # Close wandb run
     wandb.finish()
