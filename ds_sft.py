@@ -1,6 +1,7 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, BitsAndBytesConfig
 from datasets import Dataset
+from peft import get_peft_model, LoraConfig, TaskType, prepare_model_for_kbit_training
 import json
 from typing import Dict, List
 import wandb
@@ -28,9 +29,12 @@ At the end of your response, copy the final sequence, in the format below, using
         
         # Tokenize the text
         tokenized = tokenizer(text, truncation=True, max_length=2048, padding="max_length")
+        
+        # Add labels (same as input_ids for language modeling)
         formatted_data.append({
             "input_ids": tokenized["input_ids"],
-            "attention_mask": tokenized["attention_mask"]
+            "attention_mask": tokenized["attention_mask"],
+            "labels": tokenized["input_ids"].copy()  # Add labels
         })
         
     return Dataset.from_list(formatted_data)
@@ -47,11 +51,46 @@ def train_model():
     wandb.login(key=os.getenv('WANDB_API_KEY'))
     
     # Initialize wandb
-    wandb.init(project="protein-sft", name="deepseek-sft")
+    wandb.init(project="protein-sft", name="deepseek-sft-lora")
 
     # Initialize model and tokenizer
     model_name = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
-    model = AutoModelForCausalLM.from_pretrained(model_name).to(device)
+    
+    # Create a BitsAndBytesConfig object for 8-bit quantization
+    quantization_config = BitsAndBytesConfig(
+        load_in_8bit=True,
+        device_map="auto",
+        torch_dtype=torch.float16,
+    )
+    
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        quantization_config=quantization_config
+    )
+    
+    # Prepare model for k-bit training
+    model = prepare_model_for_kbit_training(model)
+    
+    # Configure LoRA
+    lora_config = LoraConfig(
+        r=16,                     # Rank of the update matrices
+        lora_alpha=32,           # Alpha scaling
+        target_modules=["q_proj", "v_proj", "k_proj", "o_proj"], # Layers to apply LoRA to
+        lora_dropout=0.05,
+        bias="none",
+        task_type=TaskType.CAUSAL_LM
+    )
+    
+    # Create PEFT model
+    model = get_peft_model(model, lora_config)
+    model.print_trainable_parameters()  # Print trainable parameters info
+
+    # Set model to training mode
+    model.train()
+    
+    # Disable caching (required for gradient checkpointing)
+    model.config.use_cache = False
+
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     # Load and process dataset with tokenizer
@@ -59,16 +98,17 @@ def train_model():
 
     # Set up training arguments
     training_args = TrainingArguments(
-        output_dir="./sft_output",
+        output_dir="./sft_lora_output",
         num_train_epochs=3,
-        per_device_train_batch_size=4,
+        per_device_train_batch_size=4,  # Can increase this now
         gradient_accumulation_steps=4,
-        learning_rate=2e-5,
+        learning_rate=2e-4,  # Slightly higher learning rate for LoRA
         warmup_steps=100,
         logging_steps=100,
         save_steps=500,
         save_total_limit=3,
         fp16=True,
+        gradient_checkpointing=True,
         report_to="wandb",
         remove_unused_columns=True,
     )
@@ -86,9 +126,9 @@ def train_model():
     
     # Save final model
     try:
-        trainer.save_model("/workspace/sft_final")
+        trainer.save_model("/workspace/sft_lora_final")
     except:
-        trainer.save_model("./sft_final")
+        trainer.save_model("./sft_lora_final")
     
     # Close wandb run
     wandb.finish()
