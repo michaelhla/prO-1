@@ -11,6 +11,7 @@ from pyrosetta import Pose
 from pyrosetta.rosetta.core.pose import make_pose_from_sequence
 from pyrosetta.rosetta.core.chemical import ResidueTypeSet, ChemicalManager
 from pyrosetta.rosetta.core.scoring import ScoreType
+import time
 
 class StabilityRewardCalculator:
     def __init__(self, protein_model_path="facebook/esmfold_v1", device="cuda"):
@@ -93,6 +94,7 @@ class StabilityRewardCalculator:
         return pdb_files
 
     def calculate_stability(self, sequence):
+        start_time = time.time()
         """Calculate stability score using Rosetta with optimization"""
         # Get structure prediction
         pdb_file = self.predict_structure(sequence)
@@ -118,12 +120,9 @@ class StabilityRewardCalculator:
         
         # Calculate final stability score
         stability_score = scorefxn(pose)
-        
-        # Normalize score (lower scores are better in Rosetta)
-        # Convert to 0-1 range where 1 is most stable
-        normalized_score = 1.0 / (1.0 + abs(stability_score))
-        
-        return normalized_score
+
+        print(f"Stability score: {stability_score} calculated in {time.time() - start_time:.2f} seconds")
+        return stability_score
 
 def get_stability_reward(sequence):
     calculator = StabilityRewardCalculator()

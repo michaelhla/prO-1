@@ -278,7 +278,7 @@ def create_mutation_traces(transformed_data: Dict[str, Dict], n_traces: int = 10
             perturbed_seq, mutations = generate_initial_mutations(sequence, esm_model, n_mutations)
             
             # Generate a prompt for this enzyme trace
-            enzyme_prompt = f"""You are an expert protein engineer. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
+            enzyme_prompt = f"""You are an expert protein engineer in rational protein design. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
 
 ENZYME NAME: {enzyme_data.get('name', 'Unknown')}
 EC NUMBER: {enzyme_data.get('ec_number', 'Unknown')}

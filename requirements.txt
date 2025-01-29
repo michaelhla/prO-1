@@ -15,4 +15,5 @@ datasets
 wandb
 peft
 bitsandbytes
+trl
 
