@@ -11,10 +11,11 @@ import random
 import wandb
 from dotenv import load_dotenv
 from datasets import Dataset
+import time
 
 from stability_reward import StabilityRewardCalculator
 
-NUM_EPOCHS = 10
+NUM_EPOCHS = 2
 
 # Load the base model & LoRA adapter exactly as in ds_sft.py, then convert to ValueHead
 
@@ -23,6 +24,8 @@ model_name = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
 if os.path.exists("./sft_lora_output/checkpoint-27"):
     peft_lora_path = "./sft_lora_output/checkpoint-27"
 else:
+    print("Downloading model from HF hub...")
+    download_start = time.time()
     from hf_util import sync_with_hf_hub
     sync_with_hf_hub(
         local_path="./sft_lora_output/checkpoint-27",
@@ -31,6 +34,7 @@ else:
         subfolder="sft_lora_output/checkpoint-27"
     )
     peft_lora_path = "./sft_lora_output/checkpoint-27"
+    print(f"Download completed in {time.time() - download_start:.2f} seconds")
 
 # Load environment variables (for WANDB_API_KEY)
 load_dotenv()
@@ -76,21 +80,18 @@ Propose mutations to optimize the stability of the enzyme given the information 
 2. How the mutation affects (or does not affect) protein function
 3. The chemical properties of the amino acids and substrates/products
 
-****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTIFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** 
+****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions****
 
-Copy the final sequence in the brackets of \\boxed{{}} to enclose the sequence:"""
+COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE:"""
 
     whole_prompt = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> reasoning process here </think>
-<answer> answer here </answer>. If there is a single final answer, wrap it in \\boxed{{}}. User: {enzyme_prompt}. Assistant:"""
-
-
+<answer> answer here </answer>. The assistant pays close attention to the user's instructions. User: {enzyme_prompt}. Assistant:"""
 
     return whole_prompt
 
 def validate_and_construct_prompt(x):
     """Wrapper function to validate data before constructing prompt"""
     try:
-
         # Ensure required fields exist and are of correct type
         if 'sequence' not in x:
             print(f"Warning: Missing required field 'sequence'")
@@ -151,6 +152,9 @@ def validate_and_construct_prompt(x):
         print(f"Problematic record: {json.dumps(x, default=str)}")
         return None
 
+print("\nLoading and processing BRENDA data...")
+data_load_start = time.time()
+
 # Create dataset from BRENDA data
 with open("data/transformed_brenda.json", 'r') as f:
     data_dict = json.load(f)
@@ -167,7 +171,10 @@ for item in data_list:
 # Create dataset from validated records
 train_dataset = Dataset.from_list(valid_data_list)
 print(f"Dataset size: {len(train_dataset)}")
+print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
 
+print("\nInitializing wandb...")
+wandb_start = time.time()
 # Initialize wandb
 wandb.login(key=os.getenv('WANDB_API_KEY'))
 wandb.init(
@@ -188,6 +195,7 @@ quantization_config = BitsAndBytesConfig(
 )
 
 print("Loading base model...")
+model_load_start = time.time()
 base_model = AutoModelForCausalLM.from_pretrained(
     model_name,
     quantization_config=quantization_config,
@@ -195,9 +203,12 @@ base_model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.float16,
     use_cache=False  # Disable KV cache to work with gradient checkpointing
 )
+print(f"Base model loaded in {time.time() - model_load_start:.2f} seconds")
 
-# Load tokenizer
+print("\nLoading tokenizer...")
+tokenizer_start = time.time()
 tokenizer = AutoTokenizer.from_pretrained(model_name)
+print(f"Tokenizer loaded in {time.time() - tokenizer_start:.2f} seconds")
 
 # Prepare base model for k-bit training
 base_model = prepare_model_for_kbit_training(base_model)
@@ -222,6 +233,8 @@ print(f"Number of trainable parameters: {sum(p.numel() for p in trainable_params
 
 model.train()  # Ensure model is in training mode
 
+print("\nInitializing stability calculator...")
+calc_start = time.time()
 calculator = StabilityRewardCalculator()
 
 # Try to load existing stability cache, create new if not found
@@ -230,14 +243,18 @@ try:
         stability_cache = json.load(f)
 except FileNotFoundError:
     stability_cache = {}
+print(f"Stability calculator initialized in {time.time() - calc_start:.2f} seconds")
 
 def calculate_relative_stability(original_seq, modified_seq, calculator):
     """Calculate percentage difference between original and modified sequence stability"""
     if original_seq in stability_cache:
         original_score = stability_cache[original_seq]
     else:
+        print(f"Calculating stability for {original_seq}")
+        stability_calc_start = time.time()
         original_score = calculator.calculate_stability(original_seq)
         stability_cache[original_seq] = original_score
+        print(f"Stability calculation completed in {time.time() - stability_calc_start:.2f} seconds")
         
     modified_score = calculator.calculate_stability(modified_seq)
     
@@ -303,6 +320,12 @@ class WandBLoggingCallback(TrainerCallback):
         if metrics:
             # Log evaluation metrics
             wandb.log({"eval/" + k: v for k, v in metrics.items()}, step=state.global_step)
+
+# def dummy_reward(prompts, completions, **kwargs):
+#     print(completions)
+#     return [1.0] * len(prompts)
+
+# dummy_dataset = Dataset.from_list([{"prompt": "print the letter a or b and nothing more"}])
 
 # Initialize GRPO trainer
 trainer = GRPOTrainer(

@@ -8,3 +8,4 @@ syn_data/brenda_seq.xlsx
 .DS_Store
 wandb/
 sft_lora_output
+grpo_output

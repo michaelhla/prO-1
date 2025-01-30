@@ -23,6 +23,7 @@ class StabilityRewardCalculator:
         
     def _load_protein_model(self, model_path, device):
         """Load ESMFold model for structure prediction"""
+        start_time = time.time()
         local_path = '/root/prO-1/model_cache/'
         if os.path.exists(local_path):
             model = EsmForProteinFolding.from_pretrained(local_path)
@@ -33,6 +34,7 @@ class StabilityRewardCalculator:
             
         if device == "cuda":
             model = model.cuda()
+        print(f"ESM loading took {time.time() - start_time:.2f} seconds")
         return model
 
     def predict_structure(self, sequence):
@@ -40,6 +42,7 @@ class StabilityRewardCalculator:
         if sequence in self.cached_structures:
             return self.cached_structures[sequence]
             
+        start_time = time.time()
         tokenizer = AutoTokenizer.from_pretrained("facebook/esmfold_v1")
         tokenized_input = tokenizer(
             [sequence], 
@@ -57,6 +60,7 @@ class StabilityRewardCalculator:
         
         # Cache the result
         self.cached_structures[sequence] = pdb_file
+        print(f"Structure prediction took {time.time() - start_time:.2f} seconds")
         return pdb_file
         
     def convert_outputs_to_pdb(self, outputs):

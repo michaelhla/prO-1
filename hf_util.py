@@ -51,7 +51,7 @@ def sync_with_hf_hub(local_path, repo_id, upload=False, subfolder=None):
         snapshot_download(
             repo_id=repo_id,
             local_dir=local_path,
-            subfolder=subfolder,  # Only download specific subfolder
+            allow_patterns=f"{subfolder}/**" if subfolder else None,  # Only download files in subfolder
             token=hf_token
         )
         print(f"Downloaded {repo_id}/{subfolder if subfolder else ''} to {local_path}")
