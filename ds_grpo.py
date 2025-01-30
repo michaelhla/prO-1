@@ -190,28 +190,37 @@ quantization_config = BitsAndBytesConfig(
 print("Loading base model...")
 base_model = AutoModelForCausalLM.from_pretrained(
     model_name,
-    quantization_config=quantization_config
+    quantization_config=quantization_config,
+    device_map="auto",
+    torch_dtype=torch.float16,
+    use_cache=False  # Disable KV cache to work with gradient checkpointing
 )
 
 # Load tokenizer
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-# Prepare base model for k-bit training (to keep it consistent with your ds_sft.py approach)
+# Prepare base model for k-bit training
 base_model = prepare_model_for_kbit_training(base_model)
 
 # Load LoRA adapters
 print(f"Loading LoRA adapter from {peft_lora_path}")
 model = PeftModel.from_pretrained(base_model, peft_lora_path)
 
-# Disable grad for all non‐LoRA parameters if desired (so only LoRA params update)
-
+# Enable gradient computation for LoRA parameters
 for name, param in model.named_parameters():
     if "lora" in name.lower():
         param.requires_grad = True
     else:
         param.requires_grad = False
 
-model.train()
+# Verify some parameters require gradients
+trainable_params = [p for p in model.parameters() if p.requires_grad]
+if not trainable_params:
+    raise ValueError("No parameters have requires_grad=True. Training will not work!")
+
+print(f"Number of trainable parameters: {sum(p.numel() for p in trainable_params)}")
+
+model.train()  # Ensure model is in training mode
 
 calculator = StabilityRewardCalculator()
 
@@ -267,6 +276,7 @@ def stability_reward_func(prompts, completions, sequences, **kwargs):
 # Create training arguments
 training_args = GRPOConfig(
     output_dir="./grpo_output",
+    run_name="grpo_training_run",  # Add distinct run name
     num_train_epochs=NUM_EPOCHS,
     per_device_train_batch_size=2,
     gradient_accumulation_steps=8,
@@ -278,6 +288,8 @@ training_args = GRPOConfig(
     temperature=0.7,
     beta=0.04,
     remove_unused_columns=False,
+    gradient_checkpointing=True,
+    gradient_checkpointing_kwargs={"use_reentrant": False}  # Explicitly set use_reentrant
 )
 
 
@@ -298,7 +310,7 @@ trainer = GRPOTrainer(
     args=training_args,
     train_dataset=train_dataset,
     reward_funcs=stability_reward_func,
-    tokenizer=tokenizer,
+    processing_class=tokenizer,
     callbacks=[WandBLoggingCallback()], 
 )
 

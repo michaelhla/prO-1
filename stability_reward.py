@@ -6,7 +6,6 @@ from transformers.models.esm.openfold_utils.feats import atom14_to_atom37
 import pyrosetta_installer
 pyrosetta_installer.install_pyrosetta()
 import pyrosetta
-pyrosetta.init()
 from pyrosetta import Pose
 from pyrosetta.rosetta.core.pose import make_pose_from_sequence
 from pyrosetta.rosetta.core.chemical import ResidueTypeSet, ChemicalManager
