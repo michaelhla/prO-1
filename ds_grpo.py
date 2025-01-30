@@ -236,10 +236,10 @@ def calculate_relative_stability(original_seq, modified_seq, calculator):
     if original_seq in stability_cache:
         original_score = stability_cache[original_seq]
     else:
-        original_score = calculator.get_stability_score(original_seq)
+        original_score = calculator.calculate_stability(original_seq)
         stability_cache[original_seq] = original_score
         
-    modified_score = calculator.get_stability_score(modified_seq)
+    modified_score = calculator.calculate_stability(modified_seq)
     
     # Calculate percentage difference
     reward = -((modified_score - original_score) / abs(original_score)) * 100
@@ -278,11 +278,11 @@ training_args = GRPOConfig(
     output_dir="./grpo_output",
     run_name="grpo_training_run",  # Add distinct run name
     num_train_epochs=NUM_EPOCHS,
-    per_device_train_batch_size=2,
+    per_device_train_batch_size=1,
     gradient_accumulation_steps=8,
     learning_rate=1.41e-5,
     logging_steps=1,
-    num_generations=4,
+    num_generations=2,
     max_prompt_length=512,
     max_completion_length=512,
     temperature=0.7,
