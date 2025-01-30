@@ -19,7 +19,18 @@ NUM_EPOCHS = 10
 # Load the base model & LoRA adapter exactly as in ds_sft.py, then convert to ValueHead
 
 model_name = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
-peft_lora_path = "./sft_lora_output/checkpoint-27"  # Changed to use output_dir's final checkpoint
+# Check if local path exists, otherwise download from HF hub
+if os.path.exists("./sft_lora_output/checkpoint-27"):
+    peft_lora_path = "./sft_lora_output/checkpoint-27"
+else:
+    from hf_util import sync_with_hf_hub
+    sync_with_hf_hub(
+        local_path="./sft_lora_output/checkpoint-27",
+        repo_id="mhla/prO-1",
+        upload=False,
+        subfolder="sft_lora_output/checkpoint-27"
+    )
+    peft_lora_path = "./sft_lora_output/checkpoint-27"
 
 # Load environment variables (for WANDB_API_KEY)
 load_dotenv()
@@ -70,12 +81,92 @@ Propose mutations to optimize the stability of the enzyme given the information 
 Copy the final sequence in the brackets of \\boxed{{}} to enclose the sequence:"""
 
     whole_prompt = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> reasoning process here </think>
-<answer> answer here </answer>. If there is a single final answer, wrap it in \\boxed{{}}. User: {prompt}. Assistant:"""
+<answer> answer here </answer>. If there is a single final answer, wrap it in \\boxed{{}}. User: {enzyme_prompt}. Assistant:"""
 
 
 
     return whole_prompt
 
+def validate_and_construct_prompt(x):
+    """Wrapper function to validate data before constructing prompt"""
+    try:
+
+        # Ensure required fields exist and are of correct type
+        if 'sequence' not in x:
+            print(f"Warning: Missing required field 'sequence'")
+            return None
+            
+        # Convert all fields to strings where appropriate
+        safe_data = {
+            'name': str(x.get('name', 'Unknown')),
+            'ec_number': str(x.get('ec_number', 'Unknown')),
+            'sequence': str(x['sequence']),
+            'general_information': str(x.get('general_information', 'No additional information available')),
+            'reaction': [],
+            'metal_ions': [],
+            'engineering': []
+        }
+        
+        # Handle reaction data
+        if 'reaction' in x and x['reaction']:
+            safe_data['reaction'] = []
+            for reaction in x['reaction']:
+                if isinstance(reaction, dict):
+                    safe_reaction = {
+                        'substrates': [str(s) for s in reaction.get('substrates', [])],
+                        'products': [str(p) for p in reaction.get('products', [])]
+                    }
+                    safe_data['reaction'].append(safe_reaction)
+        
+        # Handle metal ions
+        if 'metal_ions' in x and x['metal_ions']:
+            safe_data['metal_ions'] = [str(ion) for ion in x['metal_ions']]
+            
+        # Handle engineering data
+        if 'engineering' in x and x['engineering']:
+            safe_data['engineering'] = []
+            for mut in x['engineering']:
+                if isinstance(mut, dict):
+                    safe_mut = {
+                        'mutation': str(mut.get('mutation', '')),
+                        'effect': str(mut.get('effect', ''))
+                    }
+                    safe_data['engineering'].append(safe_mut)
+        
+        # Create the dataset record
+        result = {
+            "prompt": construct_prompt(safe_data, safe_data['sequence']), 
+            "sequences": safe_data['sequence']
+        }
+        
+        # Verify the output is valid
+        if not isinstance(result['prompt'], str) or not isinstance(result['sequences'], str):
+            print(f"Warning: Invalid output types - prompt: {type(result['prompt'])}, sequences: {type(result['sequences'])}")
+            return None
+            
+        return result
+        
+    except Exception as e:
+        print(f"Error processing record: {str(e)}")
+        print(f"Problematic record: {json.dumps(x, default=str)}")
+        return None
+
+# Create dataset from BRENDA data
+with open("data/transformed_brenda.json", 'r') as f:
+    data_dict = json.load(f)
+    # Convert dictionary values to list of records
+    data_list = list(data_dict.values())
+
+# Create the dataset with strict validation
+valid_data_list = []
+for item in data_list:
+    processed = validate_and_construct_prompt(item)
+    if processed is not None:
+        valid_data_list.append(processed)
+
+# Create dataset from validated records
+train_dataset = Dataset.from_list(valid_data_list)
+print(f"Dataset size: {len(train_dataset)}")
 
 # Initialize wandb
 wandb.login(key=os.getenv('WANDB_API_KEY'))
@@ -102,15 +193,15 @@ base_model = AutoModelForCausalLM.from_pretrained(
     quantization_config=quantization_config
 )
 
+# Load tokenizer
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
 # Prepare base model for k-bit training (to keep it consistent with your ds_sft.py approach)
 base_model = prepare_model_for_kbit_training(base_model)
 
 # Load LoRA adapters
 print(f"Loading LoRA adapter from {peft_lora_path}")
 model = PeftModel.from_pretrained(base_model, peft_lora_path)
-
-# Load tokenizer
-tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
 
 # Disable grad for all non‐LoRA parameters if desired (so only LoRA params update)
 
@@ -189,10 +280,6 @@ training_args = GRPOConfig(
     remove_unused_columns=False,
 )
 
-# Create dataset from BRENDA data
-train_dataset = Dataset.from_json("data/brenda_data.json").map(
-    lambda x: {"prompt": construct_prompt(x, x['sequence']), "sequences": x['sequence']}
-)
 
 class WandBLoggingCallback(TrainerCallback):
     def on_log(self, args, state, control, logs=None, **kwargs):
@@ -212,7 +299,7 @@ trainer = GRPOTrainer(
     train_dataset=train_dataset,
     reward_funcs=stability_reward_func,
     tokenizer=tokenizer,
-    callbacks=[WandBLoggingCallback()]
+    callbacks=[WandBLoggingCallback()], 
 )
 
 # Train the model

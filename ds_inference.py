@@ -39,31 +39,43 @@ def run_inference(sequence, active_site_residues, pdb_file=None, stability_score
 
     if device == "cuda":
         model = model.cuda()
-    # Define variables for prompt
-    name = "amide bond synthetase"
-    ec_number = "6.3.1"
-    general_information = "Amide bond synthetase is an enzyme that catalyzes the formation of amide bonds between a carbonyl group and an amine group. It is found in the liver of mammals and plays a crucial role in the synthesis of proteins."
-    substrates = ["C1=CC(=CC=C1C(=O)O)Cl", "C1COCCN1CCN"]
-    products = ["C1COCCN1CCNC(=O)C2=CC=C(C=C2)Cl", "[O-]P(=O)([O-])[O-]"]
-    metal_ions = []
 
-    # Format prompt similar to MCTS
-    prompt = f"""You are an expert protein engineer. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
+    # Format enzyme data dictionary to match grpo structure
+    enzyme_data = {
+        "name": "amide bond synthetase",
+        "ec_number": "6.3.1",
+        "general_information": "Amide bond synthetase is an enzyme that catalyzes the formation of amide bonds between a carbonyl group and an amine group. It is found in the liver of mammals and plays a crucial role in the synthesis of proteins.",
+        "reaction": [{
+            "substrates": ["C1=CC(=CC=C1C(=O)O)Cl", "C1COCCN1CCN"],
+            "products": ["C1COCCN1CCNC(=O)C2=CC=C(C=C2)Cl", "[O-]P(=O)([O-])[O-]"]
+        }],
+        "metal_ions": [],
+        "active_site_residues": active_site_residues
+    }
 
-ENZYME NAME: {name}
-EC NUMBER: {ec_number}
-GENERAL INFORMATION: {general_information}
-SUBSTRATES: {', '.join(substrates)}
-PRODUCTS: {', '.join(products)} 
-METALS/IONS: {', '.join(metal_ions)}
+    # Use the construct_prompt function format
+    base_prompt = f"""You are an expert protein engineer in rational protein design. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
+
+ENZYME NAME: {enzyme_data['name']}
+EC NUMBER: {enzyme_data['ec_number']}
+ENZYME SEQUENCE: {sequence}
+GENERAL INFORMATION: {enzyme_data['general_information']}
+SUBSTRATES: {', '.join(enzyme_data['reaction'][0]['substrates'])}
+PRODUCTS: {', '.join(enzyme_data['reaction'][0]['products'])}
+METALS/IONS: None
 ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in active_site_residues])}
 
-Propose a few mutations that will optimize enzymatic activity given the substrates and products above. For each proposed mutation, explain your reasoning and consider:
-1. How the mutation affects protein structure and function
-2. The chemical properties of the amino acids and substrates/products
-3. The position's importance in the protein sequence
+Propose mutations to optimize the stability of the enzyme given the information above. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning and consider:
+1. How the mutation affects (or does not affect) protein structure
+2. How the mutation affects (or does not affect) protein function
+3. The chemical properties of the amino acids and substrates/products
 
-For each mutation you propose, provide clear, scientific reasoning for why the mutation would be beneficial, ****USE YOUR KNOWLEDGE OF THIS SPECIFIC ENZYME AND REACTION****. Keep your response to under 100 words."""
+****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTIFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** 
+
+Copy the final sequence in the brackets of \\boxed{{}} to enclose the sequence:"""
+
+    prompt = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> reasoning process here </think>
+<answer> answer here </answer>. If there is a single final answer, wrap it in \\boxed{{}}. User: {base_prompt}. Assistant:"""
 
     best_response = None
     best_score = float('inf')

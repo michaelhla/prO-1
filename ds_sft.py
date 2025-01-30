@@ -92,7 +92,6 @@ def train_model():
     model.config.use_cache = False
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-
     # Load and process dataset with tokenizer
     train_dataset = load_sft_data("data/cot_mutation_traces.json", tokenizer)
 
