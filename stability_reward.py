@@ -127,6 +127,7 @@ class StabilityRewardCalculator:
         print(f"Stability score: {stability_score} calculated in {time.time() - start_time:.2f} seconds")
         return stability_score
 
+## for testing, deprecated
 def get_stability_reward(sequence):
     calculator = StabilityRewardCalculator()
     return calculator.calculate_stability(sequence)
