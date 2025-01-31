@@ -1,9 +1,10 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TextIteratorStreamer
 from peft import PeftModel, prepare_model_for_kbit_training
 from trl import AutoModelForCausalLMWithValueHead
 from stability_reward import StabilityRewardCalculator
 import re
+import threading
 
 def get_critic_feedback(critic_model, critic_tokenizer, pdb_file, stability_score, base_output):
     """Get feedback from the critic model based on structural and stability analysis"""
@@ -16,14 +17,31 @@ Stability Score: {stability_score}
 
 Provide hyperspecific feedback using the pdb structure generated and the stability score. If confident, suggest mutations that may remedy your critiques as well. [ASSISTANT]:"""
     inputs = critic_tokenizer(critic_prompt, return_tensors="pt").to("cuda")
-    with torch.no_grad():
-        outputs = critic_model.generate(
-            **inputs,
-            max_new_tokens=5000,
-            do_sample=True,
-            temperature=0.7
-        )
-    return critic_tokenizer.decode(outputs[0], skip_special_tokens=True)
+    
+    # Create streamer
+    streamer = TextIteratorStreamer(critic_tokenizer, skip_special_tokens=True)
+    
+    # Create generation kwargs
+    generation_kwargs = dict(
+        **inputs,
+        max_new_tokens=5000,
+        do_sample=True,
+        temperature=0.7,
+        streamer=streamer
+    )
+    
+    # Create thread to run generation
+    thread = threading.Thread(target=critic_model.generate, kwargs=generation_kwargs)
+    thread.start()
+    
+    # Print tokens as they're generated
+    generated_text = ""
+    for new_text in streamer:
+        print(new_text, end="", flush=True)
+        generated_text += new_text
+    print()
+    
+    return generated_text
 
 def extract_sequence_from_response(response):
     """Extract sequence from model response using regex pattern matching"""
@@ -56,12 +74,14 @@ PRODUCTS: {', '.join(enzyme_data['reaction'][0]['products'])}
 METALS/IONS: None
 ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in enzyme_data['active_site_residues']])}
 
-Propose mutations to optimize the stability of the enzyme given the information above. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning and consider:
+Propose 3-7 mutations to optimize the stability of the enzyme given the information above. YOUR MUTATIONS MUST BE POSITION SPECIFIC TO THE SEQUENCE. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning and consider:
 1. How the mutation affects (or does not affect) protein structure
 2. How the mutation affects (or does not affect) protein function
 3. The chemical properties of the amino acids and substrates/products
 
-****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions****
+ 
+
+****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions.****
 
 COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE:"""
 
@@ -75,29 +95,44 @@ COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE:"
     for iteration in range(max_iterations):
         # Add critic's previous feedback to the prompt if available
         if iteration > 0:
-            prompt = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> REASONING PROCESS HERE </think>
-<answer> ANSWER HERE </answer>. Follow the formatting instructions exactly as specified. [USER]: 
-CRITIC'S FEEDBACK ON YOUR DESIGNS: {critic_feedback}
+            if critic_feedback is not None:
+                prompt = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> REASONING PROCESS HERE </think>
+<answer> ANSWER HERE </answer>. Follow the formatting instructions exactly as specified. [USER]: You have made some modifications to an enzyme sequence prior. Feedback on your sequence is below. 
+CRITIC'S FEEDBACK ON YOUR MODIFICATIONS: {critic_feedback}
 RECONSIDER YOUR DESIGNS BASED ON THE FEEDBACK. [ASSISTANT]:"""
+            else:
+                prompt = current_response
+                prompt+= "[USER]: You did not copy the final sequence in the brackets of \\boxed{{}}. Please do so. [ASSISTANT]:"
 
-        # Generate response
+        # Generate response with streaming
         inputs = tokenizer(prompt, return_tensors="pt")
         if device == "cuda":
             inputs = {k: v.cuda() for k, v in inputs.items()}
-
-        with torch.no_grad():
-            outputs = model.generate(
-                **inputs,
-                max_new_tokens=5000,
-                do_sample=True,
-                temperature=0.7,
-                top_p=0.9
-            )
-
-        current_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-        print(current_response)
         
+        # Create streamer
+        streamer = TextIteratorStreamer(tokenizer, skip_special_tokens=True)
+        
+        # Create generation kwargs
+        generation_kwargs = dict(
+            **inputs,
+            max_new_tokens=5000,
+            do_sample=True,
+            temperature=0.7,
+            top_p=0.9,
+            streamer=streamer
+        )
+        
+        # Create thread to run generation
+        thread = threading.Thread(target=model.generate, kwargs=generation_kwargs)
+        thread.start()
+        
+        # Print tokens as they're generated
+        current_response = ""
+        for new_text in streamer:
+            print(new_text, end="", flush=True)
+            current_response += new_text
+        print()
+
         # Extract sequence from response
         modified_sequence = extract_sequence_from_response(current_response)
         if modified_sequence is None:
