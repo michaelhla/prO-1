@@ -1,2383 +1,2595 @@
 {
-  "B6EU02": {
-    "ec_number": "1.14.11.6",
-    "name": "thymine dioxygenase",
-    "sequence": "MLNGLTRVSTSSELESILDIVQSSGEIAVVFISPSIGDLETITSETQRRQLRIAGIPRGGYTILPAIPLYDDELLQMCERYTAANDYEKAQIRDSLFMREYPLFAYSVRNHKALFHPADYVSRILQFCSYYVQAPDADVLSLLDRSPFLHISPIKEICTHIRLIARGTPLAPEDSESPAPEQLRFHAESDAEKLAAERAGAMSIATSSGGASETEQLSLFSGVVPSALFQKDAVEEVDKDTEETMVDLTGEETVDAVHSFQAEYLTLDGLELVTKAAIFYDREGEGQRIVAVYIPGGVPEDTCRAAAAVLEPAATKKNLRALTNGGLPPDTGLVGYYDYLTNPTRHKCRETEFSRRNWGLLAQSEPLLKHLDKLYSQLAPMHHHLQKVAIPSQYQLCGTVFSTITVNRNFRTAVHTDKGDFRSGLGVLSVINGEFEGCHLAIKKLKKAFQLKVGDVLLFDTSLEHGNTEVINPEIHWQRTSIVCYLRTGLMSSVCEMERRKHLNRLILQQLRNTEVLNTTVNINGADSSLPPLFVPTRLASHLAPVQLAALGFIVERTEKQSGCVVAMTMGLGKTLVALTLCFSQLHLAPQADILILTPKPIISHWVDEKNKWAMHGLHFPHFVASDGLNSLEFEQQLLEYERQKNNEKPKLGHVFVINGEYLAGFLRRFKRFTPLLIIVDEGHRVAAKGNKLTESLDRLRCNLRIVLSGTPLQNDASELYRLVGWVNKGVGRVLPPKRFQELANDINQFVEGDDGAFYNAVMAQEYIQDWMRGFVFREMENDLPPLHDYLLICGSSDVQREYEEKLGLTETTMTALKATEHRPHHLSTHPACYLAFISDSYQSMVSGWTVRAQANTSRMRVSQLEEIDTMRLEHYVQMVENEQLDTFIDLSGKMRVLVDIVLRVQARKEKLIIFSLYVGSQDLIHRTLTALRVCTFTVRGRDSQDRRRRAMQEFSENKDLIVLVLSTKIAAYGLDFTAANHVVLFDSWWNPQVDAQAIARAYRRNQRKPVTVYRLISATENKFVLSSQTRKIALFKCILHERTSRQALPDELEDCAANEKDEERRSFWAKLKTTLLAGGTRALLNVYRYQESVRESE",
+  "P93733": {
+    "ec_number": "3.1.4.4",
+    "name": "phospholipase D",
+    "sequence": "MDNHGPRYPYPYGQYPYPYPYPAPYRPPSSEPYPPPPTNQYSAPYYPYPPPPYATPPPYASPPPPHQHTSGSHSGPLDYSHNPQPSSLAAAPPEYHRHSFDYQPSPYPYQPQGNFGAYGPPPPHYSYQEPAQYPPPETKPQEPLPPPQQTQGFQEYRRQDCLSTGGTGHDNVSNSGSSYPPVDELLGGLHISTNQPGPSVPQLSSLPSNSWQSRPGDLYGYPNSSFPSNSHLPQLGRVDSSSSYYASTESPHSADMQMTLFGKGSLKVLLLHGNLDIWIYHAKNLPNMDMFHKTLGDMFGRLPGKIEGQLTSKITSDPYVSVSVAGAVIGRTYVMSNSENPVWMQHFYVPVAHHAAEVHFVVKDSDVVGSQLIGLVTIPVEQIYSGAKIEGTYPILNSNGKPCKPGANLSLSIQYTPMDKLSVYHHGVGAGPDYQGVPGTYFPLRKGGTVRLYQDAHVPEGMLPGIRLDNGMSYEHGKCWHDMFDAIRQARRLIYITGWSVWHKVKLIRDKLGPASECTLGELLRSKSQEGVRVLLLIWDDPTSRSILGYKTDGVMATHDEETRRFFKHSSVQVLLCPRNAGKRHSWVKQREVGTIYTHHQKNVIVDADAGGNRRKIIAFVGGLDLCDGRYDTPQHPLFRTLQTIHKDDFHNPTFTGNLSGCPREPWHDLHSKIDGPAAYDVLTNFEERWLKAAKPSGIKKFKTSYDDALLRIDRIPDILGVSDTPTVSENDPEAWHVQIFRSIDSNSVKGFPKDPKDATCKNLVCGKNVLIDMSIHTAYVKAIRAAQHFIYIENQYFIGSSYNWNAHKDIGANNLIPMEIALKIAEKIRANERFAAYIVIPMWPEGVPTGAATQRILYWQHKTIQMMYETIYKALVETGLEGAFSPQDYLNFFCLGNREMVDGIDNSGTGSPSNANTPQALSRKSRRFMVYVHSKGMVVDDEYVVIGSANINQRSMEGTRDTEIAMGAYQPQHTWARKHSGPRGQIYGYRMSLWAEHMATLDDCFTQPESIECVRKVRTMGERNWKQFAAEEVSDMRGHLLKYPVEVDRKGKVRPLPGSETFPDVGGNIVGSFIAIQENLTI",
+    "reaction": [],
+    "kinetics": {},
+    "metals_ions": [
+      "Ca2+"
+    ]
+  },
+  "I1Y9V9": {
+    "ec_number": "2.7.7.52",
+    "name": "RNA uridylyltransferase",
+    "sequence": "MRIYFLVLILYQIKGRGLNKIVFFLDLFDYFTFNQRYFKILLQNDTIFLLINFIKNYQQNTKQEKLLKRLIVIKNMDLNFSDDDDEQEIQQQQEPQQIEELNKQEDNSQLDQTISVINTKNYKIKTQTPFSADEVYSQIYAYLESKQSKLVCIEVKMEVNKTDKLEKSNDESIQIIKGSISYEFFKFREINDKLKFPPPLDIYQNNIILENQDEEFDFKLNPKQYSRFPFINPSNDIFEKSQTFDVTIQGEVLGFEKVKLNEVQGFELEKKDGEDKISQTFIQSFETAQAISLGSYARDQHNYYFESLYNLGEKECTFIHLEQCYEYHMFTIFLNFRSVGQVKIVLDKPIIQVEGQYKYLIATSTPKFFASTQTYHLINLVEDKKQWYPIHNILLTLPNISTYMKIYSAENFAIKLSLKEKEIKQTNKDQPFTQNILQFTIDLSFQIQYMLLVLLSNKKISLFEFPKLQQCLKQMCQGKAFFFLNNLMNRQEHQKITDFLNIDENQVLPGPEYQIVYRVVVSPSKFNFLLPSSEYNSYLIKELETGVNETQNIVRIIFEGNESDFIQSIYYREILMSFNMLSKTFCYFGKQNNDALLIEVKTIPQNMPNLKKKDIMQHYNNELCLKLQNVGDYSSIKNVYEQQMTINQALWKSLFIFDDKDKIYSMENPFQFGLINDLIYIKILEQIKQELNVKIENINCLLIQLNGCTSLFFPMGLVKEDIVQQYKKNSFILPSVHCNHQSNKKNKLYLIDYNQLEKGWISLEISKKISNQFEVEHKQFFNDQDQIYETINQLLPLDNILTQCSQKVFRKNFNQLLSNKYDLSQEYFFMILKDILANKKKMLSLDNQRIYPQNCFRLYSFIDQQQELKEDEIFVQIQQNNKFQIIEGPVLLVNETDQQIIIKKVTAKSDLFSLDSYKKFKNIVAVSQQNLNLFNHKQKITLIYGETINQLKLNQQLIQKDKKNVKEQEGINVKKSAKIFLESKTNSKESKEFDLVRPNIMNQFSQNQLFLKAFEEDIKIDEHEIIEAKQETFKQALANIEKYSGIFSQFNQKYGLSSNFKIYELLFEGRNNTDIQILQEFEDILVKFADEAFQESIDQEINDKKLFYLNFNKKLIKSDDDEDFQDTMQCLKLTSGIYYLCLIACLAYAQNKNFNEIAQLIQEQFKFDIKNYNQQIQKIQVNDGLLGFFWILCVKQFI",
+    "reaction": [],
+    "kinetics": {},
+    "general_information": [
+      "isoform Rsp1 associates with uridylyltransferase Rdn1-RNA-dependent RNA polymerase Rdf1 or Rdn1-Rdf2 subcomplexes, creating Rsp1 complexes RSPCs that are physically separate from RNA-dependent RNA polymerase complexes RDRCs. The uridylyltransferase activity of Rdn1 is greatly reduced in RSPCs compared with RDRCs, suggesting enzyme regulation by the alternative partners. Despite the loss of all known RDRC-generated classes of endogenous sRNAs, RSP1 gene knockout is tolerated in growing cells. A minority class of dicer protein Dcr2-dependent sRNAs persists in cells lacking Rsp1 with increased size heterogeneity <21>; #12,13# isoforms TUT7/ZCCHC6, TUT4/ZCCHC11, and TUT2/PAPD4/GLD2 are the terminal uridylyltransferases responsible for pre-miRNA mono-uridylation. The terminal uridylyl transferases act specifically on dsRNAs with a 1 nucleotide 3 overhang, thereby creating a 2 nucleotide 3 overhang. Depletion of terminal uridylyl transferases reduces let-7 microRNA levels and disrupts let-7 function. Although the let-7 suppressor, Lin28, induces inhibitory oligo-uridylation in embryonic stem cells, mono-uridylation occurs in somatic cells lacking Lin28 to promote let-7 biogenesis <16>; #12,13# isoforms Zcchc11 and Zcchc6 redundantly control let-7 biogenesis in embryonic stem cells <22>; #17# isoform HESO1, which uridylates most unmethylated miRNAs in vivo, and isoform URT1 which exhibits nucleotidyl transferase activity on unmethylated miRNA, prefer substrates with different 3-end nucleotides in vitro and act cooperatively to tail different forms of the same miRNAs in vivo. Both HESO1 and URT1 exhibit nucleotidyl transferase activity on AGO1-bound miRNAs. Although the enzymes are able to add long tails to AGO1-bound miRNAs, the tailed miRNAs remain associated with AGO1. Tailing of AGO1-bound miRNA165/6 drastically reduces the slicing activity of AGO1-miR165/6 <25>; #18# isoform Tailor preferentially uridylates mirtron hairpins, thereby impeding the production of non-canonical microRNAs. Mirtron selectivity is explained by primary sequence specificity of Tailor, selecting substrates ending with a 3-guanosine. In contrast to mirtrons, conserved Drosophila precursor micro-RNAs are significantly depleted in 3-guanosine, thereby escaping regulatory uridylation. Cytoplasmic Tailor is required for miRNA uridylation and normal fertility in flies <23>; #16# oligo(A)-tailed mRNAs are uridylated by the cytosolic UTP"
+    ]
+  },
+  "Q8IUN0": {
+    "ec_number": "3.1.4.12",
+    "name": "sphingomyelin phosphodiesterase",
+    "sequence": "MPRYGASLRQSCPRSGREQGQDGTAGAPGLLWMGLALALALALALALSDSRVLWAPAEAHPLSPQGHPARLHRIVPRLRDVFGWGNLTCPICKGLFTAINLGLKKEPNVARVGSVAIKLCNLLKIAPPAVCQSIVHLFEDDMVEVWRRSVLSPSEACGLLLGSTCGHWDIFSSWNISLPTVPKPPPKPPSPPAPGAPVSRILFLTDLHWDHDYLEGTDPDCADPLCCRRGSGLPPASRPGAGYWGEYSKCDLPLRTLESLLSGLGPAGPFDMVYWTGDIPAHDVWHQTRQDQLRALTTVTALVRKFLGPVPVYPAVGNHESTPVNSFPPPFIEGNHSSRWLYEAMAKAWEPWLPAEALRTLRCI",
     "reaction": [
       {
         "substrates": [
-          "thymine",
-          "2-oxoglutarate",
+          "a sphingomyelin",
+          "H2O"
+        ],
+        "products": [
+          "a ceramide",
+          "phosphocholine"
+        ]
+      }
+    ],
+    "kinetics": {},
+    "metals_ions": [
+      "Mg2+",
+      "Zn2+"
+    ]
+  },
+  "B8I944": {
+    "ec_number": "5.1.3.30",
+    "name": "D-psicose 3-epimerase",
+    "sequence": "MKHGIYYAYWEQEWEADYKYYIEKVAKLGFDILEIAASPLPFYSDIQINELKACAHGNGITLTVGHGPSAEQNLSSPDPDIRKNAKAFYTDLLKRLYKLDVHLIGGALYSYWPIDYTKTIDKKGDWERSVESVREVAKVAEACGVDFCLEVLNRFENYLINTAQEGVDFVKQVDHNNVKVMLDTFHMNIEEDSIGGAIRTAGSYLGHLHTGECNRKVPGRGRIPWVEIGEALADIGYNGSVVMEPFVRMGGTVGSNIKVWRDISNGADEKMLDREAQAALDFSRYVLECHKHS",
+    "reaction": [
+      {
+        "substrates": [
+          "D-psicose"
+        ],
+        "products": [
+          "D-fructose"
+        ]
+      },
+      {
+        "substrates": [
+          "D-fructose"
+        ],
+        "products": [
+          "D-psicose"
+        ]
+      }
+    ],
+    "kinetics": {
+      "km_values": [
+        {
+          "substrate": "D-psicose",
+          "value": 17.4,
+          "comment": "#6# pH 8.0, 55\u00b0C <4>"
+        },
+        {
+          "substrate": "D-fructose",
+          "value": 53.5,
+          "comment": "#6# pH 8.0, 55\u00b0C <4>"
+        }
+      ]
+    },
+    "metals_ions": [
+      "Mn2+",
+      "Mg2+",
+      "Co2+",
+      "Ni2+",
+      "Fe2+"
+    ]
+  },
+  "P62820": {
+    "ec_number": "3.6.5.2",
+    "name": "small monomeric GTPase",
+    "sequence": "MSSMNPEYDYLFKLLLIGDSGVGKSCLLLRFADDTYTESYISTIGVDFKIRTIELDGKTIKLQIWDTAGQERFRTITSSYYRGAHGIIVVYDVTDQESFNNVKQWLQEIDRYASENVNKLLVGNKCDLTTKKVVDYTTAKEFADSLGIPFLETSAKNATNVEQSFMTMAAEIKKRMGPGATAGGAEKSNVKIQSTPVKQSGGGCC",
+    "reaction": [
+      {
+        "substrates": [
+          "GTP",
+          "H2O"
+        ],
+        "products": [
+          "GDP",
+          "phosphate"
+        ]
+      },
+      {
+        "substrates": [
+          "GTP",
+          "H2O"
+        ],
+        "products": [
+          "GDP",
+          "phosphate"
+        ]
+      }
+    ],
+    "kinetics": {},
+    "general_information": [
+      "Rab small GTPases are membrane trafficking proteins. Rab1A non-redundantly regulates Golgi morphology possibly through interaction with an isoform-specific effector molecule <152>; #114# Rab small GTPases are membrane trafficking proteins. Rab1B non-redundantly regulates Golgi morphology possibly through interaction with an isoform-specific effector molecule <152>; #111# Rab small GTPases are membrane trafficking proteins. Rab2A non-redundantly regulates Golgi morphology possibly through interaction with an isoform-specific effector molecule <152>; #113# Rab small GTPases are membrane trafficking proteins. Rab2B non-redundantly regulates Golgi morphology possibly through interaction with an isoform-specific effector molecule. Golgi-associated Rab2B interactor-like 4 (GARI-L4) is a Golgi-resident Rab2B-specific binding protein whose knockdown also induces fragmentation of the Golgi like the knockdown of Rab2B. Effector protein GARI-L4 is required for the compacted Golgi morphology in HeLa-S3 cells <152>; #116# Rab small GTPases are membrane trafficking proteins. Rab6A non-redundantly regulates Golgi morphology possibly through interaction with an isoform-specific effector molecule <152>; #117# Rab small GTPases are membrane trafficking proteins. Rab8B non-redundantly regulates Golgi morphology possibly through interaction with an isoform-specific effector molecule <152>; #118# Rac/Rop protein OsRac1 plays an important role in regulating the production of reactive oxygen species by the NADPH oxidase OsRbohB during innate immunity. Direct OsRac1-OsRbohB interactions activate NADPH oxidase in plants <151>; #39# Rac1 is one of the biologically important gene in coronary heart diseases. Rac directly regulates the activity of the NADPH oxidase and the generation of reactive oxygen species (ROS), important players of cardiovascular disorder <153>; #106# Rac1 is one of the biologically important genes in coronary heart diseases, i.e. cardiomyocyte hypertrophy and atherosclerosis, overview. Rac directly regulates the activity of the NADPH oxidase and the generation of reactive oxygen species (ROS), important players of cardiovascular disorder. Rac1 facilitates the formation of the lamellipodia structures by initiating peripheral actin polymerization through the Arp2/3 complex that is activated by either the Wiskott-Aldrich syndrome protein (WASP) family or the WAVE (WASP with a V-domain) family proteins. Rac1, through the calmodulin-binding GAP, that is enriched at the leading edge of migrating cells, influences the organization of microtubules, and thus cell shape and polarity. In addition to the cytoskeletal and microtubules effects, Rac1 regulates several signal transduction pathways that lead to alterations in gene expression. Cellular effects of Rac1 activation in cardiomyocytes, smooth muscle cells, endothelial cells, and leukocytes, overview <153>; #107# Rac1 is one of the biologically important genes in coronary heart diseases. Rac directly regulates the activity of the NADPH oxidase and the generation of reactive oxygen species (ROS), important players of cardiovascular disorder <153>; #10# Rad is a Ras-related small GTPase shown to inhibit cancer cell migration, and its expression is frequently lost in lung cancer cells. Rad can negatively regulate the NFkappaB pathway. Rad-mediated regulation of NFkappaB is through an IkappaB-independent mechanism. Expression of a nucleus-localized mutant Rad is sufficient to inhibit the NFkappaB transcriptional activity, whereas expressing the scaffolding protein 14-3-3gamma to retain Rad in the cytoplasm alleviates the suppressive effect of Rad on NFkappaB. The Rad-p65 interaction primarily occurs in the nucleus. Rad may directly impede the interaction between RelA/p65 and DNA. Role of nuclear Rad in inhibiting the NFkappaB pathway function <147>; #103# remodeling of the actin cytoskeleton heavily relies on the regulation of RhoGTPases which have important and conserved roles in almost all its functions. Their activity is tightly regulated by three classes of molecules"
+    ]
+  },
+  "Q8NER5": {
+    "ec_number": "2.7.11.30",
+    "name": "receptor protein serine/threonine kinase",
+    "sequence": "MTRALCSALRQALLLLAAAAELSPGLKCVCLLCDSSNFTCQTEGACWASVMLTNGKEQVIKSCVSLPELNAQVFCHSSNNVTKTECCFTDFCNNITLHLPTASPNAPKLGPMELAIIITVPVCLLSIAAMLTVWACQGRQCSYRKKKRPNVEEPLSECNLVNAGKTLKDLIYDVTASGSGSGLPLLVQRTIARTIVLQEIVGKGRFGEVWHGRWCGEDVAVKIFSSRDERSWFREAEIYQTVMLRHENILGFIAADNKDNGTWTQLWLVSEYHEQGSLYDYLNRNIVTVAGMIKLALSIASGLAHLHMEIVGTQGKPAIAHRDIKSKNILVKKCETCAIADLGLAVKHDSILNTIDIPQNPKVGTKRYMAPEMLDDTMNVNIFESFKRADIYSVGLVYWEIARRCSVGGIVEEYQLPYYDMVPSDPSIEEMRKVVCDQKFRPSIPNQWQSCEALRVMGRIMRECWYANGAARLTALRIKKTISQLCVKEDCKA",
+    "reaction": [],
+    "kinetics": {}
+  },
+  "Q6GGG1": {
+    "ec_number": "2.7.1.71",
+    "name": "shikimate kinase",
+    "sequence": "MNHDKSPIILIGFMGTGKSTIGKYVADEQNLSFIDIDSYIEEKYKLTIPEIFSKHGEQYFRNLEFTCLQECINTADIIATGGGIIESEEVFNFLKNQKNIIWLDCNIDIIYSRINDDPHRPNANNKTIKQLNDLYCSRILRYNEIAFKKFDSHLLSISEIYYELLNLIKASDQY",
+    "reaction": [
+      {
+        "substrates": [
+          "ATP",
+          "shikimate"
+        ],
+        "products": [
+          "ADP",
+          "3-phosphoshikimate"
+        ]
+      },
+      {
+        "substrates": [
+          "ATP",
+          "shikimate"
+        ],
+        "products": [
+          "ADP",
+          "3-phosphoshikimate"
+        ]
+      }
+    ],
+    "kinetics": {
+      "km_values": [
+        {
+          "substrate": "ATP",
+          "value": 0.224,
+          "comment": "#37# at pH 7.6 and 25\u00b0C <62>"
+        },
+        {
+          "substrate": "shikimate",
+          "value": 0.000153,
+          "comment": "#37# at pH 7.6 and 25\u00b0C <62>"
+        }
+      ]
+    },
+    "metals_ions": [
+      "Mg2+"
+    ]
+  },
+  "Q16772": {
+    "ec_number": "5.3.3.1",
+    "name": "steroid DELTA-isomerase",
+    "sequence": "MAGKPKLHYFNGRGRMEPIRWLLAAAGVEFEEKFIGSAEDLGKLRNDGSLMFQQVPMVEIDGMKLVQTRAILNYIASKYNLYGKDIKERALIDMYTEGMADLNEMILLLPLCRPEEKDAKIALIKEKTKSRYFPAFEKVLQSHGQDYLVGNKLSRADISLVELLYYVEELDSSLISNFPLLKALKTRISNLPTVKKFLQPGSPRKPPADAKALEEARKIFRF",
+    "reaction": [
+      {
+        "substrates": [
+          "5-Androstene-3,17-dione"
+        ],
+        "products": [
+          "4-Androstene-3,17-dione"
+        ]
+      }
+    ],
+    "kinetics": {}
+  },
+  "D3JYW9": {
+    "ec_number": "5.1.3.18",
+    "name": "GDP-mannose 3,5-epimerase",
+    "sequence": "MGSTSESNYGSYTYENLEREPYWPEAKLRISITGAGGFIASHIARRLKGEGHYIIASDWKKNEHMTEDMFCHEFHLVDLRVMDNCLKVTTGVDHVFNLAADMGGMGFIQSNHSVIMYNNTMISFNMLEAARVNGVKRFFYASSACIYPEFKQLDTNVSLKESDAWPAEPQDAYGLEKLATEELCKHYTKDFGIECRIGRFHNIYGPFGTWKGGREKAPAAFCRKTLTSTDRFEMWGDGLQTRSFTFIDECVEGVLRLTKSDFREPVNIGSDEMVSMNEMAEIVLSFENKKLPIHHIPGPEGVRGRNSDNTLIKEKLGWAPTMKLKDGLRFTYFWIKEQLEKEKAQGIDLSTYGSSKVVGTQAPVQLGSLRAADGKE",
+    "reaction": [],
+    "kinetics": {}
+  },
+  "Q90XY2": {
+    "ec_number": "2.7.1.25",
+    "name": "adenylyl-sulfate kinase",
+    "sequence": "MSGAKKLCTNLERSTNVVYQAHHVSRSKRGQIVGTRGGFRGCTIWLTGLSGAGKTTISFALEEYLVTHAIPCYSLDGDNVRHGLNKNLGFSAEDREENIRRIAEVAKLFADAGLVCITSFISPFSKDREEARKIHASAGLPFFEVFIHAPLEVCEKRDVKGLYKKARAGEIKGFTGIDSNYESPDRPDLVLKTGELTVDECLQQVLELLRENDILPTGIMEEINELFVAENKLSAAVAEASTLPTISITKLDLQWVQVLAEGWASPLKGFMRERELLQVLHFGNLLDGGTINLTVPIVLPVSNETKQKLEGCEAVTLEYQGSRVAILRNMEFYANRIEERCARQWGTTCPQHPYIKMVMEGGDWLVGGDLEVLERIKWNDGLDQFRFTPQELKQKFKDMKADAIFAFQLRNPIHNGHALLMQDTKRRLLERGYKNPVLLLHPLGGWTKDDDVPLDWRMKQHAAVLEEGVLDPDNTIVAIFPSPMMYAGPTEVQWHCRARMIAGANFYIVGRDPAGMPHPETKKDLYDPTHGSKVLTMAPGLTSVEIIPFRVAAYNKVKSAMDFYDPERHSEFEFISGTKMRNMARNEENPPDGFMAPKAWSVLVEYYSSQKDK",
+    "reaction": [
+      {
+        "substrates": [
+          "ATP",
+          "adenosine 5-phosphosulfate"
+        ],
+        "products": [
+          "ADP",
+          "3'-phosphoadenosine 5'-phosphosulfate"
+        ]
+      },
+      {
+        "substrates": [
+          "ATP",
+          "adenosine 5-phosphosulfate"
+        ],
+        "products": [
+          "ADP",
+          "3'-phosphoadenosine 5'-phosphosulfate"
+        ]
+      }
+    ],
+    "kinetics": {}
+  },
+  "A0A168S2B8": {
+    "ec_number": "1.1.1.25",
+    "name": "shikimate dehydrogenase (NADP+)",
+    "sequence": "MESGGMSKNSTLICVPIMGETIEKMVVDMSKAKTSGADLVEVRLDTLKRFNPRQDLEVLIRKCPLPTLFTYRPKWEGGQYEGDENSRRDALRLAMELGADYVDIELKVAHEFINSIHGRKPEKFKVIVSSHNYQNTPSVEDLGNLVVSIQATGADIVKIATTALEITDVARIFQITVHSQVPVIGLVMGERGLISRILCPKFSGYLTFGSLEPGIVSAPGQPTIKDLLNLYNFRQLGPDTKVFGVIGKPVSHSKSPHLYNEAFKSVGFNGVYVHLLVDDIAKFFHTYSAADFAGFSCTIPHKEAALKCCDEVSPVAKSIGAVNCIIRRPSDGKLFGYNTDYVGAISAIEDGLRDLHKISSTSGSPLAGKLFVVIGAGGAGKALAYGAKEKGARVVIANRTYARARELADAVGGDALSLADLNNFHPENGMILANTTSIGMQPKVDETPISKHALKYYSLVFDAIYTPKITRLLREAQESGATIVTGLEMFIGQAYEQFERFTGLPAPKELFKQFISNLQ",
+    "reaction": [
+      {
+        "substrates": [
+          "shikimate",
+          "NADP+"
+        ],
+        "products": [
+          "3-dehydroshikimate",
+          "NADPH",
+          "H+"
+        ]
+      },
+      {
+        "substrates": [
+          "shikimate",
+          "NADP+"
+        ],
+        "products": [
+          "3-dehydroshikimate",
+          "NADPH",
+          "H+"
+        ]
+      }
+    ],
+    "kinetics": {
+      "km_values": [
+        {
+          "substrate": "NADP+",
+          "value": 0.217,
+          "comment": "#62# pH 7.0, 30\u00b0C, recombinant isozyme VvSDH1 <47>"
+        },
+        {
+          "substrate": "shikimate",
+          "value": 0.07,
+          "comment": "#62# pH 9.0, 30\u00b0C, recombinant isozyme VvSDH1 <47>"
+        },
+        {
+          "substrate": "shikimate",
+          "value": 0.155,
+          "comment": "#62# pH 7.0, 30\u00b0C, recombinant isozyme VvSDH1 <47>"
+        },
+        {
+          "substrate": "3-dehydroshikimate",
+          "value": 0.157,
+          "comment": "#62# pH 7.0, 30\u00b0C, recombinant isozyme VvSDH1 <47>"
+        },
+        {
+          "substrate": "NADP+",
+          "value": 0.114,
+          "comment": "#9# pH 7.5, 22\u00b0C, mutant S338A <19>; #62# pH 9.0, 30\u00b0C, recombinant isozyme VvSDH1 <47>"
+        }
+      ]
+    },
+    "general_information": [
+      "phylogenetic analysis of VvSDH isozymes, isozyme VvSDH1 belongs to group I, and clusters with four characterized DQD/SDHs"
+    ]
+  },
+  "Q703G5": {
+    "ec_number": "7.2.2.3",
+    "name": "P-type Na+ transporter",
+    "sequence": "MSDSKSVSDCDVEKDQIRQTLSDQSHVDTVGPSAAPRVSIKVPRTQTTRSHIPIGFRTLSIQVYDSRGVEGAKSNDHLSDSDFFGSLDFHTVDPDALAQRFNVLPESGLDTPAATRRLERNGKNVLTQKKNKYWLKLFHYTFGGFCSILWIGVIIFFISWRPLGNPPQAYNLALAIVVLIVIFFQAIFNAFQDWSTQKVMNSILHLLPENAVVIRDGEHKSISASELVVGDVCILSTGNKVPADMRIIKASADLKFDRSVLTGESEEIPGTVEPTETNFLETKNIALLGTHICNGNATGIVVLTGPRTVMGRINKLTNDDKEKPTQLQKEISRFVYIIIGLTVTLVLIMLITWLAWLRKDHPGFLNTVGILTNLMSLVVAFIPEGMPVAVALTLSLIARRMRDVRVLPKSLSTVETLGCVNVICSDKTGTLTENKMSVNSIGFVDKECTRIDISSIDQPAVFDELNKGMALCNDAFFDPSSDAVLPSERSVQGNATDAAVLRLSASLPGSEEIKASFRRVYDIPFNSKNKFMLTVMRSNSDKATTTADEMFVKGAPDVLMPRISHFFSARDGQTKVFDDMARSQLVSKQEAWSRRGERVILLAKRQFIASSKPGTGEYEDEVAAASQEDLIVIGLLGIMDPPRSDIRHTVAECRRSGSRFFMVTGDFSLTAAAIGKMVGIFTHNGEPDCIANFDVKGRYVSEPPALNEKALKKQNGPKDIIEASLLVEGKEIPQITQQQWDVVCRYEEIVFARTTPEQKLKIVNELRDRGCVVAVTGDGVNDAPALKAADVGIAMVSGSDVAMEAADLVLMGDFSSIIQAIKLGRLVFQNLQKVISYLLPAGSWSEDWPVILNVFFGVPLPLSSFLMIIICCFTDLVCCLTLIFEKEEFDLLSLAPRNPRSDHLVNKAIYGQSYLFIGMMETLTAHSMFFLYIWKYAKIPVKDMFFAFEKFGDGFHGYTADELNHFLAVGQCVYFVTLVILQWGNLLSVRNKRLSIFQADPIRKQRRNPYLILGPLAALVIAIFVTEVKGIQNLFGTASIPIEFWLIPVPLAIGILVMDELRKLLVRTFPNSIIAKIAW",
+    "reaction": [
+      {
+        "substrates": [
+          "ATP",
+          "H2O",
+          "Rb+/in"
+        ],
+        "products": [
+          "ADP",
+          "phosphate",
+          "Rb+/out"
+        ]
+      },
+      {
+        "substrates": [
+          "ATP",
+          "H2O",
+          "Na+/in"
+        ],
+        "products": [
+          "ADP",
+          "phosphate",
+          "Na+/out"
+        ]
+      },
+      {
+        "substrates": [
+          "ATP",
+          "H2O",
+          "Na+/in"
+        ],
+        "products": [
+          "ADP",
+          "phosphate",
+          "Na+/out"
+        ]
+      },
+      {
+        "substrates": [
+          "ATP",
+          "H2O",
+          "K+/in"
+        ],
+        "products": [
+          "ADP",
+          "phosphate",
+          "K+/out"
+        ]
+      }
+    ],
+    "metals_ions": [
+      "NH4+",
+      "Ba2+"
+    ]
+  },
+  "O28050": {
+    "ec_number": "1.11.1.21",
+    "name": "catalase-peroxidase",
+    "sequence": "MMRQGGVMVGARKRWITDWWPNRLNLKILRQNLQNPYGEDYDYVEEVENLDIDAVIRDLKELMRSSQDWWPADFGHYGPLFIRLAWHSAGSYRIFDGRGGARDGSIRFPPRINWPDNINLDKAIRLLWPIKKKYGRKLSWADLIILAGTVAMEDMGVKLFGFALGREDIFEPDESPDWGPEEEMLTAKRGEKEELERPFAATEMGLIYVNPEGPGGNPDPLGSAQEIRVAFRRMGMNDEETVALIAGGHAFGKCHGAGPADYLGPDPSSSPIEMQGLGWKYNYGKGKGSDTFTSGLEVTWSPTPTKFGINYLRILFTYEWELEKSPAGKNQWVAKDAPEIIPDAHDPNKKHRPRMLTADLALRFDPEFSKIARRFLENPEEFEKAFAIAWYKLTHRDMGPKDCYIGKYVPEETFVWQDPLPRRDYELVDEKDVEELKRRILASGLSLSQLVYFAWASASTYRNSDRRGGANGARIRLKPMSVWEVNHPEELKKVIAAYEKIQQEFNEGAKGSEKRISIADLIVLGGIAAVEEAARRAGFSVKVPFIPGRVDAQQEHVDEEFYRVIEPFADGFRNYFRYPERINERDVYTTPEYFLVDKANLLTLTVPEMVVLIGGMRALGANYSHSDYGVLTERPGVLSNDFFVNLLDMSVEWRAADDYRYTFEGYDRKSGELRWRATRVDLILGHHDELRAVAEVYGCDDAKEKFVKDFAAVCAKVMHLDRFDLWRSNRKLYKEITAGLR",
+    "reaction": [
+      {
+        "substrates": [
+          "H2O2"
+        ],
+        "products": [
+          "O2",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "o-dianisidine",
+          "H2O2"
+        ],
+        "products": [
+          "oxidized o-dianisidine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-phenylenediamine",
+          "H2O2"
+        ],
+        "products": [
+          "oxidized 4-phenylenediamine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3,3'-dimethoxybenzidine",
+          "H2O2"
+        ],
+        "products": [
+          "oxidized 3,3'-dimethoxybenzidine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2,2'-azino-bis(3-ethylbenzthiazoline-6-sulfonic acid)",
+          "H2O2"
+        ],
+        "products": [
+          "oxidized 2,2'-azino-bis(3-ethylbenzthiazoline-6-sulfonic acid)",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2,4-dichlorophenol",
+          "H2O2"
+        ],
+        "products": [
+          "?"
+        ]
+      },
+      {
+        "substrates": [
+          "aminoantipyrine",
+          "H2O2"
+        ],
+        "products": [
+          "oxidized aminoantipyrine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3,3'-diaminobenzidine",
+          "H2O2"
+        ],
+        "products": [
+          "oxidized 3,3'-diaminobenzidine",
+          "H2O"
+        ]
+      }
+    ],
+    "kinetics": {
+      "km_values": [
+        {
+          "substrate": "H2O2",
+          "value": 0.85,
+          "comment": "#32# peroxidase activity, 50 mM potassium phosphate/sodium citrate buffer, pH 4.5, at 80\u00b0C <35>"
+        }
+      ],
+      "specific_activity": [
+        {
+          "value": 0.45
+        },
+        {
+          "value": 23.3
+        },
+        {
+          "value": 2375.0
+        },
+        {
+          "value": 6922.0
+        }
+      ]
+    },
+    "metals_ions": [
+      "Fe2+"
+    ]
+  },
+  "A0A1D8PP43": {
+    "ec_number": "1.2.1.23",
+    "name": "2-oxoaldehyde dehydrogenase (NAD+)",
+    "sequence": "MSEQIPKTQKAVVFDTNGGQLVYKDYPVPTPKPNELLIHVKYSGVCHTDLHAWKGDWPLATKLPLVGGHEGAGVVVGMGENVKGWKIGDFAGIKWLNGSCMSCEFCQQGAEPNCGEADLSGYTHDGSFEQYATADAVQAAKIPAGTDLANVAPILCAGVTVYKALKTADLAAGQWVAISGAGGGLGSLAVQYARAMGLRVVAIDGGDEKGEFVKSLGAEAYVDFTKDKDIVEAVKKATDGGPHGAINVSVSEKAIDQSVEYVRPLGKVVLVGLPAHAKVTAPVFDAVVKSIEIKGSYVGNRKDTAEAIDFFSRGLIKCPIKIVGLSDLPEVFKLMEEGKILGRYVLDTSK",
+    "reaction": [
+      {
+        "substrates": [
+          "methylglyoxal",
+          "NAD+",
+          "H2O"
+        ],
+        "products": [
+          "pyruvate",
+          "NADH",
+          "H+"
+        ]
+      },
+      {
+        "substrates": [
+          "methylglyoxal",
+          "NAD+",
+          "H2O"
+        ],
+        "products": [
+          "pyruvate",
+          "NADH",
+          "H+"
+        ]
+      }
+    ],
+    "kinetics": {
+      "km_values": [
+        {
+          "substrate": "methylglyoxal",
+          "value": 0.97,
+          "comment": "#7# pH and temperature not specified in the publication <13>"
+        },
+        {
+          "substrate": "pyruvate",
+          "value": 0.0385,
+          "comment": "#7# pH and temperature not specified in the publication <13>"
+        }
+      ],
+      "specific_activity": [
+        {
+          "value": 8.27
+        }
+      ]
+    }
+  },
+  "Q82IZ1": {
+    "ec_number": "1.14.11.35",
+    "name": "1-deoxypentalenic acid 11beta-hydroxylase",
+    "sequence": "MTNVTGDYTDCTPLLGDRAALDSFYEEHGYLFLRNVLDRDLVKTVAEQMREGLVALGAADPHATLEELTIDSFESVDEVAMHDYVKYDAFWNNPSTIKVFEQVFGEPVFVFLSTTIRYYPSQAGSEEPSFHYLTPFHQDGFYIGPNQDFRTFWIPLIRTTRESGGVALADGSHRRGKRDHVLNESFRRFGHPVRGIPPTEVSEDEHLLHSPMEPGDILLFHAHMCHKSIPNLSKDPRLMRMSMDTRVQPAKSHRGFNAMTPWTESAKDASKGIMAKITGTPTDVE",
+    "reaction": [
+      {
+        "substrates": [
+          "(+/-)-1-deoxypentalenic acid",
           "O2"
         ],
         "products": [
-          "5-hydroxymethyluracil",
+          "11beta-hydroxy-1-deoxypentalenic acid",
           "succinate",
           "CO2"
         ]
       }
     ],
-    "kinetics": {},
-    "engineering": [
-      {
-        "mutation": "R478A",
-        "effect": "site-directed mutagenesis, cells expressing the LtJBP2 mutant exhibits a serious growth defect"
-      },
-      {
-        "mutation": "D416A",
-        "effect": "site-directed mutagenesis, cells expressing the LtJBP2 mutant exhibits a serious growth defect"
-      },
-      {
-        "mutation": "H465A",
-        "effect": "site-directed mutagenesis, cells expressing the LtJBP2 mutant exhibits a serious growth defect"
-      },
-      {
-        "mutation": "V482A/L548Q",
-        "effect": "site-directed and random mutagenesis, the mutant can complement the JBP2 knockout mutant strain"
-      },
-      {
-        "mutation": "H414A",
-        "effect": "site-directed mutagenesis, cells expressing the LtJBP2 mutant exhibits a serious growth defect"
-      }
-    ]
-  },
-  "F8RL28": {
-    "ec_number": "4.3.1.24",
-    "name": "phenylalanine ammonia-lyase",
-    "sequence": "MALNGNGNGNCNGAAAVDSFCQGGGLLHDPLNWNLAAEGLKGSHLDELKRMVNDYRKPVVMLGGESLTVGQVAAIANHDGGVRVELSEEKRAGVKASSDWVMDSMGKGTDSYGVTTGFGATSHRRTKNGGALQKELIRFLNAGIFGSSLDSTHKLPHTATRAAMLVRINTLLQGYSGIRFEILEAITKLLNGNITPCLPLRGTISSSGDLVPLSYIAGLLIGRPNSKSIGPNGETLTPAEAFKLAGIEGDFFELQPKEGLALVNGTAVGSGMASVVLFDANTLAVLSEIMSAIFAEVMQGKPEFTDHLTHKLKHHPGQIEAAAIMEHILDGSSYVKEAKKVHEMDPLQKPKQDRYALRTSPQWLGPLIEVIRSSTKMIEREINSVNDNPLIDVSRNKALHGGNFQGTPIGTAMDNTRLALASIGKLIFAQFSELVNDFYNNGLPSNLSGGSNPSLDYGFKGAEIAMASYCSELQFLANPVTNHVQSAEQHNQDVNSLGLISSRKTSEAVDILKLMSSTFLVALCQAVDLRHMEENLKSVVKNTVSKVARRTLTVALNGELHPSRFSEKHLLSVVDREYLFSYIDDPCLATYPLMQKLRAELVEHALNNGDKEKSTNTSIFLKIAAFEEELKSVLPKEVDNARMEIENGKAEIANRIKECRSYPLYRFVREELGTSLLTGEKIRSPGEECDKVFNAICAGKLIDPLLECLKEWNGAPLPIS",
-    "reaction": [],
-    "kinetics": {}
-  },
-  "O59791": {
-    "ec_number": "5.1.1.18",
-    "name": "serine racemase",
-    "sequence": "MSDNLVLPTYDDVASASERIKKFANKTPVLTSSTVNKEFVAEVFFKCENFQKMGAFKFRGALNALSQLNEAQRKAGVLTFSSGNHAQAIALSAKILGIPAKIIMPLDAPEAKVAATKGYGGQVIMYDRYKDDREKMAKEISEREGLTIIPPYDHPHVLAGQGTAAKELFEEVGPLDALFVCLGGGGLLSGSALAARHFAPNCEVYGVEPEAGNDGQQSFRKGSIVHIDTPKTIADGAQTQHLGNYTFSIIKEKVDDILTVSDEELIDCLKFYAARMKIVVEPTGCLSFAAARAMKEKLKNKRIGIIISGGNVDIERYAHFLSQ",
-    "reaction": [
-      {
-        "substrates": [
-          "L-serine"
-        ],
-        "products": [
-          "D-serine"
-        ]
-      },
-      {
-        "substrates": [
-          "L-serine"
-        ],
-        "products": [
-          "D-serine"
-        ]
-      }
-    ],
-    "kinetics": {},
-    "engineering": [
-      {
-        "mutation": "S82A",
-        "effect": "site-directed mutagenesis"
-      }
-    ],
-    "metals_ions": [
-      "Mg2+"
-    ]
-  },
-  "Q924L9": {
-    "ec_number": "6.3.2.17",
-    "name": "tetrahydrofolate synthase",
-    "sequence": "MSWARTHLRSALSLAAVSARGATTEGAARRWLSAWPAPQEPGMEYQDAVRMLNTLQTNASYLEQVKRQRSDPQAQLEAMEVYLARSGLQVEDLNQLNIIHVTGTKGKGSTCAFTERILRSYGLKTGFFSSPHLVQVRERIRINGKPISPELFTKHFWRLYHQLEEFKDDSHVAMPAYFRFLTLMAFHVFLQEKVDLAVVEVGIGGAYDCTNIIRKPVVCGVSSLGMDHTSLLGDTVEKIAWQKGGIFKPGVPAFTVLQPEGPLAVLRDRAQQTSCPLYLCPPLEALEDGGLPLTLGLEGEHQRSNAALALQLAHCWLEQQDHQDIRELKVSRPSMRWQLPLAPVFHPTSHMRHGLRDTEWPGRTQVLRRGPLTWYLDGAHTTSSVQACVRWYCQSLQRSKHPSGGPEVYVLLFNSTGDRDSAALLKLLQPCQFDYAVFCPNLTEVSSTENADQQNFTVTLDQVLLRCLQHQQHWSCLSEKQASPDFLSSPSPEPGRPGSLQPALRPPHSTGTNSLVFSCISHALQWISQGRDPIFQAPSPPRSLLSHPTASSGASILREAGAIHVLVTGSLHLVGGVLKLLEPSLSQ",
-    "reaction": [
-      {
-        "substrates": [
-          "ATP",
-          "tetrahydropteroyl-[gamma-Glu]n",
-          "L-glutamate"
-        ],
-        "products": [
-          "ADP",
-          "phosphate",
-          "tetrahydropteroyl-[gamma-Glu]n+1"
-        ]
-      }
-    ],
-    "kinetics": {},
-    "engineering": [
-      {
-        "mutation": "R139Q",
-        "effect": "cell line AUXB3"
-      },
-      {
-        "mutation": "A173S/Q536E",
-        "effect": "cell line V79 compared to wild-type CHO-K1 cells, also with silent polymorphisms at codons 94 and 187"
-      }
-    ],
-    "metals_ions": [
-      "Mg2+"
-    ]
-  },
-  "P0A0Y6": {
-    "ec_number": "5.3.1.28",
-    "name": "D-sedoheptulose 7-phosphate isomerase",
-    "sequence": "MTTLQERVAAHFAESIRAKQEAGKVLVEPTVQAAELMLQCLMNDGKILACGNGGSAADAQHFAAEMTGRFEKERMELAAVALTTDTSALTAIGNDYGFDHVFSKQVRALGRAGDVLVGISTSGNSANVIEAVKAAHERDMHVIALTGRDGGKIAAILKDTDVLLNVPHPRTARIQENHILLIHAMCDCIDSVLLEGM",
-    "reaction": [
-      {
-        "substrates": [
-          "D-sedoheptulose 7-phosphate"
-        ],
-        "products": [
-          "D-glycero-D-manno-heptose 7-phosphate"
-        ]
-      },
-      {
-        "substrates": [
-          "D-sedoheptulose 7-phosphate"
-        ],
-        "products": [
-          "D-glycero-D-manno-heptose 7-phosphate"
-        ]
-      }
-    ],
-    "kinetics": {}
-  },
-  "Q45488": {
-    "ec_number": "3.1.21.4",
-    "name": "type II site-specific deoxyribonuclease",
-    "sequence": "MKIDITDYNHADEILNPQLWKEIEETLLKMPLHVKASDQASKVGSLIFDPVGTNQYIKDELVPKHWKNNIPIPKRFDFLGTDIDFGKRDTLVEVQFSNYPFLLNNTVRSELFHKSNMDIDEEGMKVAIIITKGHMFPASNSSLYYEQAQNQLNSLAEYNVFDVPIRLVGLIEDFETDIDIVSTTYADKRYSRTITKRDTVKGKVIDTNTPNTRRRKRGTIVTY",
-    "reaction": [
-      {
-        "substrates": [
-          "DNA containing F5dC",
-          "H2O"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "DNA containing F5dU",
-          "H2O"
-        ],
-        "products": [
-          "?"
-        ]
-      }
-    ],
-    "kinetics": {}
-  },
-  "Q9LE59": {
-    "ec_number": "2.4.1.43",
-    "name": "polygalacturonate 4-alpha-galacturonosyltransferase",
-    "sequence": "MALKRGLSGVNRIRGSGGGSRSVLVLLIFFCVFAPLCFFVGRGVYIDSSNDYSIVSVKQNLDWRERLAMQSVRSLFSKEILDVIATSTADLGPLSLDSFKKNNLSASWRGTGVDPSFRHSENPATPDVKSNNLNEKRDSISKDSIHQKVETPTKIHRRQLREKRREMRANELVQHNDDTILKLENAAIERSKSVDSAVLGKYSIWRRENENDNSDSNIRLMRDQVIMARVYSGIAKLKNKNDLLQELQARLKDSQRVLGEATSDADLPRSAHEKLRAMGQVLAKAKMQLYDCKLVTGKLRAMLQTADEQVRSLKKQSTFLAQLAAKTIPNPIHCLSMRLTIDYYLLSPEKRKFPRSENLENPNLYHYALFSDNVLAASVVVNSTIMNAKDPSKHVFHLVTDKLNFGAMNMWFLLNPPGKATIHVENVDEFKWLNSSYCPVLRQLESAAMREYYFKADHPTSGSSNLKYRNPKYLSMLNHLRFYLPEVYPKLNKILFLDDDIIVQKDLTPLWEVNLNGKVNGAVETCGESFHRFDKYLNFSNPHIARNFNPNACGWAYGMNMFDLKEWKKRDITGIYHKWQNMNENRTLWKLGTLPPGLITFYGLTHPLNKAWHVLGLGYNPSIDKKDIENAAVVHYNGNMKPWLELAMSKYRPYWTKYIKFDHPYLRRCNLHE",
-    "reaction": [
-      {
-        "substrates": [
-          "UDP-D-galacturonate",
-          "homogalacturonan"
-        ],
-        "products": [
-          "?"
-        ]
-      }
-    ],
-    "kinetics": {}
-  },
-  "R4ZBK7": {
-    "ec_number": "3.6.1.1",
-    "name": "inorganic diphosphatase",
-    "sequence": "MSKILVFGHQNPDSDAIGSSVAFAYLAKEAWGLDTEAVALGTPNEETAYVLDYFGVQAPRVVESAKAEGVETVILTDHNEFQQSISDIKDVTVYGVVDHHRVANFETANPLYMRLEPVGSASSIVYRMFKENGVSVPKELAGLLLSGLISDTLLLKSPTTHASDIPVAKELAELAGVNLEEYGLEMLKAGTNLSSKTAAELIDIDAKTFELNGEAVRVAQVNTVDINDILARQEEIEVAIQEAIVTEGYSDFVLMITDIVNSNSEILALGSNMAKVEAAFEFTLENNHAFLAGAVSRKKQVVPQLTESYNA",
-    "reaction": [
-      {
-        "substrates": [
-          "diphosphate",
-          "H2O"
-        ],
-        "products": [
-          "2 phosphate"
-        ]
-      },
-      {
-        "substrates": [
-          "diphosphate",
-          "H2O"
-        ],
-        "products": [
-          "2 phosphate"
-        ]
-      },
-      {
-        "substrates": [
-          "diphosphate",
-          "H2O"
-        ],
-        "products": [
-          "2 phosphate"
-        ]
-      }
-    ],
-    "kinetics": {},
-    "metals_ions": [
-      "Mg2+",
-      "Co2+",
-      "Mn2+"
-    ]
-  },
-  "R9WNK8": {
-    "ec_number": "7.2.2.13",
-    "name": "Na+/K+-exchanging ATPase",
-    "sequence": "MGLGKGKDEYKLAATSEDGGKKDKKAKAKKDMDDLKKEVDLDDHKLTLDELHRKYGTDLTRGLSSSRAKEILARDGPNALTPPPTTPEWVKFCKQLFGGFSMLLWIGAILCFLAYGIQAASEDEPANDNLYLGIVLSAVVIITGCFSYYQEAKSSKIMESFKNLVPQQALVIRDGEKKNINAEEVVLGDLVEVKGGDRIPADLRIISAHGCKVDNSSLTGESEPQTRSPDFSNENPLETRNISFFSTNCIEGTARGIVINTGDRTVMGRIATLASSLEGGKTPIAIEIEHFIHIITGVAVFLGVSFFILSLILGYNWLEAVIFLIGIIVANVPEGLLATVTVCLTLTAKRMAKKNCLVKNLEAVETLGSTSTICSDKTGTLTQNRMTVAHMWFDNQIHEADTTENQSGTSFDRSSATWANLSRIAGLCNRAVFLADQSNIPILKRDVAGDASEAALLKCIELCCGSVNEMREKYPKIAEIPFNSTNKYQLSIHKNTTPGETKHLLVMKGAPERILDRCSSIVLQGKVQALDDEMKDAFQNAYVELGGLGERVLGFCHYHLPDDEFPEGFAFDTDEVNFPTENLCFVGLMAMIDPPRAAVPDAVGKCRSAGIKVIMVTGDHPITAKAIAKGVGIISEGNETVEDIAARLNVPVSEVNPRDAKACVVHGSELKDMTSEELDDLLKHHTEIVFARTSPQQKLIIVEGCQRQGAIVAVTGDGVNDSPALKKADIGVAMGIAGSDVSKQAADMILLDDNFASIVTGVEEGRLIFDNLKKSIAYTLTSNIPEISPFLLFIIANIPLPLGTVTILCIDLGTDMVPAISLAYEKAESDIMKRQPRNPKTDKLVNERLISIAYGQIGMMQATAGFFTYFVILAENGFLPMDLIGVRVLWDDKYVNDLEDSYGQQWTYERRKIVEYSCHTAFFASIVIVQWADLIICKTRRNSIVQQGMTNRILIFGLFEETALAAFLSYCPGMDVALRMYPMKPLWWFCAFPYSLLIFLYDEARRYILRRNPGGWVEKETYY",
-    "reaction": [
-      {
-        "substrates": [
-          "ATP",
-          "H2O",
-          "Na+[side 1]",
-          "K+[side 2]"
-        ],
-        "products": [
-          "ADP",
-          "phosphate",
-          "Na+[side 2]",
-          "K+[side 1]"
-        ]
-      }
-    ],
-    "kinetics": {}
-  },
-  "Q6XVW8": {
-    "ec_number": "7.4.2.8",
-    "name": "protein-secreting ATPase",
-    "sequence": "MSYIKLLTQLSFPNRISGPILETSLSDVSIGEICNIQAGIESNEIIARAQVVGFHDEKTILSLIGNSRGLSRQTLIKPTAQFLHTQVGRGLLGAVVNPLGEVTDKFAVTDNSEILYRPVDNAPPLYSERAAIEKPFLTGVKVIDSLLTCGEGQRMGIFASAGCGKTFLMNMLIEHSGADIYVIGLIGERGREVTETVDYLKNSEKKSRCVLVYATSDYSSVDRCNAAYIATAIAEFFRTEGHKVALFIDSLTRYARALRDVALAAGESPARRGYPVSVFDSLPRLLERPGKLKAGGSITAFYTVLLEDDDFADPLAEEVRSILDGHIYLSRNLAQKGQFPAIDSLKSISRVFTQVVDEKHRIMATAFRELLSEIEELRTIIDFGEYKPGENASQDKIYNKISVVESFLKQDYRLGFTYEQTMELLGETIR",
-    "reaction": [
-      {
-        "substrates": [
-          "ATP",
-          "H2O"
-        ],
-        "products": [
-          "ADP",
-          "phosphate"
-        ]
-      },
-      {
-        "substrates": [
-          "ATP",
-          "H2O"
-        ],
-        "products": [
-          "ADP",
-          "phosphate"
-        ]
-      }
-    ],
-    "kinetics": {},
-    "engineering": [
-      {
-        "mutation": "K165A",
-        "effect": "site-directed mutagenesis, ATPase-inactive active site mutant, the mutation has little effect on the global structure of the protein"
-      },
-      {
-        "mutation": "R350A",
-        "effect": "site-directed mutagenesis, ATPase-inactive active site mutant, the mutation has little effect on the global structure of the protein"
-      },
-      {
-        "mutation": "E188A",
-        "effect": "site-directed mutagenesis, ATPase-inactive active site mutant, the mutation has little effect on the global structure of the protein"
-      }
-    ],
-    "metals_ions": [
-      "Mg2+"
-    ]
-  },
-  "Q9LAM9": {
-    "ec_number": "1.8.4.12",
-    "name": "peptide-methionine (R)-S-oxide reductase",
-    "sequence": "MAEIYLAGGCFWGLEEYFSRIEGVKKTTVGYANGQVESTNYQLIHQTDHAETVHLIYDEKRVSLREILLYYFRVIDPLSVNKQGNDVGRQYRTGVYYTNQADKAVIEQVFAEQEKQLGQKIAVELEPLRHYVLAEDYHQDYLKKNPGGYCHINVNDAYQPLVDPGQYEKPTDAELKEQLTQEQYQVTQLSATERPFHNAYNATFEEGIYVDVTTGEPLFFAGDKFESGCGWPSFSRPIAREVLRYYEDKSHGMERIEVRSRSGNAHLGHVFTDGPESAGGLRYCINSAALRFIPKEKMEAEGYAYLLQHMK",
-    "reaction": [],
-    "kinetics": {}
-  },
-  "A9XG43": {
-    "ec_number": "3.4.22.28",
-    "name": "picornain 3C",
-    "sequence": "MGSQVSTQRSGSHENSNSATEGSTINYTTINYYKDSYAATAGKQSLKQDPDKFANPVKDIFTEMAAPLKSPSAEACGYSDRVAQLTIGNSTLPPLNAANIIVGYGEWPSYCSDSDATAVDKPTRPDVSVNRFYTLDTKLWEKSSKGWYWKFPDVLTETGVFGQNAQFHYLYRSGFCIHVQCNASKFHQGALLVAVLPEYVIGTVAGGTGTEDSHPPYKQTQPGADGFELQHPYVLDAGIPISQLTVCPHQWINLRTNNCATIIVPYINALPFDSALNHCNFGLLVVPISPLDYDQGATPVIPITITLAPMCSEFAGLRQAVTQGFPTELKPGTNQFLTTDDGVSAPILPNFHPTPCIHIPGEVRNLLELCQVETILEVNNVPTNATSLMERLRFPVSAQAGKGELCAVFRADPGRNGPWQSTLLGQLCGYYTQWSGSLEVTFMFTGSFMATGKMLIAYTPPGGPLPKDRATAMLGTHVIWDFGLQSSVTLVIPWISNTHYRAHARDGVFDYYTTGLVSIWYQTNYVVPIGAPNTAYIIALAAAQKNFTMKLCKDASDILQTGTIQGDRVADVIESSIGDSVSRALTQALPAPTGQNTQVSSHRLDTGKVPALQAAEIGASSNASDESMIETRCVLNSHSTAETTLDSFFSRAGLVGEIDLPLEGTTNPNGYANWDIDITGYAQMRRKVELFTYMRFDAEFTFVACTPTGQVVPQLLQYITHPQEAPKPDSRESLAWQTATNPSVFVKLSDPPAQVSVPFMSPASAYQWFYDGYPTFGEHKQEKDLEYGACPNNMMGTFSVRTVGTSKSKYPLVVRIYMRMKHVRAWIPRPMRNQNYLFKANPNYAGNSIKPTGASRTAITTLGKFGQQSGAIYVGNFRVVNRHLATHNDWANLVWEDSSRDLLVSSTTAQGCDTIARCNCQTGVYYCNSRRKHYPVSFSKPSLIYVEASEYYPARYQSHLMLAQGHSEPGDCGGILRCQHGVVGIVSTGGNGLVGFADVRDLLWLDEEAMEQGVSDYIKGLGDAFGTGFTDAVSREVEALKNYLIGSEGAVEKILKNLIKLISALVIVIRSDYDMVTLTATLALIGCHGSPWAWIKAKTASILGIPIAQKQSASWLKKFNDMANAAKGLEWVSNKISKFIDWLKEKIVPAAKEKVEFLNNLKQLPLLENQISNLEQSAASQEDLEVMFGNVSYLAHFCRKFQPLYATEAKRVYALEKRMNNYMQFKSKHRIEPVCLIIRGSPGTGKSLATGIIARAIADKYHSSVYSLPPDPDHFDGYKQQVVTVMDDLCQNPDGKDMSLFCQMVSTVDFIPPMASLEEKGVSFTSKFVIASTNASNIIVPTVSDSDAIRRRFYMDCDIEVTDSYKTDLGRLDAGRAARLCSENNTANFKRCSPLVCGKAIQLRDRKSKVRYSVDTVVSELIREYSNRSAIGNTIEALFQGPPKFRPIRISLEEKPAPDAISDLLASVDSEEVRQYCRDQGWIIPETPTNVERHLNRAVLVMQSIATVVAVVSLVYVIYKLFAGFQGAYSGAPKQVLKKPALRTATVQGPSLDFALSLLRRNVRQVQTDQGHFTMLGVRDRLAVLPRHSQPGKTIWIEHKLVNILDAVELVDEQGVNLELTLITLDTNEKFRDITKFIPENISTASDATLVINTEHMPSMFVPVGDVVQYGFLNLSGKPTHRTMMYNFPTKAGQCGGVVTSVGKVIGIHIGGNGRQGFCAGLKRSYFASEQGEIQWVKSNKETGRLNINGPTRTKLEPSVFHDVFEGNKEPAVLHSKDPRLEVDFEHALFSKYVGNTLYEPDEYIKEAALHYANQLKQLEINTSQMSMEEACYGTENLEAIDLHTSAGYPYSALGIKKRDILDPTTRDVSKMKFYMDKYGLDLPYSTYVKDELRSIDKIKKGKSRLIEASSLNDSVYLRMAFGHLYEAFHANPGTITGSAVGCNPDTFWSKLPILLPGSLFAFDYSGYDASLSPVWFRALELVLREIGYSEGAVSLIEGINHTHHVYRNKTYCVLGGMPSGCSGTSIFNSMINNIIIRALLIKTFKGIDLDELNMVAYGDDVLDSYPFPIDCLELAKTGKEYGLTMTPADKSPCFNEVNWGNATFLKRGFLPDEQFPFLIHPTMPMREIHESIRWTKDARNTQDHVRSLCLLAWHNGKQEYEKFVSTIRSVPVGRALAIPNYENLRRNWLELF",
-    "reaction": [
-      {
-        "substrates": [
-          "Dabcyl-KRTATVQGPSLDFE-Edans",
-          "H2O"
-        ],
-        "products": [
-          "Dabcyl-KRTATVQ",
-          "GPSLDFE-Edans"
-        ]
-      }
-    ],
-    "kinetics": {}
-  },
-  "Q7X0G9": {
-    "ec_number": "1.2.7.4",
-    "name": "anaerobic carbon-monoxide dehydrogenase",
-    "sequence": "GLPGYICAIVASIVTGVPVKWVEDRMENLSTTSFARDYHMTAEIAAKNDGTVTGLKVHVLADHGGFDACADPSKWPAGFFNIVTGSYDFPAAHLAVDGVYTNKAPGGVAYRCSFRVTEAAYCIERAMDILAQKLDMDPADLRMKNFVKPEQFPYHSALGWEYDSGDYHTAMQKAMDTIGYRELRAEQKAKQEAFKRGETREIMGIGVSFFTEIVGAGPSKNCDILGVAMFDSAEIRVHPTGSVISRMGTKSQGQGHETTWAQIIATEIGIPAADIMVEEGNTDTAPYGLGTYGSRSTPVAGAAIALASRKIRNKAQMIAAHMLEVSEYDLEWDVDGFQVKGNPQARKSMKEIAWAAYHAPPPGIEPGLEAVSYYDPPNMTYPFGAYLCVMDIDVDTGVAKIRRFYALDDCE",
-    "reaction": [
-      {
-        "substrates": [
-          "CO",
-          "H2O",
-          "acceptor"
-        ],
-        "products": [
-          "CO2",
-          "reduced acceptor"
-        ]
-      },
-      {
-        "substrates": [
-          "CO",
-          "H2O",
-          "acceptor"
-        ],
-        "products": [
-          "CO2",
-          "reduced acceptor"
-        ]
-      }
-    ],
-    "kinetics": {}
-  },
-  "Q99SH6": {
-    "ec_number": "3.6.4.13",
-    "name": "RNA helicase",
-    "sequence": "MQNFKELGISDNTVQSLESMGFKEPTPIQKDSIPYALQGIDILGQAQTGTGKTGAFGIPLIEKVVGKQGVQSLILAPTRELAMQVAEQLREFSRGQGVQVVTVFGGMPIERQIKALKKGPQIVVGTPGRVIDHLNRRTLKTDGIHTLILDEADEMMNMGFIDDMRFIMDKIPAVQRQTMLFSATMPKAIQALVQQFMKSPKIIKTMNNEMSDPQIEEFYTIVKELEKFDTFTNFLDVHQPELAIVFGRTKRRVDELTSALISKGYKAEGLHGDITQAKRLEVLKKFKNDQINILVATDVAARGLDISGVSHVYNFDIPQDTESYTHRIGRTGRAGKEGIAVTFVNPIEMDYIRQIEDANGRKMSALRPPHRKEVLQAREDDIKEKVENWMSKESESRLKRISTELLNEYNDVDLVAALLQELVEANDEVEVQLTFEKPLSRKGRNGKPSGSRNRNSKRGNPKFDSKSKRSKGYSSKKKSTKKFDRKEKSSGGSRPMKGRTFADHQK",
-    "reaction": [
-      {
-        "substrates": [
-          "ATP",
-          "H2O"
-        ],
-        "products": [
-          "ADP",
-          "phosphate"
-        ]
-      }
-    ],
-    "kinetics": {},
-    "general_information": [
-      "CshA is a DEAD-box RNA helicase that belongs to the DExD/H-box family of proteins, which generally have an RNA-dependent ATPase activity <91>; #2,40,61,99,100# DDX5 (p68) and DDX17 (p72) belong to the large family of evolutionarily conserved DEAD box RNA helicases. The regulatory activity of DDX5 and DDX17 in transcription is conserved throughout evolution. Possible evolutionary divergence of the insulation process between drosophila and mammals <95>; #39# DDX5 (p68) and DDX17 (p72) belong to the large family of evolutionarily conserved DEAD box RNA helicases.The regulatory activity of DDX5 and DDX17 in transcription is conserved throughout evolution. Possible evolutionary divergence of the insulation process between drosophila and mammals <95>; #88# DEAD-box proteins belong to a ubiquitous family of RNA helicases, which are widely found from prokaryotes to eukaryotes and participate in multiple cellular processes, such as premRNA splicing, translation initiation, modulating RNA-protein complexes, RNA decay, and ribosome biogenesis. Sequence alignment and architecture of different DEAD-Box proteins, overview <114>; #91# DEAD-box proteins comprise the largest family of RNA helicases in plants, and exist in most organisms. They possess 12 conserved motifs that are involved in ATPase, helicase, and RNA binding activities, and participate in a variety of RNA-associated events from transcription to RNA decay. Some DEAD-box proteins are involved in the regulation of plant growth and development through ribosome biogenesis. Phylogenetic analysis, and evolutionary and functional relationships of AtRH7. AtRH7 belongs to a family whose members are involved in rRNA and mRNA processing. AtRH7 shares a conserved function with Escherichia coli enzyme CsdA under cold conditions <111>; #83# DHX9 belongs to the DExH/RHA family of helicase superfamily 2 <100>; #94# helicase Prp43 is an outstanding member of the DEAH-box subfamily since it has implications in different substantive cellular processes <98>; #93# ISE2 is a non-canonical Ski2-like RNA helicase that represents a separate sub-clade unique to green photosynthetic organisms. ISE2s evolutionary conservation may be explained by its numerous roles in regulating chloroplast gene expression <109>; #95# overall RNA binding mode is conserved between DHX8 and related SF2 helicases <92>; #51# RNA helicase A (RHA) as a member of the DExH/D-box subgroup of helicase superfamily II <93>; #61# RNA helicase p68 or DEAD (Asp-Glu-Ala-Asp) box polypeptide 5 (DDX5) is a unique member of the highly conserved protein family, which is involved in a broad spectrum of biological processes, including transcription, translation, precursor messenger RNA processing or alternative splicing, and microRNA (miRNA) processing <104>; #80,81# SF2 helicases can be grouped into 5 families, 3 of which are represented among the spliceosomal remodeling enzymes"
-    ],
-    "metals_ions": [
-      "Mg2+"
-    ]
-  },
-  "U3U992": {
-    "ec_number": "2.4.1.323",
-    "name": "7-deoxyloganetic acid glucosyltransferase",
-    "sequence": "MGSQETNLAPHVLIFPLPIQGHVNSMLRLAELLCLAELDITFIVSEFSHSRLIKHTNVASRFARYPGFQFQPISDGLPDDHPRAGERVMDILPSTKNVTGPLFKQMMVENKCFSSATRRPITCIIADGVLSFAGDFAQEKGIPLIYFRTVSACSFWACFCMPELIESGDIPIKGNGMDLIVKSVPGMETFLRRRDLPGFCRVNDINEPKLQILKTETRQTTRAQAAILNTFEDLEGPILSQIRKHMPRLFTIGPSHSHLTSRLETKNIKTLISSGSFWEEDRSCVDWLDAQPPRSVLYVSFGSITVVTRDQLLEFWYGLVNSGQRFLWVMRPDSIMGKDGQSQIPADLEEGTKARGYMVGWAPQEEVLNHPAIGGFLTHSGWNSTLESIVAGVPMICWPYFADQMINSRFVSEIWKIGLDMKDTCDRETIVKMVRELMEIRKDEFLQRADHMAKLAKEAVSEGGSSYSNLDGLVDYIKSLII",
-    "reaction": [
-      {
-        "substrates": [
-          "UDP-alpha-D-glucose",
-          "7-deoxyloganetate"
-        ],
-        "products": [
-          "UDP",
-          "7-deoxyloganate"
-        ]
-      }
-    ],
     "kinetics": {
       "km_values": [
         {
-          "substrate": "UDP-alpha-D-glucose",
-          "value": 0.088,
-          "comment": "#1# pH 8.0, 30\u00b0C <1>"
-        },
-        {
-          "substrate": "7-deoxyloganetate",
-          "value": 5.38,
-          "comment": "#1# pH 8.0, 30\u00b0C <1>"
+          "substrate": "(+/-)-1-deoxypentalenic acid",
+          "value": 0.57,
+          "comment": "#1# pH 6.0, temperature not specified in the publication <1>"
         }
       ]
-    }
+    },
+    "engineering": [
+      {
+        "mutation": "R188Q",
+        "effect": "280fold decrease in activity"
+      },
+      {
+        "mutation": "R117Q",
+        "effect": "complete loss of activity"
+      }
+    ],
+    "metals_ions": [
+      "Iron"
+    ]
   },
-  "Q07737": {
-    "ec_number": "2.7.13.3",
-    "name": "histidine kinase",
-    "sequence": "MLKKTPETVSDSDDAEERGSERRHRIHPLTIIRRIFGNAVFSSLTRRILFFNVAATVVLVGGILYLNQFREGLIDARVESLLTQGEIIAGAVSASASVDTNSITINPEKLLELQAGQSITPAPNDEDLSFPINPERVAPVLRRLISPTRTRARLFDADANLLLDSRHLYSRGQVLRFDLPPVTPETQTWGDWFTSMFNRMLQPSSLPQYKEAPGGDGSIYPEVMNALTGVRGAVVRVTEKGELIVSVAVPVQRFRAVLGVLLLSTQAGDIDKIVHAERLAIMRVFGIATLVNIVLSLLLSSTIATPLRRLSAAAIRVRRGARTREEIPDFSARQDEIGNLSIALREMTTALYDRIDAIESFAADVSHELKNPLTSLRSAVETLPRAKTEESKQRLTEIIFHDVRRLDRLISDISDASRLDAELARADASPLDLDVLMKGLVDISRQISTKKKSVAIDYVADRKAGAKTSFVVNGHDLRIGQIVTNLIENARSFVSEESGRITVRLSRHKDRCIVQVEDNGPGIQAEDIDRIFERFYTDRPASEGFGQNSGLGLSISRQIAEAHGGSLRAENVVDKYGVISGARFTLSLPAAETHER",
+  "P9WKE1": {
+    "ec_number": "2.7.4.9",
+    "name": "dTMP kinase",
+    "sequence": "MLIAIEGVDGAGKRTLVEKLSGAFRAAGRSVATLAFPRYGQSVAADIAAEALHGEHGDLASSVYAMATLFALDRAGAVHTIQGLCRGYDVVILDRYVASNAAYSAARLHENAAGKAAAWVQRIEFARLGLPKPDWQVLLAVSAELAGERSRGRAQRDPGRARDNYERDAELQQRTGAVYAELAAQGWGGRWLVVGADVDPGRLAATLAPPDVPS",
     "reaction": [
       {
         "substrates": [
           "ATP",
-          "a protein"
+          "dTMP"
         ],
         "products": [
           "ADP",
-          "a phosphoprotein"
-        ]
-      }
-    ],
-    "kinetics": {}
-  },
-  "Q7MHL9": {
-    "ec_number": "5.3.1.6",
-    "name": "ribose-5-phosphate isomerase",
-    "sequence": "MTQDEMKKAAGWAALKYVEKGSIVGVGTGSTVNHFIDALGTMSEEIKGAVSSSVASTEKLEALGIKIFDCNEVASLDIYVDGADEINADREMIKGGGAALTREKIVAAIADKFICIVDGTKAVDVLGTFPLPVEVIPMARSYVARQLVKLGGDPCYREGVITDNGNVILDVYGMKITNPKQLEDQINAIPGVVTVGLFAHRGADVVITGTPEGAKIEE",
-    "reaction": [
-      {
-        "substrates": [
-          "D-ribose 5-phosphate"
-        ],
-        "products": [
-          "D-ribulose 5-phosphate"
+          "dTDP"
         ]
       },
       {
         "substrates": [
-          "D-ribose 5-phosphate"
+          "ATP",
+          "dTMP"
         ],
         "products": [
-          "D-ribulose 5-phosphate"
-        ]
-      }
-    ],
-    "kinetics": {}
-  },
-  "A7BKB8": {
-    "ec_number": "2.2.1.7",
-    "name": "1-deoxy-D-xylulose-5-phosphate synthase",
-    "sequence": "MALSAFSFPAHANWDACSDLQKYTSVSPHFPWRTDLLGQSLLRINQAKGKKRPGGVSASLSESAEYHSNRPATPLLDTINFPIHMKNLSIKELKQLAEELRSDVIFNVSKTGGHLGSSLGVVELTVALHYIFNTPQDKILWDVGHQSYPHKILTGRRDRMRTIRQTNGLSGFTKRAESEHDCFGTGHSSTTISAGLGMAVGRDLKERKNNVVAVIGDGAMTAGQAYEAMNNAGYLDSDMIVILNDNKQVSLPTATLDGPIPPVGALSSALSRLQSNRPLRELREIAKGVTKQIGGQMHELAAKVDEYARGMISASGSSLFEELGLYYIGPVDGHNIEDLVDILKEVKSTKSTGPVLIHVVTEKGRGYPYAERAADKYHGVTKFDPATGKQFKSGGSTQSYTTYFAEALIAEAEVDKDIVAIHAAMGGGTGLNLFHRRFPNKCFDVGIAEQHAVTFAAGLACEGLKPFCAIYSSFMQRAYDQVVHDVDLQKLPVRFAMDRAGLIGADGPTHCGAFDVTFMACPPNMVVMAPSNEAELFNMVATAAAIDDRPSCFRYPRGNGIGVPLPPGNKGIPXEVGKGRILIEGERVALLGYGAAVQNCLAAASLVETPGLRVTVADARFCKPLDQSLIRSLAKSHEVLITVEEGSIGGFGSHVAHFMALNGLLDGXLKWRPLVXPDRYIEXGSPADQLIEAGLTPSXIAATIFNILGNKREALQIMSA",
-    "reaction": [],
-    "kinetics": {}
-  },
-  "Q9TRC7": {
-    "ec_number": "1.4.3.22",
-    "name": "diamine oxidase",
-    "sequence": "MGRGTLALGWAGAALLLLQMLAAAERSPRTPGGKAGVFADLSAQELKAVHSFLWSQKELKLEPSGTLTMAKNSVFLIEMLLPKKQHVLKFLDKGHRRPVREARAVIFFGAQEQPNVTEFAVGPLPTPRYMRDLPPRPGHQVSWASRPISKAEYALLSHKLQEATQPLRQFFRRTTGSSFGDCHEQCLTFTDVAPRGLASGQRRTWFILQRQMPGYFLHPTGLELLVDHGSTNAQDWTVEQVWYNGKFYRSPEELAQKYNDGEVDVVILEDPLAKGKDGESLPEPALFSFYQPRGDFAVTMHGPHVVQPQGPRYSLEGNRVMYGGWSFAFRLRSSSGLQILDVHFGGERIAYEVSVQEAVALYGGHTPAGMQTKYIDVGWGLGSVTHELAPDIDCPETATFLDALHHYDADGPVLYPRALCLFEMPTGVPLRRHFNSNFSGGFNFYAGLKGQVLVLRTTSTVYNYDYIWDFIFYPNGVMEAKMHATGYVHATFYTPEGLRYGTRLHTHLIGNMHTHLVNYRVDLDVAGTTNSFQTLQMELENITNPWSPRHRLVQPTLKQTRYSRERQAAFRFGQPLPKYLLITSPKENPWGHTRSYRLQLHSMADQVLPPGWQEERAVTWARYPLAVTRYRESELSSSSIYNQNDPWDPPVVFEEFLRNNENIEDEDLVAWVTVGFLHIPHSEDIPNTATPGNSVGFLLRPFNFFPEDPALASRDLVVVWPLENGSTYAQRWIPEEDQSCLKPPPFSYNGSYRPV",
-    "reaction": [
-      {
-        "substrates": [
-          "putrescine",
-          "H2O",
-          "O2"
-        ],
-        "products": [
-          "?"
+          "ADP",
+          "dTDP"
         ]
       },
       {
         "substrates": [
-          "histamine",
-          "H2O",
-          "O2"
+          "ATP",
+          "TMP"
         ],
         "products": [
-          "(imidazol-4-yl)acetaldehyde",
-          "NH3",
-          "H2O2"
+          "ADP",
+          "TDP"
         ]
       },
       {
         "substrates": [
-          "benzylamine",
-          "H2O",
-          "O2"
+          "ATP",
+          "TMP"
         ],
         "products": [
-          "benzaldehyde",
-          "NH3",
-          "H2O2"
-        ]
-      },
-      {
-        "substrates": [
-          "4-aminomethylpyridine dihydrochloride",
-          "H2O",
-          "O2"
-        ],
-        "products": [
-          "?"
+          "ADP",
+          "TDP"
         ]
       }
     ],
     "kinetics": {
       "km_values": [
         {
-          "substrate": "4-aminomethylpyridine dihydrochloride",
-          "value": 0.004,
-          "comment": ""
+          "substrate": "TMP",
+          "value": 0.04,
+          "comment": "#23# pH 7.5 <24>"
         },
         {
-          "substrate": "benzylamine",
-          "value": 0.557,
-          "comment": ""
-        }
-      ]
-    }
-  },
-  "Q9L5C1": {
-    "ec_number": "1.5.1.20",
-    "name": "methylenetetrahydrofolate reductase [NAD(P)H]",
-    "sequence": "MKKVSEIYGSAKGPVYSFEFFPPKTPEGDSKLMETVKELSLLNPDFVTVTYGAGGSTRDKTVQILSQISKDYSFPTVSHFTCVGANKNQILETLKGIRSSGILNLMALRGDPPKGEGEFKKVENGFGNATELVSFIRSEKLDFCIGGGCYPEKHPNAKTLEEDVENLKLKVDAGTDFLVSQLFFVNSIFENFLNLVRKVGIQVPVIPGIMPITSFSQIDRFRSMAGCEFPSSLIQDLQEVEHRPEEFYRRSLNFSVKQCRELLAMGVPGIHLYTLNQSHASYDIVRELKGESA",
-    "reaction": [
-      {
-        "substrates": [
-          "5,10-methylenetetrahydrofolate",
-          "reduced acceptor"
-        ],
-        "products": [
-          "5-methyltetrahydrofolate",
-          "oxidized acceptor"
-        ]
-      },
-      {
-        "substrates": [
-          "5,10-methylenetetrahydrofolate",
-          "reduced acceptor"
-        ],
-        "products": [
-          "5-methyltetrahydrofolate",
-          "oxidized acceptor"
-        ]
-      },
-      {
-        "substrates": [
-          "5,10-methylenetetrahydrofolate",
-          "reduced acceptor"
-        ],
-        "products": [
-          "5-methyltetrahydrofolate",
-          "oxidized acceptor"
-        ]
-      }
-    ],
-    "kinetics": {}
-  },
-  "P12758": {
-    "ec_number": "2.4.2.3",
-    "name": "uridine phosphorylase",
-    "sequence": "MSKSDVFHLGLTKNDLQGATLAIVPGDPDRVEKIAALMDKPVKLASHREFTTWRAELDGKPVIVCSTGIGGPSTSIAVEELAQLGIRTFLRIGTTGAIQPHINVGDVLVTTASVRLDGASLHFAPLEFPAVADFECTTALVEAAKSIGATTHVGVTASSDTFYPGQERYDTYSGRVVRHFKGSMEEWQAMGVMNYEMESATLLTMCASQGLRAGMVAGVIVNRTQQEIPNAETMKQTESHAVKIVVEAARRLL",
-    "reaction": [
-      {
-        "substrates": [
-          "uridine",
-          "phosphate"
-        ],
-        "products": [
-          "uracil",
-          "alpha-D-ribose 1-phosphate"
-        ]
-      },
-      {
-        "substrates": [
-          "uridine",
-          "phosphate"
-        ],
-        "products": [
-          "uracil",
-          "alpha-D-ribose 1-phosphate"
-        ]
-      }
-    ],
-    "kinetics": {},
-    "engineering": [
-      {
-        "mutation": "R30A",
-        "effect": "complete loss of uridine phosphorylase activity"
-      },
-      {
-        "mutation": "M197A",
-        "effect": "low activity conserved"
-      },
-      {
-        "mutation": "R91A",
-        "effect": "complete loss of uridine phosphorylase activity"
-      },
-      {
-        "mutation": "R91K",
-        "effect": "very low activity"
-      },
-      {
-        "mutation": "F162A",
-        "effect": "mutation causes a drastic decrease in uridine phosphorylase activity"
-      },
-      {
-        "mutation": "E198Q",
-        "effect": "complete loss of uridine phosphorylase activity"
-      },
-      {
-        "mutation": "E198D",
-        "effect": "complete loss of uridine phosphorylase activity"
-      },
-      {
-        "mutation": "T94A",
-        "effect": "mutation causes a drastic decrease in uridine phosphorylase activity"
-      },
-      {
-        "mutation": "Y195G",
-        "effect": "mutation causes a drastic decrease in uridine phosphorylase activity"
-      },
-      {
-        "mutation": "Y195A",
-        "effect": "increase in activity"
-      },
-      {
-        "mutation": "M197S",
-        "effect": "low activity conserved"
-      },
-      {
-        "mutation": "E196A",
-        "effect": "complete loss of uridine phosphorylase activity"
-      },
-      {
-        "mutation": "W196D",
-        "effect": "mutant enzyme is still partially active"
-      },
-      {
-        "mutation": "E198G",
-        "effect": "complete loss of uridine phosphorylase activity"
-      },
-      {
-        "mutation": "R30K",
-        "effect": "very low activity"
-      },
-      {
-        "mutation": "I69A",
-        "effect": "mutation does not decrease activity"
-      },
-      {
-        "mutation": "H8A",
-        "effect": "mutation lowers the activity by 20%"
-      }
-    ]
-  },
-  "Q8NFF5": {
-    "ec_number": "2.7.7.2",
-    "name": "FAD synthase",
-    "sequence": "MGWDLGTRLFQRQEQRSRLSRIWLEKTRVFLEGSTRTPALPHCLFWLLQVPSTQDPLFPGYGPQCPVDLAGPPCLRPLFGGLGGYWRALQRGREGRTMTSRASELSPGRSVTAGIIIVGDEILKGHTQDTNTFFLCRTLRSLGVQVCRVSVVPDEVATIAAEVTSFSNRFTHVLTAGGIGPTHDDVTFEAVAQAFGDELKPHPKLEAATKALGGEGWEKLSLVPSSARLHYGTDPCTGQPFRFPLVSVRNVYLFPGIPELLRRVLEGMKGLFQNPAVQFHSKELYVAADEASIAPILAEAQAHFGRRLGLGSYPDWGSNYYQVKLTLDSEEEGPLEECLAYLTARLPQGSLVPYMPNAVEQASEAVYKLAESGSSLGKKVAGALQTIETSLAQYSLTQLCVGFNGGKDCTALLHLFHAAVQRKLPDVPNPLQILYIRSISPFPELEQFLQDTIKRYNLQMLEAEGSMKQALGELQARHPQLEAVLMGTRRTDPYSCSLCPFSPTDPGWPAFMRINPLLDWTYRDIWDFLRQLFVPYCILYDRGYTSLGSRENTVRNPALKCLSPGGHPTYRPAYLLENEEEERNSRT",
-    "reaction": [
-      {
-        "substrates": [
-          "ATP",
-          "FMN"
-        ],
-        "products": [
-          "diphosphate",
-          "FAD"
-        ]
-      },
-      {
-        "substrates": [
-          "ATP",
-          "FMN"
-        ],
-        "products": [
-          "diphosphate",
-          "FAD"
-        ]
-      },
-      {
-        "substrates": [
-          "ATP",
-          "FMN"
-        ],
-        "products": [
-          "diphosphate",
-          "FAD"
-        ]
-      },
-      {
-        "substrates": [
-          "diphosphate",
-          "FAD"
-        ],
-        "products": [
-          "ATP",
-          "FMN"
-        ]
-      }
-    ],
-    "kinetics": {
-      "km_values": [
-        {
-          "substrate": "FMN",
-          "value": 0.00035,
-          "comment": "#11# at 37\u00b0C, in 50 mM Tris-HCl, pH 7.5 <29>"
-        },
-        {
-          "substrate": "FMN",
-          "value": 0.00013,
-          "comment": "#11# pH 7.5, 37\u00b0C <43>"
-        },
-        {
-          "substrate": "FMN",
-          "value": 0.0004,
-          "comment": "#11# 37\u00b0C <16>"
-        },
-        {
-          "substrate": "diphosphate",
-          "value": 0.042,
-          "comment": "#11# pH 7.5, 37\u00b0C <43>"
-        },
-        {
-          "substrate": "FMN",
-          "value": 1.5,
-          "comment": "#11# at 37\u00b0C <15>"
-        },
-        {
-          "substrate": "FMN",
-          "value": 0.0013,
-          "comment": ""
-        },
-        {
-          "substrate": "FMN",
-          "value": 0.00036,
-          "comment": "#11# at 37\u00b0C <16>"
+          "substrate": "dTMP",
+          "value": 0.0045,
+          "comment": "#23# pH 7.4 <25>; #9# pH 7.4, 30\u00b0C <20>; #9# in 50 mM Tris-HCl pH 7.4, 50 mM KCl, 2 mM MgCl2, temperature not specified in the publication <56>"
         },
         {
           "substrate": "ATP",
-          "value": 0.00691,
-          "comment": "#11# pH 7.5, 37\u00b0C <43>"
-        },
-        {
-          "substrate": "ATP",
-          "value": 0.0153,
-          "comment": "#11# at 37\u00b0C, in 50 mM Tris-HCl, pH 7.5 <29>; #9# mutant E301K, pH 7, 25\u00b0C <46>"
-        }
-      ],
-      "specific_activity": [
-        {
-          "value": 0.03
-        },
-        {
-          "value": 0.0039
-        },
-        {
-          "value": 6.8
-        },
-        {
-          "value": 0.59
-        },
-        {
-          "value": 0.0044
+          "value": 0.1,
+          "comment": "#23# pH 7.5 <24>; #9# pH 7.4, 30\u00b0C <20>"
         }
       ]
     },
     "metals_ions": [
-      "Co2+",
-      "MgCl2",
+      "Mg2+"
+    ]
+  },
+  "Q9WYB7": {
+    "ec_number": "3.2.1.55",
+    "name": "non-reducing end alpha-L-arabinofuranosidase",
+    "sequence": "MSYRIVVDPKEVVKPISRHIYGHFTEHLGRCIYGGIYEEGSPLSDERGFRKDVLEAVKRIKVPNLRWPGGNFVSNYHWEDGIGPKDQRPVRFDLAWQQEETNRFGTDEFIEYCREIGAEPYISINMGTGTLDEALHWLEYCNGKGNTYYAQLRRKYGHPEPYNVKFWGIGNEMYGEWQVGHMTADEYARAAKEYTKWMKVFDPTIKAIAVGCDDPIWNLRVLQEAGDVIDFISYHFYTGSDDYYETVSTVYLLKERLIGVKKLIDMVDTARKRGVKIALDEWNVWYRVSDNKLEEPYDLKDGIFACGVLVLLQKMSDIVPLANLAQLVNALGAIHTEKDGLILTPVYKAFELIVNHSGEKLVKTHVESETYNIEGVMFINKMPFSVENAPFLDAAASISEDGKKLFIAVVNYRKEDALKVPIRVEGLGQKKATVYTLTGPDVNARNTMENPNVVDITSETITVDTEFEHTFKPFSCSVIEVELE",
+    "reaction": [
+      {
+        "substrates": [
+          "L-arabinoxylan",
+          "H2O"
+        ],
+        "products": [
+          "?"
+        ]
+      },
+      {
+        "substrates": [
+          "L-arabinan",
+          "H2O"
+        ],
+        "products": [
+          "?"
+        ]
+      }
+    ],
+    "kinetics": {}
+  },
+  "Q3I409": {
+    "ec_number": "1.14.11.15",
+    "name": "gibberellin 3beta-dioxygenase",
+    "sequence": "MPTPAHLSKDPHYFDFRAARRVPETHAWPGLHDHPVVDGSGAGGEPDAVPVVDMRDPFAAEAVGLAAQDWGAFLLVGHGVPLDLLVRVEAAIAGMFALPASEKMRAVRRPGDSCGYGSPPISSFFSKCMWSEGYTFSPANLRSDLRKLWPKAGHDYRHFCAVMEEFHREMRALADKLLELFLVALGLTGEQVAAVESEQKIAETMTATMHLNWYPKCPDPKRALGLIAHTDSGFFTFVLQSLVPGLQLFRHGPDRWVTVPAVPGAMVVNVGDLFQILTNGRFHSVYHRAVVNRESDRISLGYFLGPPAHVKVAPLREALAGTPAAYRAVTWPEYMGVRKKAFTTGASALKMVAISTDDAANDTDDLILS",
+    "reaction": [
+      {
+        "substrates": [
+          "gibberellin a20",
+          "2-oxoglutarate",
+          "O2"
+        ],
+        "products": [
+          "gibberellin a1",
+          "succinate",
+          "CO2"
+        ]
+      },
+      {
+        "substrates": [
+          "gibberellin a9",
+          "2-oxoglutarate",
+          "O2"
+        ],
+        "products": [
+          "gibberellin a4",
+          "succinate",
+          "CO2"
+        ]
+      }
+    ],
+    "kinetics": {
+      "km_values": [
+        {
+          "substrate": "gibberellin a9",
+          "value": 0.001,
+          "comment": "#18,19,20# in 100 mM Tris-HCl at pH 7.5 <17>"
+        },
+        {
+          "substrate": "gibberellin a20",
+          "value": 0.002024,
+          "comment": "#18,19,20# in 100 mM Tris-HCl at pH 7.5 <17>"
+        }
+      ]
+    }
+  },
+  "P97490": {
+    "ec_number": "4.6.1.1",
+    "name": "adenylate cyclase",
+    "sequence": "MELSDVHCLSGSEELYTIQPTPPAGDDGSGSRPQRLLWQTAVRHITEQRFIHGHRGGGGGGVSRKASNPAGSGPNHHAPQLSSDSVLPLYSLGPGERAHNTGGTKVFPERSGSGSASGSGGGGDLGFLHLDCAPSNSDFFLNGGYSYRGVIFPTLRNSFKSRDLERLYQRYFLGQRRKSEVVMNVLDVLTKLTLLVLHLSLASAPMDPLKGILLGFFTGIEVVICALVVVRKDNTSHTYLQYSGVVTWVAMTTQILAAGLGYGLLGDGIGYVLFTLFATYSMLPLPLTWAILAGLGTSLLQVTLQVLIPRLAVFSINQVLAQVVLFMCMNTAGIFISYLSDRAQRQAFLETRRCVEARLRLETENQRQERLVLSVLPRFVVLEMINDMTNVEDEHLQHQFHRIYIHRYENVSILFADVKGFTNLSTTLSAQELVRMLNELFARFDRLAHEHHCLRIKILGDCYYCVSGLPEPRRDHAHCCVEMGLSMIKTIRFVRSRTKHDVDMRIGIHSGSVLCGVLGLRKWQFDVWSWDVDIANKLESGGIPGRIHISKATLDCLNGDYNVEEGHGKERNEFLRKHNIETYLIKQPEESLLCLPEDIVKESVSCSDRRNSGATFTEGSWSPELPFDNIVGKQNTLAALTRNSINLLPNHLAQALHVQSGPEEINKRIEHTIDLRSGDKLRREHIKPFSLMFKDSSLEHKYSQMRDEVFKSNLVCAFIVLLFITAIQSLLPSSRLMPMTIQFSILIMLHSALVLITTAEDYKCLPLILRKTCCWINETYLARNVIIFASILINFLGAVLNILWCDFDKSIPLKNLTFNSSAVFTDICSYPEYFVFTGVLAMVTCAVFLRLNSVLKLAVLLIMIAIYALLTETIYAGLFLSYDNLNHSGEDFLGTKEASLLLMAMFLLAVFYHGQQLEYTARLDFLWRVQAKEEINEMKELREHNENMLRNILPSHVARHFLEKDRDNEELYSQSYDAVGVMFASIPGFADFYSQTEMNNQGVECLRLLNEIIADFDELLGEDRFQDIEKIKTIGSTYMAVSGLSPEKQQCEDKWGHLCALADFSLALTESIQEINKHSFNNFELRIGISHGSVVAGVIGAKKPQYDIWGKTVNLASRMDSTGVSGRIQVPEETYLILKDQGFAFDYRGEIYVKGISEQEGKIKTYFLLGRVQPNPFILPPRRLPGQYSLAAVVLGLVQSLNRQRQKQLLNENSNSGIIKSHYNRRTLLTPSGPEPGAQAEGTDKSDLP",
+    "reaction": [
+      {
+        "substrates": [
+          "ATP"
+        ],
+        "products": [
+          "3',5'-cyclic-AMP",
+          "diphosphate"
+        ]
+      }
+    ],
+    "kinetics": {},
+    "metals_ions": [
+      "Ca2+"
+    ]
+  },
+  "P19499": {
+    "ec_number": "1.12.98.1",
+    "name": "coenzyme F420 hydrogenase",
+    "sequence": "MVLGTYKEIVSARSTDREIQKLAQDGGIVTGLLAYALDEGIIEGAVVAGPGKEFWKPEPMVAMTSDELKAAAGTKYTFSPNVLMLKKAVRQYGIEKLGTVAIPCQTMGIRKAQTYPFGVRFVADKIKLLVGIYCMENFPYTSLQTFICEKLGLNMELVEKMDIGKGKFWVYTQDDVYTLPLKETHGYEQAGCKICKDYVAELADVSTGSVGSPDGWSTVITRTDSGDSILKQAVEAGIFETKPIEEVKPGLGLLEKLSAQKKEKAEKNIAARKEMGLPTPY",
+    "reaction": [
+      {
+        "substrates": [
+          "H2",
+          "coenzyme F420"
+        ],
+        "products": [
+          "reduced coenzyme F420"
+        ]
+      },
+      {
+        "substrates": [
+          "H2",
+          "coenzyme F420"
+        ],
+        "products": [
+          "reduced coenzyme F420"
+        ]
+      }
+    ],
+    "kinetics": {},
+    "metals_ions": [
+      "Nickel",
+      "Iron",
+      "sulfur"
+    ]
+  },
+  "A0A2Z5U421": {
+    "ec_number": "1.1.5.8",
+    "name": "quinate/shikimate dehydrogenase (quinone)",
+    "sequence": "MHSIDQPSSRPALLLAWLLAIALFVTGLYFFSGGIWLLALGGSPYFALESILLLTSAWFLMRQRSLAFLLFMIFYITTVLWAFGETGIDFWPLISRLFVPSVFLLVFFALLPYLRQISGKTPLRGPSYGLCFLTCIGLIGAFAEMFIPHAPVAGPTQEAPLASTKDGTGDWSAYGRTATGTRFAPFSEINRNTISRLHQVWSIHTGDIPISPGGNGAEDQETPLQIGNTLFLCTPHNNVIAVDADSGGKRWEAHVNSQSKIWQRCRGLGYFDASAPLPVTTNALSAPEPISHDPTAPCDKRLFTNTPDGRLIAIDAQTGEYCQEFGTNGTVNLLEGLGDAPDPQYQVTSPPTVAGTTVIVGGRIADNVKTDMPGGVIRGYDVITGALRWAFDARNPDPNHKLTEGETYRRSSANSWAPMSYDAAMNTVFIPMGSSSVDLWGGNRTPEDHKYATSILALDATTGHMRWVYQTVHNDLWDFDIPMQPTLIDVPTAHGNTPAVVFGTKSGQIFVLDRATGQPLTDVKEVPVPKANIPNEHYSPTQPVSVGMPQIGAGPLSEADMWGATPFDQLACRISFRSMRYTGLFTAPGTDTSLSFPGSLGGMNWGGISTDPDNHYIFVNDMRLGLWVRMVKTAAPAPTPSAGQSEKVETGKTGSASGGEAINAGMGAVPLGGTPYSVVKNRFMSPLQIPCQKPPFGTLSAIDMRTHKIVWQVPVGTVQDTGPFGIKMHAKMPIGMPTLGGTLATKGGLVFIAGTQDYYLRAFDSATGKEVWKARLPVGSQGGPMSYVSPTTHRQYIVISVGGARQSPDRGDDVIAFALDEK",
+    "reaction": [
+      {
+        "substrates": [
+          "quinate",
+          "pyrroloquinoline quinone"
+        ],
+        "products": [
+          "3-dehydroquinate",
+          "pyrroloquinoline quinol"
+        ]
+      }
+    ],
+    "kinetics": {}
+  },
+  "Q9WZC1": {
+    "ec_number": "2.8.4.3",
+    "name": "tRNA-2-methylthio-N6-dimethylallyladenosine synthase",
+    "sequence": "MRFYIKTFGCQMNENDSEAMAGLLVKEGFTPASSPEEADVVIINTCAVRRKSEEKAYSELGQVLKLKKKKKIVVGVAGCVAEKEREKFLEKGADFVLGTRAVPRVTEAVKKALEGEKVALFEDHLDEYTHELPRIRTSRHHAWVTIIHGCDRFCTYCIVPYTRGRERSRPMADILEEVKKLAEQGYREVTFLGQNVDAYGKDLKDGSSLAKLLEEASKIEGIERIWFLTSYPTDFSDELIEVIAKNPKVAKSVHLPVQSGSNRILKLMNRRYTKEEYLALLEKIRSKVPEVAISSDIIVGFPTETEEDFMETVDLVEKAQFERLNLAIYSPREGTVAWKYYKDDVPYEEKVRRMQFLMNLQKRINRKLNERYRGKTVRIIVEAQAKNGLFYGRDIRNKIIAFEGEDWMIGRFADVKVEKITAGPLYGKVVWVEKTPSPVSSSE",
+    "reaction": [
+      {
+        "substrates": [
+          "N6-dimethylallyladenine37 in tRNA",
+          "sulfur-(sulfur carrier)",
+          "2 S-adenosyl-L-methionine"
+        ],
+        "products": [
+          "2-methylthio-N6-dimethylallyladenine37 in tRNA",
+          "S-adenosyl-L-homocysteine",
+          "(sulfur carrier)",
+          "L-methionine",
+          "5'-deoxyadenosine"
+        ]
+      },
+      {
+        "substrates": [
+          "N6-dimethylallyladenine in tRNA",
+          "sulfur-(sulfur carrier)",
+          "2 S-adenosyl-L-methionine"
+        ],
+        "products": [
+          "2-methylthio-N6-dimethylallyladenine in tRNA",
+          "S-adenosyl-L-homocysteine",
+          "(sulfur carrier)",
+          "L-methionine",
+          "5'-deoxyadenosine"
+        ]
+      },
+      {
+        "substrates": [
+          "N6-dimethylallyladenine37 in tRNA",
+          "sulfur-(sulfur carrier)",
+          "S-adenosyl-L-methionine"
+        ],
+        "products": [
+          "2-thio-N6-dimethylallyladenine37 in tRNA",
+          "(sulfur carrier)",
+          "L-methionine",
+          "5'-deoxyadenosine"
+        ]
+      },
+      {
+        "substrates": [
+          "S-adenosyl-L-methionine",
+          "2-thio-N6-dimethylallyladenine37 in tRNA"
+        ],
+        "products": [
+          "S-adenosyl-L-homocysteine",
+          "2-methylthio-N6-dimethylallyladenine37 in tRNA"
+        ]
+      }
+    ],
+    "kinetics": {},
+    "engineering": [
+      {
+        "mutation": "C150/154/157A",
+        "effect": "mutant lacks the radical-S-adenosyl-L-methionine [4Fe-4S] cluster, inactive in an in vivo assay"
+      }
+    ],
+    "metals_ions": [
+      "[4Fe-4S]-center"
+    ]
+  },
+  "Q9X2H9": {
+    "ec_number": "3.1.21.7",
+    "name": "deoxyribonuclease V",
+    "sequence": "MDYRQLHRWDLPPEEAIKVQNELRKKIKLTPYEGEPEYVAGVDLSFPGKEEGLAVIVVLEYPSFKILEVVSERGEITFPYIPGLLAFREGPLFLKAWEKLRTKPDVVVFDGQGLAHPRKLGIASHMGLFIEIPTIGVAKSRLYGTFKMPEDKRCSWSYLYDGEEIIGCVIRTKEGSAPIFVSPGHLMDVESSKRLIKAFTLPGRRIPEPTRLAHIYTQRLKKGLF",
+    "reaction": [
+      {
+        "substrates": [
+          "DNA",
+          "H2O"
+        ],
+        "products": [
+          "?"
+        ]
+      },
+      {
+        "substrates": [
+          "DNA",
+          "H2O"
+        ],
+        "products": [
+          "5'-phosphoryltermini DNA",
+          "3'-hydroxyltermini DNA"
+        ]
+      },
+      {
+        "substrates": [
+          "DNA",
+          "H2O"
+        ],
+        "products": [
+          "hydrolysed DNA"
+        ]
+      },
+      {
+        "substrates": [
+          "deoxyinosine-containing single-stranded DNA",
+          "H2O"
+        ],
+        "products": [
+          "?"
+        ]
+      }
+    ],
+    "kinetics": {},
+    "engineering": [
+      {
+        "mutation": "H125A",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "R211K",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "D43A",
+        "effect": "active site mutant"
+      },
+      {
+        "mutation": "G41V",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "P207A",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "I81A",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "P82A",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "Y80A",
+        "effect": "conversion to a C-specific mismatch cleavage variant"
+      },
+      {
+        "mutation": "Y80F",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "Y80H",
+        "effect": "the mutant is severely compromised in its ability to bind to DNA base lesions and the corresponding nicked product"
+      },
+      {
+        "mutation": "R88E",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "P209A",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "R211A",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "H214D",
+        "effect": "little change in substrate specificity or DNA cleavage kinetics"
+      },
+      {
+        "mutation": "H214E",
+        "effect": "tolerant of mutation without impacting activity"
+      },
+      {
+        "mutation": "R118A",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "R205K",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "H214A",
+        "effect": "tolerant of mutation without impacting activity"
+      },
+      {
+        "mutation": "E89D",
+        "effect": "mutant"
+      },
+      {
+        "mutation": "E89A",
+        "effect": "about 20-30% cleavage activity"
+      },
+      {
+        "mutation": "R88Q",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      },
+      {
+        "mutation": "D110A",
+        "effect": "little cleavage activity"
+      },
+      {
+        "mutation": "D43C",
+        "effect": "no more than 10% cleavage activity"
+      },
+      {
+        "mutation": "D43H",
+        "effect": "no more than 10% cleavage activity"
+      },
+      {
+        "mutation": "D43E",
+        "effect": "no more than 10% cleavage activity"
+      },
+      {
+        "mutation": "E89H",
+        "effect": "mutant"
+      },
+      {
+        "mutation": "D110C",
+        "effect": "mutant"
+      },
+      {
+        "mutation": "D110H",
+        "effect": "mutant"
+      },
+      {
+        "mutation": "D110E",
+        "effect": "mutant"
+      },
+      {
+        "mutation": "H214C",
+        "effect": "tolerant of mutation without impacting activity"
+      },
+      {
+        "mutation": "R88K",
+        "effect": "mismatch cleavage activity similar to the wild-type enzyme"
+      }
+    ],
+    "metals_ions": [
       "Mn2+",
       "Mg2+",
       "Ca2+"
     ]
   },
-  "Q9Y764": {
-    "ec_number": "2.5.1.59",
-    "name": "protein geranylgeranyltransferase type I",
-    "sequence": "MNQLLINKHEKFFNRCLIGLPSTAQSEDSNKLAIIYFCLHGLQLIQKFQFTNQELIYYRNFIINQFMIENNQIISFRSTHYFQKTNQKYDCPNLSSTLFALYNLLILKSPYHTIINRKKIMNFLCKCQVKDGINKGGFVPTLYYNEENGDYKQYGEPDLRVCYMALLIRHLMKYDDHNNNNNNNNNNNNNNNNNREDSNETDIDLISLQQFILDRININGGFSSTIMDESHLGFTFCAIASLKLLNYPLEKLKSTKEWLIHRQVDYPENLYPKDGNDNGDNYEYYRNIDIGGFNGRENKLSDTCYSWWCTGSLYNIDVNFIKLVDLNKAEDYLLNKTQNQLFGGFGRDPDSTPDPMHSYLALASLSLWNHEKFALQEINPILTITKESYQFFKEEIKY",
-    "reaction": [],
-    "kinetics": {}
-  },
-  "O88267": {
-    "ec_number": "3.1.2.20",
-    "name": "acyl-CoA hydrolase",
-    "sequence": "MEATLSLEPAGRSCWDEPLSITVRGLVPEQPVTLRAALRDEKGALFRARALYRADAHGELDLARAPALGGSFTGLEPMGLIWAMEPERPFWRLVKRDVQTPFVVELEVLDGHEPDGGRLLARAVHERHFMAPGVRRVPVREGRVRATLFLPPEPGPFPGIIDLFGVGGGLLEYRASLLAGKGFAVMALAYYNYDDLPKTMETMRIEYFEEAVNYLRGHPEVKGPGIGLLGISKGGELGLAMASFLKGITAAVVINGSVAAVGNTICYKDETIPPVTILRNQVKMTKDGLKDVVDALQSPLVEQKSFIPVERSDTTFLFLVGQDDHNWKSEFYANEISKRLQAHGKEKPQIICYPEAGHYIEPPYFPLCSAGMHLLVGANITFGGEPKPHSVAQLDAWQQLQTFFHKQLGGKSHGVSPKI",
-    "reaction": [],
-    "kinetics": {}
-  },
-  "O88509": {
-    "ec_number": "2.1.1.37",
-    "name": "DNA (cytosine-5-)-methyltransferase",
-    "sequence": "MKGDSRHLNEEEGASGYEECIIVNGNFSDQSSDTKDAPSPPVLEAICTEPVCTPETRGRRSSSRLSKREVSSLLNYTQDMTGDGDRDDEVDDGNGSDILMPKLTRETKDTRTRSESPAVRTRHSNGTSSLERQRASPRITRGRQGRHHVQEYPVEFPATRSRRRRASSSASTPWSSPASVDFMEEVTPKSVSTPSVDLSQDGDQEGMDTTQVDAESRDGDSTEYQDDKEFGIGDLVWGKIKGFSWWPAMVVSWKATSKRQAMPGMRWVQWFGDGKFSEISADKLVALGLFSQHFNLATFNKLVSYRKAMYHTLEKARVRAGKTFSSSPGESLEDQLKPMLEWAHGGFKPTGIEGLKPNKKQPVVNKSKVRRSDSRNLEPRRRENKSRRRTTNDSAASESPPPKRLKTNSYGGKDRGEDEESRERMASEVTNNKGNLEDRCLSCGKKNPVSFHPLFEGGLCQSCRDRFLELFYMYDEDGYQSYCTVCCEGRELLLCSNTSCCRCFCVECLEVLVGAGTAEDAKLQEPWSCYMCLPQRCHGVLRRRKDWNMRLQDFFTTDPDLEEFEPPKLYPAIPAAKRRPIRVLSLFDGIATGYLVLKELGIKVEKYIASEVCAESIAVGTVKHEGQIKYVNDVRKITKKNIEEWGPFDLVIGGSPCNDLSNVNPARKGLYEGTGRLFFEFYHLLNYTRPKEGDNRPFFWMFENVVAMKVNDKKDISRFLACNPVMIDAIKVSAAHRARYFWGNLPGMNRPVMASKNDKLELQDCLEFSRTAKLKKVQTITTKSNSIRQGKNQLFPVVMNGKDDVLWCTELERIFGFPAHYTDVSNMGRGARQKLLGRSWSVPVIRHLFAPLKDYFACE",
+  "I1ZBQ8": {
+    "ec_number": "3.2.1.26",
+    "name": "beta-fructofuranosidase",
+    "sequence": "MAILSRISLLAAVALCCLRNGVVDVEGSHDVYQELMSVPAEVVDNKYRTQFHFQPPRNWINDPNGPMYYNGIYHLFYQYNPYGAVWGNIVWAHSVSTDMINWKALEPAIYPSKPFDVNGCWSGSATILPGNKPAILYTGIDPQNRQVQNIAFPKNLSDPYLREWVKPDYNPIIAPVNGINASAFRDPTTAWHGPDGHWRLVIGSKRKHRGMAIMYRSRDFIHWIRAKHPLHSANGTGMWECPDFYPVATQGKLGVDTSEYGAGLKYVLKASLDLTRYEYYTLGYYLRDVDKYVPDGTSADDGSGLRYDYGNFYASKTFYDAGKKRRVLLGWSNESDSRQDDVSKGWAGIQIIPRVVLLDSNERQLIQWPIKELETLRGKLVSVQKKKIKSGGSLEISGIMASQADVEVAFELSSLEKAELFDASWTDPQKLCELKGADVKGGVGPFGLLALASANRQEQTAVFFRIFKGLNSFVALMCHDPSKSSLRPGLYKPIYGGWVDVDIQKNGKLSLRSLIDHSVVESFGAEGRTCITSRVYPSLAVGNAAHLFVFNNGEEDVKVSELKAWEMRKPLMNGI",
     "reaction": [
       {
         "substrates": [
-          "S-adenosyl-L-methionine",
-          "DNA"
-        ],
-        "products": [
-          "S-adenosyl-L-homocysteine",
-          "DNA containing 5-methylcytosine"
-        ]
-      },
-      {
-        "substrates": [
-          "S-adenosyl-L-methionine",
-          "DNA"
-        ],
-        "products": [
-          "S-adenosyl-L-homocysteine",
-          "DNA containing 5-methylcytosine"
-        ]
-      },
-      {
-        "substrates": [
-          "S-adenosyl-L-methionine",
-          "CpT"
-        ],
-        "products": [
-          "S-adenosyl-L-homocysteine",
-          "CpT containing 5-methylcytosine"
-        ]
-      },
-      {
-        "substrates": [
-          "S-adenosyl-L-methionine",
-          "CpA"
-        ],
-        "products": [
-          "S-adenosyl-L-homocysteine",
-          "CpA containing 5-methylcytosine"
-        ]
-      },
-      {
-        "substrates": [
-          "S-adenosyl-L-methionine",
-          "dGdC"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "S-adenosyl-L-methionine",
-          "dIdC"
-        ],
-        "products": [
-          "?"
-        ]
-      }
-    ],
-    "kinetics": {
-      "km_values": [
-        {
-          "substrate": "dGdC",
-          "value": 0.0005,
-          "comment": "#34# pH 7.4, 37\u00b0C, Dnmt3b <46>"
-        },
-        {
-          "substrate": "dIdC",
-          "value": 0.0004,
-          "comment": "#34# pH 7.4, 37\u00b0C, Dnmt3b <46>"
-        },
-        {
-          "substrate": "S-adenosyl-L-methionine",
-          "value": 0.0007,
-          "comment": "#34# pH 7.4, 37\u00b0C, Dnmt3b <46>"
-        }
-      ]
-    },
-    "engineering": [
-      {
-        "mutation": "S277P",
-        "effect": "naturally occuring mutation causing recessive genetic disorder, ICF syndrome, the mutation does not affect the association of Dnmt3b with Mbd4 or Tdg"
-      },
-      {
-        "mutation": "A609T",
-        "effect": "naturally occuring mutation causing recessive genetic disorder, ICF syndrome, the mutation does not affect the association of Dnmt3b with Mbd4 or Tdg"
-      },
-      {
-        "mutation": "V612A",
-        "effect": "naturally occuring mutation causing recessive genetic disorder, ICF syndrome, the mutation does not affect the association of Dnmt3b with Mbd4 or Tdg"
-      }
-    ]
-  },
-  "Q90YK3": {
-    "ec_number": "1.1.3.8",
-    "name": "L-gulonolactone oxidase",
-    "sequence": "MDQGTMGYQFENWATTYSCEPELYFEPTTVEEIRQILELANQRNKRVKVVGCGHSPSDIACTDNYLVRLNKLNRILQVDKERKWITAEAGILLSDLNEKLDALGLALSNIGAVSDVALGGVIGTGTHNTGIQHGILATQIVAMTLMTAAGDTLECSNTVNREIFQATRLHLGSLGVVLNVTIQCVPAFRIHLQQFPKTLTEVLGDLDTHLKQSEYFRFFWFPHTDKVTVFYADRTNKPIKTTSSWFWNYAIGYYLLEFLLWISVFVPRLVPWINRLFYWLLYSAKAEQVKRSDKAFNFDCLFKQHVSDWALPIKQTRAALEQLKDWLDNNPNVRAHFPVEVRFVRADDILLSPCYRQDSCYINIIMYRPYGKEVPREGYWAMYEEIMKRNGGRPHWAKAHSLLRQDFEKIYPAFHKFCSIREELDPSGMFLNNYLEKTFF",
-    "reaction": [],
-    "kinetics": {}
-  },
-  "Q8A2I1": {
-    "ec_number": "4.2.2.21",
-    "name": "chondroitin-sulfate-ABC exolyase",
-    "sequence": "MLILSFLCPAFLNAQIVTDERMFSFEEPQLPACITGVQSQLGISGAHYKDGKHSLEWTFEPNGKLELRKDLKFEKKDPTGKDLYLSAFIVWIYNEQPQDAAIEFEFLKDGRKCASFPFGINFKGWRAAWVCYERDMQGTPEEGMNELRIVAPNAKGRLFIDHLITATKVDARQQTADLQVPFVNAGTTNHWLVLYKHSLLKPDIELTPVSDRQRQEMKLLEKRFRDMIYTKGKVTEKEAETIRKKYDLYQITYKDGQVSGVPIFMVRASEAYERMIPDWDKDMLTKMGIEMRAYFDLMKRIAVAYNNSEAGSPVREEMKRKFLAMYDHITDQGVAYGSCWGNIHHYGYSVRGLYPAYFLMKDVLREEGKLLEAERTLRWYAITNEVYPKPEGNGIDMDSFNTQTTGRIASILMMEDTPEKLQYLKSFSRWIDYGCRPAPGLAGSFKVDGGAFHHRNNYPAYAVGGLDGATNMIYLFSRTSLAVSELAHRTVKDVLLAMRFYCNKLNFPLSMSGRHPDGQGKLVPMHYAMMAIAGTPDGKGDFDKEMASAYLRLVSSDSSSAEQAPEYMPKVSNAQERKIAKRLVENGFRAESDPQGNLSLGYGCVSVQRRENWSAVARGHSRYLWAAEHYLGHNLYGRYLAHGSLQILTAPPGQTVTPATSGWQQEGFDWNRIPGVTSIHLPLDLLKANVLNVDTFSGMEEMLYSDEAFAGGLSQGKMNGNFGMKLHEHDKYNGTHRARKSYHFIDGMIVCLGSDIENTNTDYPTETTIFQLAVTDKAAHDYWKNNAGEGKVWMDHLGTGYYVPVPARFEKNFPQYSRMQDTGKETKGDWVSLIIDHGKAPKAGSYEYAILPGTDRKTMTAFAKKPAYSVLQQDRNAHILESPSDRITSYVLFETPQSLLPGGLLQRTDTSCLVMVRKESADKVLLTVAQPDLALYRGPSDEAFDKDGKRMERSIYSRPWIDNESGEIPVTVTLKGRWKVAETPFCKVVSEDKKQTVLRFLCKDGASYEVELEK",
-    "reaction": [
-      {
-        "substrates": [
-          "chondroitin 4-sulfate"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "dermatan sulfate"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "chondroitin sulfate D"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "chondroitin sulfate E"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "chondroitin sulfate A"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "chondroitin sulfate C"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "high molecular weight hyaluronic acid D"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "low molecular weight hyaluronic acid D"
-        ],
-        "products": [
-          "?"
-        ]
-      }
-    ],
-    "kinetics": {
-      "km_values": [
-        {
-          "substrate": "chondroitin sulfate A",
-          "value": 0.045,
-          "comment": "#6# mutant H345Q <15>"
-        },
-        {
-          "substrate": "chondroitin sulfate C",
-          "value": 0.05,
-          "comment": "#6# mutant Q173A <16>"
-        },
-        {
-          "substrate": "chondroitin sulfate C",
-          "value": 0.012,
-          "comment": "#6# mutant H453N <15>"
-        },
-        {
-          "substrate": "chondroitin sulfate C",
-          "value": 0.02,
-          "comment": "#6# mutant H453A <16>"
-        },
-        {
-          "substrate": "chondroitin sulfate A",
-          "value": 0.038,
-          "comment": "#6# mutant H453A <16>"
-        },
-        {
-          "substrate": "dermatan sulfate",
-          "value": 0.09,
-          "comment": "#6# mutant H344N <15>"
-        },
-        {
-          "substrate": "chondroitin sulfate A",
-          "value": 0.067,
-          "comment": "#6# wild-type <15,16>"
-        },
-        {
-          "substrate": "chondroitin sulfate C",
-          "value": 0.033,
-          "comment": "#6# wild-type <15,16>"
-        },
-        {
-          "substrate": "chondroitin sulfate A",
-          "value": 0.034,
-          "comment": "#6# mutant H453N <15>"
-        },
-        {
-          "substrate": "dermatan sulfate",
-          "value": 0.071,
-          "comment": "#6# mutant Q173A <16>; #6# mutant R267A <16>"
-        },
-        {
-          "substrate": "chondroitin sulfate A",
-          "value": 0.102,
-          "comment": "#6# mutant Q173A <16>"
-        },
-        {
-          "substrate": "chondroitin sulfate C",
-          "value": 0.102,
-          "comment": "#6# mutant H345Q <15>"
-        },
-        {
-          "substrate": "chondroitin sulfate C",
-          "value": 0.035,
-          "comment": "#6# mutant E628Q <15>"
-        },
-        {
-          "substrate": "chondroitin sulfate A",
-          "value": 0.202,
-          "comment": "#6# mutant H344A <16>"
-        },
-        {
-          "substrate": "chondroitin sulfate C",
-          "value": 0.026,
-          "comment": "#6# mutant H345N <15>"
-        },
-        {
-          "substrate": "dermatan sulfate",
-          "value": 0.061,
-          "comment": "#6# wild-type <15,16>"
-        },
-        {
-          "substrate": "chondroitin sulfate A",
-          "value": 0.061,
-          "comment": "#6# mutant H345N <15>"
-        },
-        {
-          "substrate": "chondroitin sulfate A",
-          "value": 0.073,
-          "comment": "#6# mutant H344Q <15>"
-        },
-        {
-          "substrate": "chondroitin sulfate A",
-          "value": 0.039,
-          "comment": "#6# mutant H344N <15>"
-        },
-        {
-          "substrate": "dermatan sulfate",
-          "value": 0.044,
-          "comment": "#6# mutant H453A <16>"
-        },
-        {
-          "substrate": "chondroitin sulfate A",
-          "value": 0.171,
-          "comment": "#6# mutant H345A <16>"
-        },
-        {
-          "substrate": "chondroitin sulfate C",
-          "value": 0.134,
-          "comment": "#6# mutant H344A <16>"
-        },
-        {
-          "substrate": "chondroitin sulfate A",
-          "value": 0.109,
-          "comment": "#6# mutant R267A <16>"
-        },
-        {
-          "substrate": "chondroitin sulfate C",
-          "value": 0.098,
-          "comment": "#6# mutant R267A <16>"
-        },
-        {
-          "substrate": "chondroitin sulfate A",
-          "value": 0.158,
-          "comment": "#6# mutant E628Q <15>"
-        },
-        {
-          "substrate": "chondroitin sulfate C",
-          "value": 0.084,
-          "comment": "#6# mutant H344N <15>"
-        },
-        {
-          "substrate": "chondroitin sulfate C",
-          "value": 0.195,
-          "comment": "#6# mutant H345A <16>"
-        }
-      ]
-    },
-    "engineering": [
-      {
-        "mutation": "H453A",
-        "effect": "Km (mM) (chondroitin sulfate A) 0.038, (chondroitin sulfate C) 0.02, (dermatan sulfate) 0.044, kcat (1/sec) (chondroitin sulfate A) 17, (chondroitin sulfate B) 6.41, (dermatan sulfate) 5.8"
-      },
-      {
-        "mutation": "H345A",
-        "effect": "Km (mM) (chondroitin sulfate A) 0.171, (chondroitin sulfate C) 0.195, kcat (1/sec) (chondroitin sulfate A) 63, (chondroitin sulfate B) 30.88, no activity toward dermatan sulfate"
-      },
-      {
-        "mutation": "H344A",
-        "effect": "Km (mM) (chondroitin sulfate A) 0.202, (chondroitin sulfate C) 0.134, kcat (1/sec) (chondroitin sulfate A) 92.66, (chondroitin sulfate B) 35.71, no activity toward dermatan sulfate"
-      },
-      {
-        "mutation": "H344Q",
-        "effect": "Km (mM) (chondroitin sulfate A) 0.073, kcat (1/sec) (chondroitin sulfate A) 16.78, no activity toward dermatan sulfate or chondroitin sulfate C"
-      },
-      {
-        "mutation": "Q173A",
-        "effect": "Km (mM) (chondroitin sulfate A) 0.102, (chondroitin sulfate C) 0.050, (dermatan sulfate) 0.071, kcat (1/sec) (chondroitin sulfate A) 123, (chondroitin sulfate B) 33, (dermatan sulfate) 6.8"
-      },
-      {
-        "mutation": "R267A",
-        "effect": "Km (mM) (chondroitin sulfate A) 0.109, (chondroitin sulfate C) 0.098, (dermatan sulfate) 0.071, kcat (1/sec) (chondroitin sulfate A) 205, (chondroitin sulfate B) 61.7, (dermatan sulfate) 4.1"
-      },
-      {
-        "mutation": "R172A",
-        "effect": "mutant shows no activity"
-      },
-      {
-        "mutation": "H453N",
-        "effect": "Km (mM) (chondroitin sulfate A) 0.034, (chondroitin sulfate C) 0.012, kcat (1/sec) (chondroitin sulfate A) 13.15, (chondroitin sulfate B) 6.8, no activity toward dermatan sulfate"
-      },
-      {
-        "mutation": "H454/D/N/Q",
-        "effect": "mutant shows no activity"
-      },
-      {
-        "mutation": "Y461A",
-        "effect": "mutant shows no activity"
-      },
-      {
-        "mutation": "E628D",
-        "effect": "mutant shows no activity"
-      },
-      {
-        "mutation": "E628Q",
-        "effect": "Km (mM) (chondroitin sulfate A) 0.158, (chondroitin sulfate C) 0.035, kcat (1/sec) (chondroitin sulfate A) 10.38, (chondroitin sulfate B) 4.41, no activity toward dermatan sulfate"
-      },
-      {
-        "mutation": "H344D",
-        "effect": "mutant shows no activity"
-      },
-      {
-        "mutation": "H344E",
-        "effect": "mutant shows no activity"
-      },
-      {
-        "mutation": "H344N",
-        "effect": "Km (mM) (chondroitin sulfate A) 0.039, (chondroitin sulfate C) 0.084, (dermatan sulfate) 0.09, kcat (1/sec) (chondroitin sulfate A) 42.2, (chondroitin sulfate B) 18.7, (dermatan sulfate) 9.06"
-      },
-      {
-        "mutation": "H345D/E",
-        "effect": "mutant shows no activity"
-      },
-      {
-        "mutation": "H345N",
-        "effect": "Km (mM) (chondroitin sulfate A) 0.061, (chondroitin sulfate C) 0.026, kcat (1/sec) (chondroitin sulfate A) 21, (chondroitin sulfate B) 6.6, no activity toward dermatan sulfate"
-      },
-      {
-        "mutation": "H345Q",
-        "effect": "Km (mM) (chondroitin sulfate A) 0.045, (chondroitin sulfate C) 0.102, kcat (1/sec) (chondroitin sulfate A) 23.46, (chondroitin sulfate B) 10.85, no activity toward dermatan sulfate"
-      },
-      {
-        "mutation": "H454A",
-        "effect": "mutant shows no activity"
-      },
-      {
-        "mutation": "Y461F",
-        "effect": "mutant shows no activity"
-      },
-      {
-        "mutation": "R514A",
-        "effect": "mutant shows no activity"
-      }
-    ],
-    "metals_ions": [
-      "Mg2+",
-      "Ca2+"
-    ]
-  },
-  "P23865": {
-    "ec_number": "3.4.21.102",
-    "name": "C-terminal processing peptidase",
-    "sequence": "MNMFFRLTALAGLLAIAGQTFAVEDITRADQIPVLKEETQHATVSERVTSRFTRSHYRQFDLDQAFSAKIFDRYLNLLDYSHNVLLASDVEQFAKKKTELGDELRSGKLDVFYDLYNLAQKRRFERYQYALSVLEKPMDFTGNDTYNLDRSKAPWPKNEAELNALWDSKVKFDELSLKLTGKTDKEIRETLTRRYKFAIRRLAQTNSEDVFSLAMTAFAREIDPHTNYLSPRNTEQFNTEMSLSLEGIGAVLQMDDDYTVINSMVAGGPAAKSKAISVGDKIVGVGQTGKPMVDVIGWRLDDVVALIKGPKGSKVRLEILPAGKGTKTRTVTLTRERIRLEDRAVKMSVKTVGKEKVGVLDIPGFYVGLTDDVKVQLQKLEKQNVSSVIIDLRSNGGGALTEAVSLSGLFIPAGPIVQVRDNNGKVREDSDTDGQVFYKGPLVVLVDRFSASASEIFAAAMQDYGRALVVGEPTFGKGTVQQYRSLNRIYDQMLRPEWPALGSVQYTIQKFYRVNGGSTQRKGVTPDIIMPTGNEETETGEKFEDNALPWDSIDAATYVKSGDLTAFEPELLKEHNARIAKDPEFQNIMKDIARFNAMKDKRNIVSLNYAVREKENNEDDATRLARLNERFKREGKPELKKLDDLPKDYQEPDPYLDETVNIALDLAKLEKARPAEQPAPVK",
-    "reaction": [
-      {
-        "substrates": [
-          "Protein",
+          "sucrose",
           "H2O"
         ],
         "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "variant of the lambda repressor",
-          "H2O"
-        ],
-        "products": [
-          "?"
-        ]
-      }
-    ],
-    "kinetics": {},
-    "engineering": [
-      {
-        "mutation": "D369A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "H19A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "H34A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "H60A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "H203A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "R371A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "S372A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "G375A",
-        "effect": "no hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "G376A",
-        "effect": "no hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "S428A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "S430A",
-        "effect": "no hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "S430C",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "S432A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "E433A",
-        "effect": "no hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "D441A",
-        "effect": "no hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "D441N",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "R444A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "E449A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "T452A",
-        "effect": "no hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "K455A",
-        "effect": "no hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "K455R",
-        "effect": "no hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "D505A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      },
-      {
-        "mutation": "H553A",
-        "effect": "hydrolysis of the 105 variant of N-terminal domain of lambda repressor"
-      }
-    ]
-  },
-  "D9ZKR8": {
-    "ec_number": "1.2.1.44",
-    "name": "cinnamoyl-CoA reductase",
-    "sequence": "MPTDTPSSNGMTVCVTGAGGFIASWMVKLLLEKGYSVKGTVRNPDDPKNSHLRELEGAKERLSLHRADLLDYPSLKEAISGCDGVFHTASPVTDDPEQMVEPAVNGTKNVIMAAAEAKVRRVVFTSSIGAVYMDPNRSPDVVVDESCWSDLEFCKNTKNWYCYGKAVAEQAAWETAKEKGVDLVVVAPVLVLGPLLQSTVNASTVHILKYLTGSAKTYANSVQAYVHVRDVALAHILVFENPSASGRYLCAESVLHRGEVVEILAKLFPEYPVPTKCSDESNPRKKPYKFSNQKLRELGLEFTPVKQCLYETVKSLQEKGHLAIPAQQQEDPVLRIQS",
-    "reaction": [
-      {
-        "substrates": [
-          "4-coumaroyl-CoA",
-          "NADPH",
-          "H+"
-        ],
-        "products": [
-          "4-coumaraldehyde",
-          "CoA",
-          "NADP+"
-        ]
-      },
-      {
-        "substrates": [
-          "4-coumaroyl-CoA",
-          "NADPH",
-          "H+"
-        ],
-        "products": [
-          "4-coumaraldehyde",
-          "CoA",
-          "NADP+"
-        ]
-      },
-      {
-        "substrates": [
-          "feruloyl-CoA",
-          "NADPH",
-          "H+"
-        ],
-        "products": [
-          "coniferaldehyde",
-          "CoA",
-          "NADP+"
-        ]
-      },
-      {
-        "substrates": [
-          "feruloyl-CoA",
-          "NADPH",
-          "H+"
-        ],
-        "products": [
-          "coniferaldehyde",
-          "CoA",
-          "NADP+"
+          "D-fructose",
+          "D-glucose"
         ]
       }
     ],
     "kinetics": {}
   },
-  "P50286": {
-    "ec_number": "3.5.1.1",
-    "name": "asparaginase",
-    "sequence": "MAKPQVTILATGGTIAGSGESSVKSSYSAGAVTVDKLLAAVPAINDLATIKGEQISSIGSQEMTGKVWLKLAKRVNELLAQKETEAVIITHGTDTMEETAFFLNLTVKSQKPVVLVGAMRSGSSMSADGPMNLYNAVNVAINKASTNKGVVIVMNDEIHAAREATKLNTTAVNAFASPNTGKIGTVYYGKVEYFTQSVRPHTLASEFDISKIEELPRVDILYAHPDDTDVLVNAALQAGAKGIIHAGMGNGNPFPLTQNALEKAAKSGVVVARSSRVGSGSTTQEAEVDDKKLGFVATESLNPQKARVLLMLALTKTSDREAIQKIFSTY",
+  "A2BD60": {
+    "ec_number": "1.13.11.52",
+    "name": "indoleamine 2,3-dioxygenase",
+    "sequence": "MENQDINPKEFYVSEQYGFILQDPLEKLPEYYKPWMTIAGDLCNLIKNKQIREAVRQMPELSLKYLSGHREQRLARLILGHIVMGYVWQDGEQGAVKVLPRCLAVPYFTLSEVLGMPPILVHADLVLANWRRKNPHGPLTMENLTTIVSLPGGDSLQGFALVTLMVEVAAIPGVQAVCQAVNSLVCQDEPRLLQALKDLTESINRMSDALKLMHDYVDSDIFYNTIRLFLSGWKDNPSMPEGLRYEGVAETPFSFSGGSAAQSSVFQAFDELLGIKHRSDSADFLLRMREYMPPAHRHFVERIGKAPSLPGYVQESGDPELLSAFNECVLSLTDFRSLHIRIVCKYVSAAGNRSKMLGKMEQHLHERGTGGSNIMSFLKNVRGTCKEGVLNNDTQEDC",
     "reaction": [
       {
         "substrates": [
-          "L-asparagine",
-          "H2O"
-        ],
-        "products": [
-          "L-aspartate",
-          "NH3"
-        ]
-      },
-      {
-        "substrates": [
-          "L-glutamine",
-          "H2O"
-        ],
-        "products": [
-          "L-glutamate",
-          "NH3"
-        ]
-      }
-    ],
-    "kinetics": {
-      "km_values": [
-        {
-          "substrate": "L-glutamine",
-          "value": 0.32,
-          "comment": "#141# mutant S121P, 37\u00b0C, pH not specified in the publication <174>"
-        },
-        {
-          "substrate": "L-asparagine",
-          "value": 0.0236,
-          "comment": "#141# mutant S121P, 37\u00b0C, pH not specified in the publication <174>"
-        },
-        {
-          "substrate": "L-glutamine",
-          "value": 0.38,
-          "comment": "#141# wild-type, 37\u00b0C, pH not specified in the publication <174>"
-        },
-        {
-          "substrate": "L-asparagine",
-          "value": 0.0217,
-          "comment": "#141# wild-type, 37\u00b0C, pH not specified in the publication <174>"
-        }
-      ]
-    },
-    "engineering": [
-      {
-        "mutation": "S121P",
-        "effect": "mutant gains L-glutaminase activity, but retains L-asparaginase activity comparable to wild-type"
-      }
-    ]
-  },
-  "Q72H18": {
-    "ec_number": "1.17.7.3",
-    "name": "(E)-4-hydroxy-3-methylbut-2-enyl-diphosphate synthase (flavodoxin)",
-    "sequence": "MEGMRRPTPTVYVGRVPIGGAHPIAVQSMTNTPTRDVEATTAQVLELHRAGSEIVRLTVNDEEAAKAVPEIKRRLLAEGVEVPLVGDFHFNGHLLLRKYPKMAEALDKFRINPGTLGRGRHKDEHFAEMIRIAMDLGKPVRIGANWGSLDPALLTELMDRNASRPEPKSAHEVVLEALVESAVRAYEAALEMGLGEDKLVLSAKVSKARDLVWVYRELARRTQAPLHLGLTEAGMGVKGIVASAAALAPLLLEGIGDTIRVSLTPSPKEPRTKEVEVAQEILQALGLRAFAPEVTSCPGCGRTTSTFFQELAEEVSRRLKERLPEWRARYPGVEELKVAVMGCVVNGPGESKHAHIGISLPGAGEEPKAPVYADGKLLTILKGEGIAEEFLRLVEDYVKTRFAPKA",
-    "reaction": [
-      {
-        "substrates": [
-          "(E)-4-hydroxy-3-methylbut-2-en-1-yl diphosphate",
-          "H2O",
-          "oxidized flavodoxin"
-        ],
-        "products": [
-          "2-C-methyl-D-erythritol 2,4-cyclodiphosphate",
-          "reduced flavodoxin"
-        ]
-      },
-      {
-        "substrates": [
-          "[(2R,3R)-3-(hydroxymethyl)-3-methyloxiran-2-yl]methyl trihydrogen diphosphate",
+          "L-tryptophan",
           "O2"
         ],
         "products": [
-          "[(2R,3R)-3-(hydroxymethyl)-3-methyloxiran-2-yl]methyl trihydrogen diphosphate",
-          "H2O"
-        ]
-      }
-    ],
-    "kinetics": {}
-  },
-  "P20960": {
-    "ec_number": "3.5.5.1",
-    "name": "nitrilase",
-    "sequence": "MQTRKIVRAAAVQAASPNYDLATGVDKTIELARQARDEGCDLIVFGETWLPGYPFHVWLGAPAWSLKYSARYYANSLSLDSAEFQRIAQAARTLGIFIALGYSERSGGSLYLGQCLIDDKGQMLWSRRKLKPTHVERTVFGEGYARDLIVSDTELGRVGALCCWEHLSPLSKYALYSQHEAIHIAAWPSFSLYSEQAHALSAKVNMAASQIYSVEGQCFTIAASSVVTQETLDMLEVGEHNASLLKVGGGSSMIFAPDGRTLAPYLPHDAEGLIIADLNMEEIAFAKAINDPVGHYSKPEATRLVLDLGHREPMTRVHSKSVIQEEAPEPHVQSTAAPVAVSQTQDSDTLLVQEPS",
-    "reaction": [
-      {
-        "substrates": [
-          "2-phenylpropionitrile",
-          "2 H2O"
-        ],
-        "products": [
-          "2-phenylpropionic acid",
-          "NH3"
+          "N-formyl-L-kynurenine"
         ]
       },
       {
         "substrates": [
-          "(R)-2-chloromandelonitrile",
-          "H2O"
+          "L-tryptophan",
+          "O2"
         ],
         "products": [
-          "(R)-2-chloromandelic acid",
-          "(S)-2-chloromandelic acid",
-          "NH3"
-        ]
-      }
-    ],
-    "kinetics": {
-      "specific_activity": [
-        {
-          "value": 0.1
-        },
-        {
-          "value": 0.14
-        },
-        {
-          "value": 0.52
-        },
-        {
-          "value": 0.62
-        }
-      ]
-    },
-    "engineering": [
-      {
-        "mutation": "A198V",
-        "effect": "the mutant enzyme shows 2.4fold increased conversion rate of 2-phenylpropionitrile at pH 7.5 compared to the wild type enzyme"
-      },
-      {
-        "mutation": "A198V/Q197H",
-        "effect": "the mutant enzyme shows 2.9fold increased conversion rate of 2-phenylpropionitrile at pH 7.5 compared to the wild type enzyme"
-      },
-      {
-        "mutation": "A198V/Q197H/L176M",
-        "effect": "the mutant enzyme shows 6.5fold increased conversion rate of 2-phenylpropionitrile at pH 7.5 compared to the wild type enzyme"
-      },
-      {
-        "mutation": "A198V/Q197H/L176M/V306I",
-        "effect": "the mutant enzyme shows 8fold increased conversion rate of 2-phenylpropionitrile at pH 7.5 compared to the wild type enzyme"
-      },
-      {
-        "mutation": "I290F/Q3L",
-        "effect": "the mutant enzyme shows 2.3fold increased conversion rate of 2-phenylpropionitrile at pH 7.5 and 100% activity at pH 4.5 compared to the wild type enzyme"
-      },
-      {
-        "mutation": "A198V/I290F",
-        "effect": "the mutant enzyme shows 1.2fold increased conversion rate of 2-phenylpropionitrile at pH 7.5 and 140% activity at pH 4.5 compared to the wild type enzyme"
-      },
-      {
-        "mutation": "A198V/I290F/H135Y",
-        "effect": "the mutant enzyme shows 1.7fold increased conversion rate of 2-phenylpropionitrile at pH 7.5 and 150% activity at pH 4.5 compared to the wild type enzyme"
-      },
-      {
-        "mutation": "A198V/I290F/Y213H/T350S",
-        "effect": "the mutant enzyme shows 2fold increased conversion rate of 2-phenylpropionitrile at pH 7.5 and 200% activity at pH 4.5 compared to the wild type enzyme"
-      },
-      {
-        "mutation": "A198V/I290F/Y177C/A285T",
-        "effect": "the mutant enzyme shows 0.9fold conversion rate of 2-phenylpropionitrile at pH 7.5 and 240% activity at pH 4.5 compared to the wild type enzyme"
-      },
-      {
-        "mutation": "A198V/I290F/H135Y/Y213H/T350S/Y177C/A285T",
-        "effect": "the mutant enzyme shows 2.8fold increased conversion rate of 2-phenylpropionitrile at pH 7.5 and 740% activity at pH 4.5 compared to the wild type enzyme"
-      }
-    ]
-  },
-  "W8VJU1": {
-    "ec_number": "4.2.2.23",
-    "name": "rhamnogalacturonan endolyase",
-    "sequence": "MFFKSVAIASLALLAKQASAAFGITTSSDSYVIDAGSSNPLKFTVSRSSCDITSINYYAAELQYQSTGSHIGSSLGSATVSATQSGDYIKVTCETSTLTHYYVVRKGDSTIHMATYTTEEPSIGELRYIARLNADLLPNEEPFGDVSTIAGGTVIEGEDVFLVDGETRSKFYSSQRFIDDNIHCVSGSAHRVCMILNQYETSSGGPFQRDINTNNVGSYTGLYWYMNSGHVKTEDFRQGLHGPYSMTFSRSGTPSSKLDTSFFADLDIKGYVPTSARGYVKGTASGADSAFKWVVHWHNDAAQYWTYASSSGDFTSPAMKPGTYTMVYYQGEYPVATSEVTVTAGKTTSKSISGSVKTGTTIFRIGDWDGTPNGFLNAANQLRMHPSDSRMSSWSPATYTVGTSKVSSFPMALFKSVNSPVTIKFTASSDQTGAATLRIGTTLAFASGRPQVKVNSYSGPTPAAPTNLNSRGVTRGAYRGLGEVYDVSIPAGTIVAGSNTITISVASGSSGDKFLSPNFIFDCVELFQ",
-    "reaction": [
-      {
-        "substrates": [
-          "azurine-crosslinked rhamnogalacturonan"
-        ],
-        "products": [
-          "azurine-crosslinked unsaturated rhamnogalacturonan oligosaccharides"
-        ]
-      },
-      {
-        "substrates": [
-          "degalactosylated rhamnogalacturonan"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "rhamnogalacturonan"
-        ],
-        "products": [
-          "rhamnogalacturonan tetrasaccharide with 4-deoxy-4,5-unsaturated galacturonic acid at the nonreducing end"
-        ]
-      }
-    ],
-    "kinetics": {
-      "specific_activity": [
-        {
-          "value": 2.0
-        }
-      ]
-    },
-    "metals_ions": [
-      "Ca2+"
-    ]
-  },
-  "A0A142UTH4": {
-    "ec_number": "7.6.2.11",
-    "name": "ABC-type polyamine transporter",
-    "sequence": "MKKPIIEFKNVSKVFEDSGTTVLKDISFELEEGKFYTLLGASGSGKSTILNIIAGLLDASSGDIYLDGQRINDVPTNKRDVHTVFQSYALFPHMTVFENVAFPLKLRKIDKAEIERRVTEALQMVRLSGYENRSIQKLSGGQRQRVAIARAIINQPRVVLLDEPLSALDLKLRTEMQYELRELQQRLGITFVFVTHDQEEALAMSDWIFVMNEGEIVQSGTPVDIYDEPINHFVATFIGESNILPGRMIEDYLVEFNGKRFEAVDGGMRPNEEVEVVIRPEDLQITLPEEGKLQVKVDTQLFRGVHYEIIAYDDLGNEWMIHSTRKAIVGEVIGLSFEPEDIHIMRLNETEEEFDARIEEYVEVEEVEDGLINAIEEERNEENL",
-    "reaction": [
-      {
-        "substrates": [
-          "ATP",
-          "H2O",
-          "spermine-[polyamine-binding protein][side 1]"
-        ],
-        "products": [
-          "ADP",
-          "phosphate",
-          "spermine[side 2]",
-          "[polyamine-binding protein][side 1]"
-        ]
-      },
-      {
-        "substrates": [
-          "ATP",
-          "H2O",
-          "polyamine-[polyamine-binding protein][side 1]"
-        ],
-        "products": [
-          "ADP",
-          "phosphate",
-          "polyamine[side 2]",
-          "[polyamine-binding protein][side 1]"
-        ]
-      },
-      {
-        "substrates": [
-          "ATP",
-          "H2O",
-          "spermidine-[polyamine-binding protein][side 1]"
-        ],
-        "products": [
-          "ADP",
-          "phosphate",
-          "spermidine[side 2]",
-          "[polyamine-binding protein][side 1]"
-        ]
-      }
-    ],
-    "kinetics": {},
-    "metals_ions": [
-      "Mg2+"
-    ]
-  },
-  "Q8PI23": {
-    "ec_number": "3.2.1.100",
-    "name": "mannan 1,4-mannobiosidase",
-    "sequence": NaN,
-    "reaction": [
-      {
-        "substrates": [
-          "4-nitrophenyl beta-D-mannopyranoside",
-          "H2O"
-        ],
-        "products": [
-          "4-nitrophenol",
-          "beta-D-mannopyranoside"
-        ]
-      },
-      {
-        "substrates": [
-          "beta-mannan",
-          "H2O"
-        ],
-        "products": [
-          "D-mannose",
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "galactomannan",
-          "H2O"
-        ],
-        "products": [
-          "D-mannose",
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "mannobiose",
-          "H2O"
-        ],
-        "products": [
-          "mannose",
-          ""
-        ]
-      },
-      {
-        "substrates": [
-          "mannohexaose",
-          "H2O"
-        ],
-        "products": [
-          "D-mannose",
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "mannopentaose",
-          "H2O"
-        ],
-        "products": [
-          "D-mannose",
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "mannotetraose",
-          "H2O"
-        ],
-        "products": [
-          "D-mannose",
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "mannotriose",
-          "H2O"
-        ],
-        "products": [
-          "mannobiose",
-          "D-mannose"
+          "N-formyl-L-kynurenine"
         ]
       }
     ],
     "kinetics": {
       "km_values": [
         {
-          "substrate": "beta-mannan",
-          "value": 4.2,
-          "comment": "#2# pH 5.5, 40\u00b0C <2>"
-        },
-        {
-          "substrate": "mannohexaose",
-          "value": 5.11,
-          "comment": "#2# pH 5.5, 40\u00b0C <2>"
+          "substrate": "L-tryptophan",
+          "value": 7.4,
+          "comment": "#62# pH 7.5, 37\u00b0C <222>"
         }
       ]
     }
   },
-  "Q9SM55": {
-    "ec_number": "6.3.5.4",
-    "name": "asparagine synthase (glutamine-hydrolysing)",
-    "sequence": "MCGILAVLGCSDSSQAKRVRVLELSRRLKHRGPDWSGLHQYGDCYLAHQRLAIVDPASGDQPLFNEDKTIAVTVNGEIYNHEELRKQLPNHTFRTGSDCDVIAHLYEEHGENFVDMLDGIFSFVLLDTRDNSFIVARDAIGVTSLYIGWGLDGSVWISSELKGLNGDCEHFESFPPGHLYSSKEREFRRWYNPPWFSEAIPSAPYDPLALRHAFEKAVIKRLMTDVPFGVLLSGGLDSSLVAAVTARYLEGTNAAKHWGTKLHSFCVGLEGAPDLKAAREVADYIGTVHHEFHYSVQDGIDAIEDVIYHIETYDVTTIRASIPMFLMSRKIKSLGVKWDICGEGSDEIYGGYLYFHKAPNKEEFHQETCRKIKALHKYDCLRANKSTFAWGLEARVPFLDKEFIEVAMNVNPEYKMIKKEEGRIEKWVLRRAFDDGEHPYLPKHILYRQKEQFSDGVGYGWIDGLKGHAEKHVTDRMMLNAANIFPFNTPTTKEAYYYRMIFERFFPQDSARLSVPGGPSVACSTAKAVEWDAAWSNNLDPSGRAALGVHASAYGNQVKAVEPEKTIPKMEVSPLGVAI",
+  "Q5BLE8": {
+    "ec_number": "1.3.99.23",
+    "name": "all-trans-retinol 13,14-reductase",
+    "sequence": "MWFAVVAIFLALVAFLYRYVVGSGPNPFAIDTREPLKPMVFDRKLKNKVLKQGFLASRVPEDLDAVVVGSGIGGLAIAVLLAKVGKKVLVLEQHDRAGGCCHTFKEQGFEFDVGIHYIGELSNHKPLRCIIDQMTNGQLQWDPLENPFDNVVIGPPENRRIYQIYSGRKRYMDELKKCFPGEEKAIDEYVRLCKEVGQGVWVMVLLKFLPTPIANFLVRTGLANRLTSFSRYASRSLTDVVNELTQNKDLRAVLSYIFGTYGKIPKEASFSMHSLIVNHYMNGAWYPKGGATEIAYHMIPIIEKAGGAVLVRAPVNRILLNDAKEAIGVSVLKGQEEVHVRAPIVISDAGIFNTYEYLLPKDVQTMPAIQKQLSMLQHGDSGLSIFIGLDGTKEELGLKADNYFIYPENNIDELLEDYRSGNREESAKKNPLIFVASPSAKDSTWPERTPGKSTLTVVSFANYEWFEEWKDDKVKNRSTDYKQLKELFINYILEAVTEIYPKIKDRIEYVDAGTPITNQHYIAAPRGEIYGADHGIPRFSAELNATIRAQTPIKNLYLTGQDLMLCGFAGALTGALTCGSVILNRNLHLEAFSLAKRVQNGNNKKKT",
     "reaction": [
       {
         "substrates": [
-          "ATP",
-          "L-aspartate",
-          "L-glutamine"
+          "all-trans-retinol",
+          "reduced acceptor"
         ],
         "products": [
-          "AMP",
-          "diphosphate",
-          "L-asparagine",
-          "L-glutamate"
+          "all-trans-13,14-dihydroretinol",
+          "acceptor"
         ]
       },
       {
         "substrates": [
-          "ATP",
-          "L-aspartate",
-          "L-glutamine"
+          "all-trans-retinol",
+          "reduced acceptor"
         ],
         "products": [
-          "AMP",
-          "diphosphate",
-          "L-asparagine",
-          "L-glutamate"
+          "all-trans-13,14-dihydroretinol",
+          "acceptor"
+        ]
+      },
+      {
+        "substrates": [
+          "all-trans-13,14-didehydroretinol",
+          "reduced acceptor"
+        ],
+        "products": [
+          "all-trans-13,14-dihydro-3,4-didehydroretinol",
+          "acceptor"
+        ]
+      },
+      {
+        "substrates": [
+          "all-trans-retinol",
+          "reduced acceptor"
+        ],
+        "products": [
+          "all-trans-7,8-dihydroretinol",
+          "acceptor"
+        ]
+      },
+      {
+        "substrates": [
+          "all-trans-13,14-dihydroretinol",
+          "FAD"
+        ],
+        "products": [
+          "all-trans-retinol",
+          "FADH2"
+        ]
+      },
+      {
+        "substrates": [
+          "all-trans-13,14-dihydroretinol",
+          "NAD+"
+        ],
+        "products": [
+          "all-trans-retinol",
+          "NADH",
+          "H+"
+        ]
+      },
+      {
+        "substrates": [
+          "all-trans-13,14-dihydroretinol",
+          "NADP+"
+        ],
+        "products": [
+          "all-trans-retinol",
+          "NADPH",
+          "H+"
+        ]
+      },
+      {
+        "substrates": [
+          "all-trans-13,14-didehydroretinol",
+          "reduced acceptor"
+        ],
+        "products": [
+          "all-trans-7,8-dihydro-3,4-didehydroretinol",
+          "acceptor"
+        ]
+      },
+      {
+        "substrates": [
+          "10'-apo-beta-carotene-3,10'-diol",
+          "acceptor"
+        ],
+        "products": [
+          "11',12'-dihydro-10'-apo-beta-carotene-3,10'-diol",
+          "reduced acceptor"
+        ]
+      },
+      {
+        "substrates": [
+          "all-trans-7,8-dihydroretinol",
+          "acceptor"
+        ],
+        "products": [
+          "all-trans-retinol",
+          "reduced acceptor"
         ]
       }
     ],
     "kinetics": {}
   },
-  "P49840": {
-    "ec_number": "2.7.11.26",
-    "name": "tau-protein kinase",
-    "sequence": "MSGGGPSGGGPGGSGRARTSSFAEPGGGGGGGGGGPGGSASGPGGTGGGKASVGAMGGGVGASSSGGGPGGSGGGGSGGPGAGTSFPPPGVKLGRDSGKVTTVVATLGQGPERSQEVAYTDIKVIGNGSFGVVYQARLAETRELVAIKKVLQDKRFKNRELQIMRKLDHCNIVRLRYFFYSSGEKKDELYLNLVLEYVPETVYRVARHFTKAKLTIPILYVKVYMYQLFRSLAYIHSQGVCHRDIKPQNLLVDPDTAVLKLCDFGSAKQLVRGEPNVSYICSRYYRAPELIFGATDYTSSIDVWSAGCVLAELLLGQPIFPGDSGVDQLVEIIKVLGTPTREQIREMNPNYTEFKFPQIKAHPWTKVFKSRTPPEAIALCSSLLEYTPSSRLSPLEACAHSFFDELRCLGTQLPNNRPLPPLFNFSAGELSIQPSLNAILIPPHLRSPAGTTTLTPSSQALTETPTSSDWQSTDATPTLTNSS",
+  "A0A0A7I0A5": {
+    "ec_number": "1.1.1.433",
+    "name": "sulfoacetaldehyde reductase (NADH)",
+    "sequence": "MLWDYAQPVTIRFGKGRAMEIKDIAEAMGLHDGIMVTPKFFVDSGEAQRLIDASDGAVSTVFTDFSPNPDVTEVDACAEIIRKNHCEFVVAMGGGSAMDVSKAAASICLTDDSIADYHGTGKAMPQKHLPIIALPTTAGTGSEVTCVSVLTNRKLGKKAPIVSDGFFPSVAIVDPELTYSVPPKITASTGMDVLSQAIEGFWSKGHQPICDSCAAHAAKLVFKYLPIAVAEPHNEEAREKMCEASVIAGLAFTLPKTTSSHACSFPLTNIHGIPHGEACGLTLDYFARINKDAQHGRVQEFARGIGFKDVDAMADAIHDLKVRIGMRTGLKDLNLTEEQIADLVRISRHPNLYNNPVEITDDMLDTMYHYLASTD",
     "reaction": [
       {
         "substrates": [
-          "ATP",
-          "[tau-protein]"
+          "2-sulfoacetaldehyde",
+          "NADH",
+          "H+"
         ],
         "products": [
-          "ADP",
-          "O-phospho-[tau-protein]"
+          "isethionate",
+          "NAD+"
         ]
-      }
-    ],
-    "kinetics": {},
-    "engineering": [
-      {
-        "mutation": "R159A",
-        "effect": "site-directed mutagenesis, the mutant shows reduced activity compared to the wild-type"
       },
-      {
-        "mutation": "Y279F",
-        "effect": "site-directed mutagenesis, the mutant activity is similar to the wild-type"
-      },
-      {
-        "mutation": "K148R",
-        "effect": "site-directed mutagenesis, the mutant shows reduced activity compared to the wild-type"
-      },
-      {
-        "mutation": "P442A/P443A",
-        "effect": "site-directed mutagenesis, the mutant shows reduced activity compared to the wild-type"
-      }
-    ],
-    "general_information": [
-      "deletion of the C-terminus alphaDELTACT-4 leads to loss of nearly all activity of the GSK-3 isoform and abolishes suppression of Wnt signaling, GSK-3 C-terminal deletions mutants fail to interact with axin GID <158>; #13# deletion of the C-terminus betaDELTACT-4 leads to loss of nearly all activity of the GSK-3 isoform and abolishes suppression of Wnt signaling, GSK-3 C-terminal deletions mutants fail to interact with axin GID <158>; #35,40# functional status of glycogen synthase kinase-3 and correlated appearance of distinct tau phospho-epitopes"
-    ],
-    "metals_ions": [
-      "Mg2+"
-    ]
-  },
-  "Q9SHP0": {
-    "ec_number": "2.6.1.52",
-    "name": "phosphoserine transaminase",
-    "sequence": "MAASTNSFLIGNQTQIPSLKPKSISQSFIHFTKPNTINLTTRTKSVSIRCASASTTVGSEQRVINFAAGPAALPENVLLKAQSDLYNWRGSGMSVMEMSHRGKEFLSIIQKAESDLRQLLEIPSEYSVLFLQGGATTQFAALPLNLCKSDDSVDYIVTGSWGDKAFKEAKKYCNPKVIWSGKSEKYTKVPTFDGLEQSSDAKYLHICANETIHGVEFKDYPLVENPDGVLIADMSSNFCSKPVDVSKFGVIYAGAQKNVGPSGVTIVIIRKDLIGNARDITPVMLDYKIHDENSSLYNTPPCFGIYMCGLVFDDLLEQGGLKEVEKKNQRKAELLYNAIDESRGFFRCPVEKSVRSLMNVPFTLEKSELEAEFIKEAAKEKMVQLKGHRSVGGMRASIYNAMPLAGVEKLVAFMKDFQARHA",
-    "reaction": [
       {
         "substrates": [
-          "O-phospho-L-serine",
-          "2-oxoglutarate"
+          "2-sulfoacetaldehyde",
+          "NADH",
+          "H+"
         ],
         "products": [
-          "3-phosphooxypyruvate",
-          "L-glutamate"
+          "isethionate",
+          "NAD+"
         ]
-      }
-    ],
-    "kinetics": {}
-  },
-  "Q8H6E0": {
-    "ec_number": "7.3.2.1",
-    "name": "ABC-type phosphate transporter",
-    "sequence": "MATEQLNVLKALDVAKTQLYHFKAVVIAGMGFFTDAYDLFCIALVTKLLGRIYYTDPALNEPGHLPANVSAAVNGVALCGTLAGQLFFGWLGDKLGRKSVYGFTLILMVLCSIASGLSFGHEAKGVMGTLCFFRFWLGFGVGGDYPLSATIMSEYANKKTRGTFIAAVFAMQGFGILFGTIVTIIVSSAFRHAFPAPPFYIDAAASIGPEADYVWRIIVMFGTIPAALTYYWRMKMPETARYTALIAGNTKQATSDMSKVLNKEISEEAGQGERATGDTWGLFSRQFMKRHGVHLLATTSTWFLLDVAFYSQNLFQKDIFTKIGWIPPAKTMNALEELYRIARAQALIALCGTVPGYWFTVAFIDIIGRFWIQLMGFTMMTIFMLAIAIPYDYLVKPGNHTGFVVLYGLTFFFANFGPNSTTFIVPAEIFPARLRSTCHGISAATGKAGAIIGAFGFLYASQDQKKPETGYSRGIGMRNALFVLAGTNFLGLLFSLLVPESKGKSLEELSKENVGDDGIDA",
-    "reaction": [
+      },
       {
         "substrates": [
-          "ATP",
-          "H2O",
-          "phosphate/out"
+          "3-hydroxypropane-1-sulfonate",
+          "NAD+"
         ],
         "products": [
-          "ADP",
-          "phosphate",
-          "phosphate/in"
+          "?",
+          "NADH",
+          "H+"
+        ]
+      },
+      {
+        "substrates": [
+          "isethionate",
+          "NAD+"
+        ],
+        "products": [
+          "2-sulfoacetaldehyde",
+          "NADH",
+          "H+"
+        ]
+      },
+      {
+        "substrates": [
+          "3-hydroxypropionate",
+          "NAD+"
+        ],
+        "products": [
+          "?",
+          "NADH",
+          "H+"
         ]
       }
     ],
     "kinetics": {
       "km_values": [
         {
-          "substrate": "phosphate/out",
-          "value": 0.0019,
-          "comment": "#52# pH 7.5, temperature not specified in the publication <45>"
-        }
-      ]
-    }
-  },
-  "A0A545BBS8": {
-    "ec_number": "1.1.1.422",
-    "name": "pseudoephedrine dehydrogenase",
-    "sequence": "MINMRNRVAIVTGGAMGMGNGCARKLAEAGAKVYLIDRSNLVAAAAQDMREAGLNANHVQVDITDQESLTSAYDGIAAESGRLDVLVNAAGVGDSRMFLDVDDAHYKKVIDVNVRGTWNSCRAAVPHMLSNKHGRIINFGSISGPIVADPGWTVYALSKGAIFGFTKALASEFAGQNILVNAILPGSMDTPMMRAAAADTNPADPQSVIDEIAAAVPLKRLGTIDDAGNLALFLASDLASYLTGQAIVLDGAFTLAEYQSGGLEAPAETPALVN",
-    "reaction": [
-      {
-        "substrates": [
-          "(+)-(1S,2S)-pseudoephedrine",
-          "NAD+"
-        ],
-        "products": [
-          "(S)-2-(methylamino)-1-phenylpropan-1-one",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "(4-chlorophenyl)-2-pyridinylmethanone",
-          "NAD+"
-        ],
-        "products": [
-          "(R)-(4-chlorophenyl)(pyridin-2-yl) methanol",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "(S,R)-(+)-ephedrine",
-          "NAD+"
-        ],
-        "products": [
-          "?",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "1,2-indandione",
-          "NAD+"
-        ],
-        "products": [
-          "?",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "1,2-naphthoquinone",
-          "NAD+"
-        ],
-        "products": [
-          "?",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "1-phenyl-1,2-propanedione",
-          "NAD+"
-        ],
-        "products": [
-          "(S)-phenylacetylcarbinol",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "2,2'-dichlorobenzil",
-          "NAD+"
-        ],
-        "products": [
-          "(2S)-1,2--bis(2-chlorophenyl)-2-hydroxyethan-1-one",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "2,2'-furil",
-          "NAD+"
-        ],
-        "products": [
-          "(2S)-1,2-di(furan-2-yl)-2-hydroxyethan-1-one",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "2,2'-thenil",
-          "NAD+"
-        ],
-        "products": [
-          "(2S)-2-hydroxy-1,2-di(thiophen-2-yl)ethan-1-one",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "2-aminoacetophenone",
-          "NAD+"
-        ],
-        "products": [
-          "(1S)-2-amino-1-phenylethan-1-ol",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "2-bromo-1-(3-chlorophenyl)-1-propanone",
-          "NAD+"
-        ],
-        "products": [
-          "(R,S)-2-bromo-1-(3-chlorophenyl)propan-1-ol",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "2-bromoacetophenone",
-          "NAD+"
-        ],
-        "products": [
-          "(1S)-2-bromo-1-phenylethan-1-ol",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "2-chloro-1-phenyl-1-propane",
-          "NAD+"
-        ],
-        "products": [
-          "(R,S)-2-chloro-1-phenylpropan-1-ol",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "4,4'-difluorobenzil",
-          "NAD+"
-        ],
-        "products": [
-          "(2S)-1,2-bis(4fluorophenyl)-2-hydroxyethan-1-one",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "4,4'-dimethylbenzil",
-          "NAD+"
-        ],
-        "products": [
-          "(2S)-2-hydroxy-1,2-bis(4-methylphenyl)ethan-1-one",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "4-chlorobenzil",
-          "NAD+"
-        ],
-        "products": [
-          "?",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "benzil",
-          "NAD+"
-        ],
-        "products": [
-          "(2S)-2-hydroxy-1,2-diphenylethan-1-one",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "ethyl 2-chlorobenzoylacetate",
-          "NAD+"
-        ],
-        "products": [
-          "ethyl (R,S)-2-chloro-3-hydroxy-3-phenylpropanoate",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "isatin",
-          "NAD+"
-        ],
-        "products": [
-          "?",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "methyl benzoylformate",
-          "NAD+"
-        ],
-        "products": [
-          "methyl (2S)-hydroxy(phenyl)acetate",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "phenyl-2-pyridinylmethanone",
-          "NAD+"
-        ],
-        "products": [
-          "(S)-phenyl(pyridin-1-yl)methynol",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "phenylglyoxal",
-          "NAD+"
-        ],
-        "products": [
-          "(R,S)-hydroxy(phenyl)acetaldehyde",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "(1S,2S)-(+)-pseudoephedrine",
-          "NAD+"
-        ],
-        "products": [
-          "(S)-2-(methylamino)-1-phenylpropan-1-one",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "(S,R)-(+)-ephedrine",
-          "NAD+"
-        ],
-        "products": [
-          "(R)-2-methylimino-1-phenylpropan-1-ol",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "(S,S)-(+)-pseudoephedrine",
-          "NAD+"
-        ],
-        "products": [
-          "(S)-2-(methylamino)-1-phenylpropan-1-one",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "1-phenylpropan-1,2-dione",
-          "NAD+"
-        ],
-        "products": [
-          "phenylacetylcarbinol",
-          "NADH",
-          "H+"
-        ]
-      },
-      {
-        "substrates": [
-          "1-phenylpropan-1,2-dione",
-          "NADH",
-          "H+"
-        ],
-        "products": [
-          "(S)-phenylacetylcarbinol",
-          "NAD+"
-        ]
-      },
-      {
-        "substrates": [
-          "1,2-indandione",
-          "NADH",
-          "H+"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "1,2-naphthoquinone",
-          "NADH",
-          "H+"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "2,2'-dichlorobenzil",
-          "NADH",
-          "H+"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "2-aminoacetophenone",
-          "NADH",
-          "H+"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "2-bromo-1-(3-chlorophenyl)-1-propanone",
-          "NADH",
-          "H+"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "ethyl 2-chlorobenzoylacetate",
-          "NADH",
-          "H+"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "isatin",
-          "NADH",
-          "H+"
-        ],
-        "products": [
-          "?"
-        ]
-      },
-      {
-        "substrates": [
-          "methyl benzoylformate",
-          "NADH",
-          "H+"
-        ],
-        "products": [
-          "?"
-        ]
-      }
-    ],
-    "kinetics": {
-      "km_values": [
-        {
-          "substrate": "1,2-naphthoquinone",
-          "value": 0.05,
-          "comment": "#1,2# pH 7.5, 25\u00b0C <1>"
+          "substrate": "NADH",
+          "value": 0.06,
+          "comment": "#2# pH 10.0, 30\u00b0C, recombinant wild-type enzyme <3>; #3# pH 7.5, temperature not specified in the publication <3>"
         },
         {
-          "substrate": "4-chlorobenzil",
-          "value": 0.05,
-          "comment": "#1,2# pH 7.5, 25\u00b0C <1>"
-        },
-        {
-          "substrate": "2-aminoacetophenone",
-          "value": 0.14,
-          "comment": "#1,2# pH 7.5, 25\u00b0C <1>"
-        },
-        {
-          "substrate": "isatin",
-          "value": 0.81,
-          "comment": "#1,2# pH 7.5, 25\u00b0C <1>"
-        },
-        {
-          "substrate": "ethyl 2-chlorobenzoylacetate",
-          "value": 3.94,
-          "comment": "#1,2# pH 7.5, 25\u00b0C <1>"
-        },
-        {
-          "substrate": "1-phenyl-1,2-propanedione",
-          "value": 3.12,
-          "comment": "#1,2# pH 7.5, 25\u00b0C <1>"
-        },
-        {
-          "substrate": "methyl benzoylformate",
-          "value": 7.01,
-          "comment": "#1,2# pH 7.5, 25\u00b0C <1>"
-        },
-        {
-          "substrate": "2-bromo-1-(3-chlorophenyl)-1-propanone",
-          "value": 12.71,
-          "comment": "#1,2# pH 7.5, 25\u00b0C <1>"
-        },
-        {
-          "substrate": "(+)-(1S,2S)-pseudoephedrine",
-          "value": 0.26,
-          "comment": "#2# pH 7.8, 25\u00b0C <2>"
-        },
-        {
-          "substrate": "(S,R)-(+)-ephedrine",
-          "value": 0.33,
-          "comment": "#2# pH 7.8, 25\u00b0C <2>"
+          "substrate": "2-sulfoacetaldehyde",
+          "value": 0.5,
+          "comment": "#2# pH 10.0, 30\u00b0C, recombinant wild-type enzyme <3>; #3# pH 7.5, temperature not specified in the publication <3>"
         },
         {
           "substrate": "NAD+",
-          "value": 3.4,
-          "comment": "#2# pH 7.8, 25\u00b0C <2>"
+          "value": 0.08,
+          "comment": "#2# pH 10.0, 30\u00b0C, recombinant wild-type enzyme <3>; #3# pH 10, temperature not specified in the publication <3>"
         },
         {
-          "substrate": "1,2-indandione",
-          "value": 0.93,
-          "comment": "#2# pH 7.5, 25\u00b0C <1>"
+          "substrate": "isethionate",
+          "value": 4.44,
+          "comment": "#2# pH 10.0, 30\u00b0C, recombinant wild-type enzyme <3>; #3# pH 10, temperature not specified in the publication <3>"
+        }
+      ]
+    },
+    "engineering": [
+      {
+        "mutation": "T257A",
+        "effect": "almost complete loss of activity"
+      },
+      {
+        "mutation": "F265A",
+        "effect": "almost complete loss of activity"
+      },
+      {
+        "mutation": "F252A",
+        "effect": "mutant retains approximately 28% of the wild-type activity"
+      }
+    ],
+    "metals_ions": [
+      "Zn2+"
+    ]
+  },
+  "B3VZQ2": {
+    "ec_number": "1.13.11.1",
+    "name": "catechol 1,2-dioxygenase",
+    "sequence": "IEGPLYVAGAPLVEGPDVNLTVDPDDTTSLYMTGQVRGPDGEPVRNAIMHVWHADSQGWYSHFDPTKEQTPFNNRRRIKLGDDGRYAFRSKMPKGYSVPPGGATDVLMKAVGRHGNRPAHVHFFIEAPGYRQLTTQINFG",
+    "reaction": [],
+    "kinetics": {}
+  },
+  "Q96ZY7": {
+    "ec_number": "1.1.1.119",
+    "name": "glucose 1-dehydrogenase (NADP+)",
+    "sequence": "MKAIVVTPKKSGVEVKDIPMRESLGKGKVLVKTLYTGICGTDRGIVNAKITFTYPPDGYNFLILGHEGLGMVEEVGDGVKYLKKGDFVVPVVRRGCGVCLNCRIGRQDFCETGKFVEAGIRGKHGFMREEFVDDELWLVKVPDEIKDIAVLTEPLSNVVKAIDELLFVQRRMIWTCEDSTFECRNAFIIGSGPIGTFFSLILTTLGFNVYMINKRDPSPMEDYISKRLGVTFINSMKEGDKLPEADLIVDTSGVPSAFIPLMSKMRPNSALILFGTLEGEKYEITSDLVTFMVERNIIVIGSVNASKRDFQGALNYLSIWKNRYYDVLQRMITSKVSVEQAPEVLMRKPSGEIKTVIVWD",
+    "reaction": [
+      {
+        "substrates": [
+          "D-glucose",
+          "NADP+"
+        ],
+        "products": [
+          "D-glucono-1,5-lactone",
+          "NADPH",
+          "H+"
+        ]
+      },
+      {
+        "substrates": [
+          "D-glucose",
+          "NADP+"
+        ],
+        "products": [
+          "D-glucono-1,5-lactone",
+          "NADPH",
+          "H+"
+        ]
+      }
+    ],
+    "kinetics": {
+      "km_values": [
+        {
+          "substrate": "NADP+",
+          "value": 0.117,
+          "comment": "#12# pH 9.0, 80\u00b0C, wild-type enzyme <16>"
         },
         {
-          "substrate": "(S,S)-(+)-pseudoephedrine",
-          "value": 0.263,
-          "comment": "#2# pH 7.8, 25\u00b0C <2>"
+          "substrate": "NADP+",
+          "value": 0.132,
+          "comment": "#12# pH 9.0, 80\u00b0C, mutant enzyme V254I <16>; #13# mutant enzyme V254I, at pH 9.0 and 80\u00b0C <16>"
         },
         {
-          "substrate": "1-phenylpropan-1,2-dione",
-          "value": 3.12,
-          "comment": "#2# pH 7.5, 25\u00b0C <1>"
+          "substrate": "D-glucose",
+          "value": 0.457,
+          "comment": "#12# pH 9.0, 80\u00b0C, mutant enzyme V254I <16>; #13# mutant enzyme V254I, at pH 9.0 and 80\u00b0C <16>"
         },
         {
-          "substrate": "2-chloro-1-phenyl-1-propane",
-          "value": 8.74,
-          "comment": "#2# pH 7.5, 25\u00b0C <1>"
+          "substrate": "D-glucose",
+          "value": 0.0286,
+          "comment": "#12# pH 9.0, 25\u00b0C, wild-type enzyme <16>; #13# wild type enzyme, at pH 9.0 and 25\u00b0C <16>"
+        },
+        {
+          "substrate": "D-glucose",
+          "value": 0.287,
+          "comment": "#12# pH 9.0, 80\u00b0C, wild-type enzyme <16>; #13# wild type enzyme, at pH 9.0 and 80\u00b0C <16>"
+        },
+        {
+          "substrate": "NADP+",
+          "value": 0.109,
+          "comment": "#12# pH 9.0, 80\u00b0C, mutant enzyme I189V <16>; #13# mutant enzyme I189V, at pH 9.0 and 80\u00b0C <16>"
+        },
+        {
+          "substrate": "D-glucose",
+          "value": 0.314,
+          "comment": "#12# pH 9.0, 80\u00b0C, mutant enzyme I189V <16>; #13# mutant enzyme I189V, at pH 9.0 and 80\u00b0C <16>"
+        },
+        {
+          "substrate": "D-glucose",
+          "value": 0.0293,
+          "comment": "#12# pH 9.0, 25\u00b0C, mutant enzyme I189V <16>; #13# mutant enzyme I189V, at pH 9.0 and 25\u00b0C <16>"
+        },
+        {
+          "substrate": "D-glucose",
+          "value": 0.0391,
+          "comment": "#12# pH 9.0, 25\u00b0C, mutant enzyme V254I <16>; #13# mutant enzyme V254I, at pH 9.0 and 25\u00b0C <16>"
+        },
+        {
+          "substrate": "NADP+",
+          "value": 0.00588,
+          "comment": "#12# pH 9.0, 25\u00b0C, wild-type enzyme <16>; #13# wild type enzyme, at pH 9.0 and 25\u00b0C <16>"
+        },
+        {
+          "substrate": "NADP+",
+          "value": 0.00927,
+          "comment": "#12# pH 9.0, 25\u00b0C, mutant enzyme I189V <16>; #13# mutant enzyme I189V, at pH 9.0 and 25\u00b0C <16>"
+        },
+        {
+          "substrate": "NADP+",
+          "value": 0.00876,
+          "comment": "#12# pH 9.0, 25\u00b0C, mutant enzyme V254I <16>; #13# mutant enzyme V254I, at pH 9.0 and 25\u00b0C <16>"
+        }
+      ]
+    },
+    "engineering": [
+      {
+        "mutation": "V254I",
+        "effect": "mutant has improved kcat and kcat/Km values at both 25\u00b0C and 80\u00b0C. The thermal stability of the mutant enzyme was comparable to that of the wild-type enzyme. Calculation of the energetic contribution of the V254I mutation for the dehydrogenase reaction reveals that the mutation destabilizes the enzyme-NADPD-glucose ternary complex and reduces the transition-state energy, thus enhancing catalysis"
+      }
+    ]
+  },
+  "Q8JU43": {
+    "ec_number": "2.7.7.48",
+    "name": "RNA-directed RNA polymerase",
+    "sequence": "MSKKPGGPGKSRAVNMLKRGMPRVLSLIGLKRAMLSLIDGKGPIRFVLALLAFFRFTAIAPTRAVLDRWRGVNKQTAMKHLLSFKKELGTLTSAINRRSSKQKKRGGKTGIAVMIGLIASVGAVTLSNFQGKVMMTVNATDVTDVITIPTAAGKNLCIVRAMDVGYMCDDTITYECPVLSAGNDPEDIDCWCTKSAVYVRYGRCTKTRHSRRSRRSLTVQTHGESTLANKKGAWMDSTKATRYLVKTESWILRNPGYALVAAVIGWMLGSNTMQRVVFVVLLLLVAPAYSFNCLGMSNRDFLEGVSGATWVDLVLEGDSCVTIMSKDKPTIDVKMMNMEAANLAEVRSYCYLATVSDLSTKAACPTMGEAHNDKRADPAFVCRQGVVDRGWGNGCGLFGKGSIDTCAKFACSTKAIGRTILKENIKYEVAIFVHGPTTVESHGNYSTQVGATQAGRFSITPAAPSYTLKLGEYGEVTVDCEPRSGIDTNAYYVMTVGTKTFLVHREWFMDLNLPWSSAGSTVWRNRETLMEFEEPHATKQSVIALGSQEGALHQALAGAIPVEFSSNTVKLTSGHLKCRVKMEKLQLKGTTYGVCSKAFKFLGTPADTGHGTVVLELQYTGTDGPCKVPISSVASLNDLTPVGRLVTVNPFVSVATANAKVLIELEPPFGDSYIVVGRGEQQINHHWHKSGSSIGKAFTTTLKGAQRLAALGDTAWDFGSVGGVFTSVGKAVHQVFGGAFRLLFGGMSWITQGLLGALLLWMGINARDRSIALTFLAVGGVLLFLSVNVHADTGCAIDISRQELRCGSGVFIHNDVEAWMDRYKYYPETPQGLAKIIQKAHKEGVCGLRSVSRLEHQMWEAVKDELNTLLKENGVDLSVVVEKQEGMYKSAPKRLTATTEKLEIGWKAWGKSILFAPELANNTFVVDGPETKECPTQNRAWNSLEVEDFGFGLTSTRMFLKVRESNTTECDSKIIGTAVKNNLAIHSDLSYWIESRLNDTWKLERAVLGEVKSCTWPETHTLWGDGILESDLIIPVTLAGPRSNHNRRPGYKTQNQGPWDEGRVEIDFDYCPGTTVTLSESCGHRGPATRTTTESGKLITDWCCRSCTLPPLRYQTDSGCWYGMEIRPQRHDEKTLVQSQVNAYNADMIDPFQLGLLVVFLATQEVLRKRWTAKISMPAILIALLVLVFGGITYTDVLRYVILVGAAFAESNSGGDVVHLALMATFKIQPVFMVASFLKARWTNQENILLMLAAVFFQMAYHDARQILLWEIPDVLNSLAVAWMILRAITFTTTSNVVVPLLALLTPGLRCLNLDVYRILLLMVGIGSLIREKRSAAAKKKGASLLCLALASTGLFNPMILAAGLITCDPNRKRGWPATEVMTAVGLMFAIVGGLAELDIDSMAIPMTIAGLMFAAFVISGKSTDMWIERTADISWESDAEITGSSERVDVRLDDDGNFQLMNDPGAPWKIWMLRMVCLAISAYTPWAILPSVVGFWITLQYTKRGGVLWDTPSPKEYKKGDTTTGVYRIMTRGLLGSYQAGAGVMVEGVFHTLWHTTKGAALMSGEGRLDPYWGSVKEDRLCYGGPWKLQHKWNGQDEVQMIVVEPGKNVKNVQTKPGVFKTPEGEIGAVTLDFPTGTSGSPIVDKNGDVIGLYGNGVIMPNGSYISAIVQGERMDEPIPAGFEPEMLRKKQITVLDLHPGAGKTRRILPQIIKEAINRRLRTAVLAPTRVVAAEMAEALRGLPIRYQTSAVPREHNGNEIVDVMCHATLTHRLMSPHRVPNYNLFVMDEAHFTDPASIAARGYISTKVELGEAAAIFMTATPPGTSDPFPESNSPISDLQTEIPDRAWNSGYEWITEYTGKTVWFVPSVKMGNEIALCLQRAGKKVVQLNRKSYETEYPKCKNDDWDFVITTDISEMGANFKASRVIDSRKSVKPTIITEGEGRVILGEPSAVTAASAAQRRGRIGRNPSQVGDEYCYGGHTNEDDSNFAHWTEARIMLDNINMPNGLIAQFYQPEREKVYTMDGEYRLRGEERKNFLELLRTADLPVWLAYKVAAAGVSYHDRRWCFDGPRTNTILEDNNEVEVITKLGERKILRPRWIDARVYSDHQALKAFKDFASGKRSQIGLIEVLGKMPEHFMGKTWEALDTMYVVATAEKGGRAHRMALEELPDALQTIALIALLSVMTMGVFFLLMQRKGIGKIGLGGAVLGVATFFCWMAEVPGTKIAGMLLLSLLLMIVLIPEPEKQRSQTDNQLAVFLICVMTLVSAVAANEMGWLDKTKSDISSLFGQRIEVKENFSMGEFLLDLRPATAWSLYAVTTAVLTPLLKHLITSDYINTSLTSINVQASALFTLARGFPFVDVGVSALLLAAGCWGQVTLTVTVTAATLLFCHYAYMVPGWQAEAMRSAQRRTAAGIMKNAVVDGIVATDVPELERTTPIMQKKVGQIMLILVSLAAVVVNPSVKTVREAGILITAAAVTLWENGASSVWNATTAIGLCHIMRGGWLSCLSITWTLIKNMEKPGLKRGGAKGRTLGEVWKERLNQMTKEEFTRYRKEAIIEVDRSAAKHARKEGNVTGGHPVSRGTAKLRWLVERRFLEPVGKVIDLGCGRGGWCYYMATQKRVQEVRGYTKGGPGHEEPQLVQSYGWNIVTMKSGVDVFYRPSECCDTLLCDIGESSSSAEVEEHRTIRVLEMVEDWLHRGPREFCVKVLCPYMPKVIEKMELLQRRYGGGLVRNPLSRNSTHEMYWVSRASGNVVHSVNMTSQVLLGRMEKRTWKGPQYEEDVNLGSGTRAVGKPLLNSDTSKIKNRIERLRREYSSTWHHDENHPYRTWNYHGSYDVKPTGSASSLVNGVVRLLSKPWDTITNVTTMAMTDTTPFGQQRVFKEKVDTKAPEPPEGVKYVLNETTNWLWAFLAREKRPRMCSREEFIRKVNSNAALGAMFEEQNQWRSAREAVEDPKFWEMVDEEREAHLRGECHTCIYNMMGKREKKPGEFGKAKGSRAIWFMWLGARFLEFEALGFLNEDHWLGRKNSGGGVEGLGLQKLGYILREVGTRPGGKIYADDTAGWDTRITRADLENEAKVLELLDGEHRRLARAIIELTYRHKVVKVMRPAADGRTVMDVISREDQRGSGQVVTYALNTFTNLAVQLVRMMEGEGVIGPDDVEKLTKGKGPKVRTWLFENGEERLSRMAVSGDDCVVKPLDDRFATSLHFLNAMSKVRKDIQEWKPSTGWYDWQQVPFCSNHFTELIMKDGRTLVVPCRGQDELVGRARISPGAGWNVRDTACLAKSYAQMWLLLYFHRRDLRLMANAICSAVPVNWVPTGRTTWSIHAGGEWMTTEDMLEVWNRVWIEENEWMEDKTPVEKWSDVPYSGKREDIWCGSLIGTRARATWAENIQVAINQVRAIIGDEKYVDYMSSLKRYEDTTLVEDTVL",
+    "reaction": [],
+    "kinetics": {},
+    "engineering": [
+      {
+        "mutation": "T363N",
+        "effect": "mutation selected to stabilize the secondary structural elements near the rNTP binding pocket of the enzyme. Mutant viruses were tested in vitro on Vero, C6/36, Culex tarsalis and DF-1 cell types and in vivo in one day old chickens and Culex pipiens mosquitoes. Mutation affects plaque morphology and alters growth and RNA replication kinetics"
+      },
+      {
+        "mutation": "A365N",
+        "effect": "mutation selected to stabilize the secondary structural elements near the rNTP binding pocket of the enzyme. Mutant viruses were tested in vitro on Vero, C6/36, Culex tarsalis and DF-1 cell types and in vivo in one day old chickens and Culex pipiens mosquitoes. Mutation affects plaque morphology and particularly alters growth and RNA replication kinetics"
+      },
+      {
+        "mutation": "T537I",
+        "effect": "mutation selected to stabilize the secondary structural elements near the rNTP binding pocket of the enzyme. Mutant viruses were tested in vitro on Vero, C6/36, Culex tarsalis and DF-1 cell types and in vivo in one day old chickens and Culex pipiens mosquitoes. Mutation affects plaque morphology and alters growth and RNA replication kinetics"
+      }
+    ]
+  },
+  "O29985": {
+    "ec_number": "1.6.3.3",
+    "name": "NADH oxidase (H2O2-forming)",
+    "sequence": "MKVAIIGGGAAGMSAASRVKALRPNWDVKVFEKSRWVSHAPCGIPFFVGGAVEKFDELCAYDIDYFKRERGIDVHTNARVVEIEEGRLTVDEGGKEASYEWDKLLFATGSKAVRLNVEGENLEGVIYVDDIENAERVKIEAMKVDNVVVVGSGYIGVEMADAITRLGKNVTVIEVMERPLPEYDAEIAAIIKSEMEKYVNLRLSEKVTAFEGKDRVEKVVTNKGEYPCELAIIAVGVAPNTDLAKGFVELGVKGAIRTNSRMETSRENVYAAGDCAESINIVTGREDWIPLAAPANKMGYVAGVNMAGLEMHYPGSLKSQLTGFKDIEIGKAGLSENEAIRFGYEVVSAFITSRTSARYLPGGLIHLKVVADRNGKLLGLQAVGKDVAMRVYAASALLHKNGDVKDLFFCDFPYYPPVSRVWDPLVVAARNIFRKLGLP",
+    "reaction": [
+      {
+        "substrates": [
+          "NADH",
+          "H+",
+          "O2"
+        ],
+        "products": [
+          "NAD+",
+          "H2O2"
+        ]
+      }
+    ],
+    "kinetics": {
+      "km_values": [
+        {
+          "substrate": "O2",
+          "value": 0.06,
+          "comment": "#12# pH 7.0, 80\u00b0C <7>"
+        },
+        {
+          "substrate": "NADH",
+          "value": 0.13,
+          "comment": "#12# pH 7.0, 80\u00b0C <7>"
         }
       ],
       "specific_activity": [
         {
-          "value": 0.2
-        },
-        {
-          "value": 2.4
-        },
-        {
-          "value": 0.04
-        },
-        {
-          "value": 1.5
-        },
-        {
-          "value": 3.75
-        },
-        {
-          "value": 2.93
-        },
-        {
-          "value": 12.58
-        },
-        {
-          "value": 0.58
-        },
-        {
-          "value": 4.7
-        },
-        {
-          "value": 0.66
-        },
-        {
-          "value": 5.26
-        },
-        {
-          "value": 5.51
-        },
-        {
-          "value": 21.96
-        },
-        {
-          "value": 10.08
-        },
-        {
-          "value": 5.41
-        },
-        {
-          "value": 55.47
-        },
-        {
-          "value": 9.52
-        },
-        {
-          "value": 160.12
-        },
-        {
-          "value": 16.13
-        },
-        {
-          "value": 66.99
-        },
-        {
-          "value": 9.49
-        },
-        {
-          "value": 64.02
+          "value": 5.81
         }
       ]
     }
+  },
+  "Q9R1E6": {
+    "ec_number": "3.1.4.39",
+    "name": "alkylglycerophosphoethanolamine phosphodiesterase",
+    "sequence": "MARQGCFGSYQVISLFTFAIGVNLCLGFTASRIKRAEWDEGPPTVLSDSPWTNTSGSCKGRCFELQEVGPPDCRCDNLCKSYSSCCHDFDELCLKTARGWECTKDRCGEVRNEENACHCSEDCLSRGDCCTNYQVVCKGESHWVDDDCEEIRVPECPAGFVRPPLIIFSVDGFRASYMKKGSKVMPNIEKLRSCGTHAPYMRPVYPTKTFPNLYTLATGLYPESHGIVGNSMYDPVFDATFHLRGREKFNHRWWGGQPLWITATKQGVRAGTFFWSVSIPHERRILTILQWLSLPDNERPSVYAFYSEQPDFSGHKYGPFGPEMTNPLREIDKTVGQLMDGLKQLKLHRCVNVIFVGDHGMEDVTCDRTEFLSNYLTNVDDITLVPGTLGRIRPKIPNNLKYDPKAIIANLTCKKPDQHFKPYMKQHLPKRLHYANNRRIEDLHLLVERRWHVARKPLDVYKKPSGKCFFQGDHGFDNKVNSMQTVFVGYGPTFKYRTKVPPFENIELYNVMCDLLGLKPAPNNGTHGSLNHLLRTNTFRPTLPEEVSRPNYPGIMYLQSDFDLGCTCDDKVEPKNKLEELNKRLHTKGSTEERHLLYGRPAVLYRTSYDILYHTDFESGYSEIFLMPLWTSYTISKQAEVSSIPEHLTNCVRPDVRVSPGFSQNCLAYKNDKQMSYGFLFPPYLSSSPEAKYDAFLVTNMVPMYPAFKRVWTYFQRVLVKKYASERNGVNVISGPIFDYNYNGLRDIEDEIKQYVEGSSIPVPTHYYSIITSCLDFTQPADKCDGPLSVSSFILPHRPDNDESCNSSEDESKWVEELMKMHTARVRDIEHLTGLDFYRKTSRSYSEILTLKTYLHTYESEI",
+    "reaction": [
+      {
+        "substrates": [
+          "lysophosphatidylcholine",
+          "H2O"
+        ],
+        "products": [
+          "lysophosphatidic acid",
+          "choline"
+        ]
+      },
+      {
+        "substrates": [
+          "p-nitrophenyl phenylphosphate",
+          "H2O"
+        ],
+        "products": [
+          "p-nitrophenol",
+          "phenylphosphate"
+        ]
+      },
+      {
+        "substrates": [
+          "arachidoyl-lysophosphatidylcholine",
+          "H2O"
+        ],
+        "products": [
+          "1-arachidoyl-sn-gycerol-3-phosphate",
+          "choline"
+        ]
+      },
+      {
+        "substrates": [
+          "behenoyl-lysophosphatidylcholine",
+          "H2O"
+        ],
+        "products": [
+          "1-behenoyl-sn-gycerol-3-phosphate",
+          "choline"
+        ]
+      },
+      {
+        "substrates": [
+          "lauroyl-lysophosphatidylcholine",
+          "H2O"
+        ],
+        "products": [
+          "1-lauroyl-sn-gycerol-3-phosphate",
+          "choline"
+        ]
+      },
+      {
+        "substrates": [
+          "myristoyl-lysophosphatidylcholine",
+          "H2O"
+        ],
+        "products": [
+          "1-myristoyl-sn-gycerol-3-phosphate",
+          "choline"
+        ]
+      },
+      {
+        "substrates": [
+          "oleoyl-lysophosphatidylcholine",
+          "H2O"
+        ],
+        "products": [
+          "1-oleoyl-sn-gycerol 3-phosphate",
+          "choline"
+        ]
+      },
+      {
+        "substrates": [
+          "palmitoyl-lysophosphatidylcholine",
+          "H2O"
+        ],
+        "products": [
+          "1-palmitoyl-sn-gycerol-3-phosphate",
+          "choline"
+        ]
+      },
+      {
+        "substrates": [
+          "stearoyl-lysophosphatidylcholine",
+          "H2O"
+        ],
+        "products": [
+          "1-stearoyl-sn-gycerol-3-phosphate",
+          "choline"
+        ]
+      },
+      {
+        "substrates": [
+          "decanoyl-lysophosphatidylcholine",
+          "H2O"
+        ],
+        "products": [
+          "1-decanoyl-sn-gycerol-3-phosphate",
+          "choline"
+        ]
+      },
+      {
+        "substrates": [
+          "hexanoyl-lysophosphatidylcholine",
+          "H2O"
+        ],
+        "products": [
+          "1-hexanoyl-sn-gycerol-3-phosphate",
+          "choline"
+        ]
+      },
+      {
+        "substrates": [
+          "octanoyl-lysophosphatidylcholine",
+          "H2O"
+        ],
+        "products": [
+          "1-octanoyl-sn-gycerol-3-phosphate",
+          "choline"
+        ]
+      }
+    ],
+    "kinetics": {
+      "specific_activity": [
+        {
+          "value": 0.0163
+        },
+        {
+          "value": 0.0051
+        }
+      ]
+    },
+    "engineering": [
+      {
+        "mutation": "DELTA592-617",
+        "effect": "ATXalpha isoform, 915 amino acids total"
+      },
+      {
+        "mutation": "DELTA323-375",
+        "effect": "murine autotaxin gamma isoform, 889 amino acids total"
+      }
+    ],
+    "metals_ions": [
+      "Co2+",
+      "Zn2+",
+      "Mn2+",
+      "Ni2+",
+      "Mg2+",
+      "Ca2+"
+    ]
+  },
+  "I3RA72": {
+    "ec_number": "2.3.1.9",
+    "name": "acetyl-CoA C-acetyltransferase",
+    "sequence": "MEVAVIGSSMTKFGQRSAWIRELLSEAGQACLEDAGVAPASVDHLYVSNMASGEFEGQTGVMNALAHDLGVIPAYTQRIDQTSSSGGAGIYEAWQSIASGVSEMTLLVGGEKMTHKTTGESTDIIASCTHPEEYKHGVTLPSFAGMTARNYLERFDAPRESLARVAVKNHRNGVDNPKAQFQKEIDIETALESPIIADPLRLYDFCPITDGSAAMMFTTEERAQEITDEYAIVSGVGGATDTHVVHERDDPTVMGGVVESSKQAYEMAGVGPDDLDVAELHDMFTILEFLQLEGIGVADHGAAWELAMDGVTAKDGGLPINTSGGLKSKGHPLGASGVAQGVEIYEQLVGEAGPRQVEADTALACNVGGFGNCVITTIMEAAK",
+    "reaction": [
+      {
+        "substrates": [
+          "2 acetyl-CoA"
+        ],
+        "products": [
+          "CoA",
+          "acetoacetyl-CoA"
+        ]
+      },
+      {
+        "substrates": [
+          "2 acetyl-CoA"
+        ],
+        "products": [
+          "CoA",
+          "acetoacetyl-CoA"
+        ]
+      },
+      {
+        "substrates": [
+          "2 acetyl-CoA"
+        ],
+        "products": [
+          "CoA",
+          "acetoacetyl-CoA"
+        ]
+      },
+      {
+        "substrates": [
+          "acetyl-CoA",
+          "propionyl-CoA"
+        ],
+        "products": [
+          "CoA",
+          "3-oxopentanoyl-CoA"
+        ]
+      }
+    ],
+    "kinetics": {}
+  },
+  "P60281": {
+    "ec_number": "2.7.7.6",
+    "name": "DNA-directed RNA polymerase",
+    "sequence": "MLEGCILAVSSQSKSNAITNNSVPGAPNRVSFAKLREPLEVPGLLDVQTDSFEWLVGSDRWRQAAIDRGEENPVGGLEEVLAELSPIEDFSGSMSLSFSDPRFDEVKASVDECKDKDMTYAAPLFVTAEFINNNTGEIKSQTVFMGDFPMMTEKGTFIINGTERVVVSQLVRSPGVYFDETIDKSTEKTLHSVKVIPGRGAWLEFDVDKRDTVGVRIDRKRRQPVTVLLKALGWTNEQIVERFGFSEIMMGTLEKDTTSGTDEALLDIYRKLRPGEPPTKESAQTLLENLFFKEKRYDLARVGRYKVNKKLGLNAGKPITSSTLTEEDVVATIEYLVRLHEGQTSMTVPGGVEVPVEVDDIDHFGNRRLRTVGELIQNQIRVGLSRMERVVRERMTTQDVEAITPQTLINIRPVVAAIKEFFGTSQLSQFMDQNNPLSGLTHKRRLSALGPGGLSRERAGLEVRDVHPSHYGRMCPIETPEGPNIGLIGSLSVYARVNPFGFIETPYRKVENGVVTDQIDYLTADEEDRHVVAQANSPTDENGRFTEDRVMVRKKGGEVEFVSADQVDYMDVSPRQMVSVATAMIPFLEHDDANRALMGANMQRQAVPLVRSEAPLVGTGMELRAAIDAGDVVVADKTGVIEEVSADYITVMADDGTRQSYRLRKFARSNHGTCANQRPIVDAGQRVEAGQVIADGPCTQNGEMALGKNLLVAIMPWEGHNYEDAIILSNRLVEEDVLTSIHIEEHEIDARDTKLGAEEITRDIPNVSDEVLADLDERGIVRIGAEVRDGDILVGKVTPKGETELTPEERLLRAIFGEKAREVRDTSLKVPHGESGKVIGIRVFSREDDDELPAGVNELVRVYVAQKRKISDGDKLAGRHGNKGVIGKILPVEDMPFLPDGTPVDIILNTHGVPRRMNIGQILETHLGWVAKAGWNIDVAAGVPDWASKLPEELYSAPADSTVATPVFDGAQEGELAGLLGSTLPNRDGEVMVDADGKSTLFDGRSGEPFPYPVTVGYMYILKLHHLVDDKIHARSTGPYSMITQQPLGGKAQFGGQRFGEMECWAMQAYGAAYTLQELLTIKSDDTVGRVKVYEAIVKGENIPEPGIPESFKVLLKELQSLCLNVEVLSSDGAAIEMRDGDDEDLERAAANLGINLSRNESASVEDLA",
+    "reaction": [],
+    "kinetics": {}
+  },
+  "P47998": {
+    "ec_number": "2.5.1.47",
+    "name": "cysteine synthase",
+    "sequence": "MASRIAKDVTELIGNTPLVYLNNVAEGCVGRVAAKLEMMEPCSSVKDRIGFSMISDAEKKGLIKPGESVLIEPTSGNTGVGLAFTAAAKGYKLIITMPASMSTERRIILLAFGVELVLTDPAKGMKGAIAKAEEILAKTPNGYMLQQFENPANPKIHYETTGPEIWKGTGGKIDGFVSGIGTGGTITGAGKYLKEQNANVKLYGVEPVESAILSGGKPGPHKIQGIGAGFIPSVLNVDLIDEVVQVSSDESIDMARQLALKEGLLVGISSGAAAAAAIKLAQRPENAGKLFVAIFPSFGERYLSTVLFDATRKEAEAMTFEA",
+    "reaction": [
+      {
+        "substrates": [
+          "O-acetyl-L-serine",
+          "hydrogen sulfide"
+        ],
+        "products": [
+          "L-cysteine",
+          "acetate"
+        ]
+      }
+    ],
+    "kinetics": {},
+    "engineering": [
+      {
+        "mutation": "G162E",
+        "effect": "naturally occuring mutation, the EMS-induced single nucleotide substitution in the cytosolic OASTL-A1 gene in the Ler-0 accession of Arabidopsis thaliana causes early senescence and death in plants, and is referred to as onset of leaf death3 (old3-1)"
+      }
+    ],
+    "general_information": [
+      "besides a role of OAST-A1 in cysteine biosynthesis, the enzyme is involved in regulation of plant immunity <152>; #94# biosynthesis of cysteine is one of the fundamental processes in plants providing the reduced sulfur for cell metabolism. It is accomplished by the sequential action of two enzymes, serine acetyltransferase (SAT) and O-acetylserine (thiol) lyase (OAS-TL). Together they constitute the hetero-oligomeric cysteine synthase (CS) complex through specific protein\u0096protein interactions influencing the rate of cysteine production. The function of the complex formation is not metabolic channeling, but sensing the sulfur status of the cell to properly adjust the sulfur homeostasis. Whereas OAS-TL is only active outside the CS complex, SAT is strongly activated by association with OAS-TL. Mitochondrial isozyme OAS-TL C has an additional function besides cysteine synthesis, regulatory function when complexed with serine acetyltransferase. The formation of the CS complex is also important because of the inhibition of the free serine acetyltransferase by cysteine <154>; #99# CysK influences transcription in Caenorhabditis elegans. The enzyme from Caenorhabditis elegans interacts with EGL-9 in regulation of O2-dependent behavioral plasticity <142>; #69,80,89,100# enzyme CysK is organized in a complex with serine acetyltransferase (CysE) and can physically associate CysE, which catalyzes the penultimate reaction in the synthetic pathway. This cysteine synthase complex is stabilized by insertion of the CysE C-terminus into the active-site of CysK <142>; #4# enzyme CysK is organized in a complex with serine acetyltransferase (CysE) and can physically associate CysE, which catalyzes the penultimate reaction in the synthetic pathway. This cysteine synthase complex is stabilized by insertion of the CysE C-terminus into the active-site of CysK. CysK influences transcription in Gram-positive bacteria. The enzyme from Staphylococcus aureus interacts with CymR in transcription repression <142>; #83# enzyme CysK is organized in a complex with serine acetyltransferase (CysE) and can physically associate CysE, which catalyzes the penultimate reaction in the synthetic pathway. This cysteine synthase complex is stabilized by insertion of the CysE C-terminus into the active-site of CysK. Regulatory function of CysK/CysE interaction in plants, overview <142>; #72# enzyme CysK is organized in a complex with serine acetyltransferase (CysE) and can physically associate CysE, which catalyzes the penultimate reaction in the synthetic pathway. This cysteine synthase complex is stabilized by insertion of the CysE C-terminus into the active-site of CysK. Regulatory function of CysK/CysE interaction in plants, overview. Productive cysteine biosynthesis requires a high CysK to CysE ratio <142>; #97# enzyme CysK is organized in a complex with serine acetyltransferase (CysE), which catalyzes the penultimate reaction in the synthetic pathway. This cysteine synthase complex is stabilized by insertion of the CysE C-terminus into the active-site of CysK. CysK also activates an antibacterial nuclease toxin produced by uropathogenic Escherichia coli. Role for CysK during bacterial contact-dependent growth inhibition involving the CDI system from uropathogenic Escherichi coli, overview. CysK-binding provides a mechanism to protect the bacterial CysE from cold-inactivation and proteolysis. Escherichia coli CysK acts as a so-called permissive factor to activate an antibacterial contact-dependent growth inhibition (CDI) toxin, and interacts with CdiA-CTUPEC536 in toxin activation <142>; #96# enzyme CysK is organized in a complex with serine acetyltransferase (CysE), which catalyzes the penultimate reaction in the synthetic pathway. This cysteine synthase complex is stabilized by insertion of the CysE C-terminus into the active-site of CysK. CysK influences transcription in Gram-positive bacteria. In Bacillus subtilis, CysK modulates the affinity of an Rrf2-type transcription factor for its operator sequences, thereby regulating expression of the cysteine regulon. The enzyme from Bacillus subtilis interacts with CymR in transcription repression. CdiA-CT toxins are activated by CysK, also from other species <142>; #69,70# O-acetylserine sulfhydrylase plays a key role in the adaptation of bacteria to the host environment, in the defense mechanisms to oxidative stress and in antibiotic resistance <155>; #40# occurrence of the regulatory cysteine synthase complex in microalgae. In plants and also in bacteria, enzyme OASTL is catalytically inactive in the cysteine synthase complex but becomes fully active upon dissociation from the complex realized by O-acetylserine <151>; #90# the bifunctional enzyme, encoded by gene K10H10.2, or cysl-2, shows cysteine synthase activity and also L-3-cyanoalanine synthase activity, EC 4.4.1.9. It has been described as a hypoxia inducible factor (HIF) target. The enzyme regulates the mRNA expression of aging-associated and stress-related genes in wild-type Caenorhabditis elegans. Enzyme treatment protects the wild-type nematodes against oxidative, endoplasmic reticulum stress, and thermal stressors but not cadmium-induced metallic stress. The enzyme is active in vitro and in vivo and protects against lipopolysaccharide-induced inflammation. GYY4137 induces longevity and stress resistance, mechanism of action via induction of T24B8.5 and altered transcriptional control of SKN-1 <156>; #83,93,94# the major isoforms, OAS-TL A, OAS-TL B, and OAS-TL C, catalyze the formation of Cys by combining O-acetylserine and sulfide in the cytosol, the plastids, and the mitochondria, respectively. Subcellular localization of OAS-TL proteins is more important for efficient Cys synthesis than total cellular OAS-TL activity in leaves <153>; #92# tree legume Leucaena contains a toxic, nonprotein amino acid, mimosine, which is not formed by the enzyme O-acetylserine (thiol) lyase, OAS-TL <140>; #91# upregulation of cysteine synthase and cystathionine beta-synthase contributes to Leishmania braziliensis survival under oxidative stress. Ability of Leishmania braziliensis promastigotes and amastigotes overexpressing the enzyme to resist oxidative stress, which is significantly enhanced compared to that of nontransfected cells, resulting in a phenotype far more resistant to treatment with the pentavalent form of sodium stibogluconate in vitro <139>; #93# cyclophilin 20-3, 2-cysteine peroxiredoxin and cysteine synthase form a redox-sensitive module. The interference of the module is accompanied with disturbance of carbohydrate, sulfur and nitrogen metabolism, and also citric acid cycle intermediates. Serine acetyltransferase2-1 and OASB appear to play antagonistic functions in sulfur metabolism, and also in nitrogen metabolism <177>; #112# knockout of OASTL-A1 leads to significantly lower levels of cysteine, glutathione, and phytochelatins in roots and increased sensitivity to arsenate stress. The knockout reduces As accumulation in the roots, but increases As accumulation in shoots. OASTL-A1 is able to complement an Escherichia coli cysteine synthase-deficient mutant <172>; #111# over-expression of CS1 in Arabidopsis results in the enhanced biosynthesis of glutathione, which allows plants to tolerate cadmium stress <176>; #113# overexpression of cysteine synthase in amphotericin B (Amp B) sensitive strain S1-OE modulates resistance towards oxidative stress and drug pressure. Antioxidant enzyme activities are upregulated in S1-OE parasites and these parasites alleviate intracellular reactive oxygen species efficiently by maintaining the reduced thiol pool. The Amp B sensitive strain shows higher levels of reactive oxygen species which is positively correlated with the protein carbonylation levels and negatively correlated with cell viability. Cysteine synthase overexpression also augments the ROS-primed induction of cysteine synthase-GFP as well as endogenous cysteine synthase and thiol pathway proteins in Leishmania donovani parasites. The expression of cysteine synthase is upregulated in Amp B resistant isolates and during infective stationary stages of growth. Cysteine synthase overexpression enhances the infectivity of Leishmania donovani parasites <178>; #22# overexpression of OASS does not affect the nodule number, but negatively impacts plant growth. Levels of cysteine, glutathione, and homoglutathione nearly double in OASS overexpressing nodules when compared to control nodules. Several metabolites related to serine, aspartate, glutamate, and branched-chain amino acid pathways are significantly elevated in OASS overexpressing nodules. Flavonoid levels of the OASS overexpressing nodules are mostly reduced  <180>; #90,99# parental infection by Pseudomonas vranovensis results in increased expression of the cysteine synthases CysL-1 and CysL-2 and the regulator of hypoxia inducible factor Rhy-1 in progeny, and these three genes are required for adaptation to Pseudomonas vranovensis <175>; #97# serine acetyltransferase CysE is activated when bound to O-acetylserine sulfhydrylase CysK. CysE activation results from the release of substrate inhibition. Feedback inhibition of CysE by L-Cys is also relieved in the bacterial cysteine synthase complex <167>; #97# the binding interaction of CdiA-CT toxin from uropathogenic Escherichia coli 536 with CysK mimics the cysteine synthase complex of CysK"
+    ]
+  },
+  "A0A4P8GNL5": {
+    "ec_number": "2.6.1.82",
+    "name": "putrescine-2-oxoglutarate transaminase",
+    "sequence": "MSTNNPQTREWQTLSGEHHLAPFSDYKQLKEKGPRIITKAQGVHLWDSEGHKILDGMAGLWCVAVGYGREELVQAAEKQMRELPYYNLFFQTAHPPALELAKAITDVAPEGMTHVFFTGSGSEGNDTVLRMVRHYWALKGKPHKQTIIGRINGYHGSTFAGACLGGMSGMHEQGGLPIPGIVHIPQPYWFGEGGDMTPDAFGIWAAEQLEKKILEVGEDNVAAFIAEPIQGAGGVIIPPETYWPKVKEILAKYDILFVADEVICGFGRTGEWFGSDYYDLKPDLMTIAKGLTSGYIPMGGVIVRDKVAKVISEGGDFNHGFTYSGHPVAAAVGLENLRILRDEQIVEKARTEAAPYLQKRLRELQDHPLVGEVRGLGMLGAIELVKDKATRSRYEGKGVGMICRTFCFENGLIMRAVGDTMIIAPPLVISHAEIDELVEKARKCLDLTLEAIR",
+    "reaction": [
+      {
+        "substrates": [
+          "putrescine",
+          "2-oxoglutarate"
+        ],
+        "products": [
+          "1-pyrroline",
+          "L-glutamate",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3,5-dimethoxybenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "3,5-dimethoxybenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "1H-indole-2-carbaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "1-(1H-indol-2-yl)methanamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "1H-indole-2-carbaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "1-(1H-indol-2-yl)methanamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2,3-dimethoxybenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "3,5-dimethoxybenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2,3-dimethoxybenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "2,3-dimethoxybenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2,4-dimethoxybenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "2,4-dimethoxybenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2,4-dimethoxybenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "2,4-dimethoxybenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2-(trifluoromethyl)benzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "2-(trifluoromethyl)benzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2-(trifluoromethyl)benzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "2-(trifluoromethyl)benzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2-formylbenzoic acid",
+          "cadaverine"
+        ],
+        "products": [
+          "2-(aminomethyl)benzoic acid",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2-formylbenzoic acid",
+          "isopropylamine"
+        ],
+        "products": [
+          "2-(aminomethyl)benzoic acid",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2-formylbenzonitrile",
+          "cadaverine"
+        ],
+        "products": [
+          "2-(aminomethyl)benzonitrile",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2-formylbenzonitrile",
+          "isopropylamine"
+        ],
+        "products": [
+          "2-(aminomethyl)benzonitrile",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2-methoxybenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "2-methoxybenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2-methoxybenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "2-methoxybenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2-methoxypyridine-3-carbaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "1-(2-methoxypyridin-3-yl)methanamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2-methoxypyridine-3-carbaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "1-(2-methoxypyridin-3-yl)methanamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2H-1,3-benzodioxole-4-carbaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "1-(2H-1,3-benzodioxol-4-yl)methanamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "2H-1,3-benzodioxole-4-carbaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "1-(2H-1,3-benzodioxol-4-yl)methanamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3,4-difluorobenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "3,4-difluorobenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3,4-difluorobenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "3,4-difluorobenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3,5-dibromobenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "3,5-dibromobenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3,5-dibromobenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "3,5-dibromobenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3,5-dimethoxybenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "3,5-dimethoxybenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3-acetylbenzoic acid",
+          "cadaverine"
+        ],
+        "products": [
+          "3-(1-aminoethyl)benzoic acid",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3-acetylbenzoic acid",
+          "isopropylamine"
+        ],
+        "products": [
+          "3-(1-aminoethyl)benzoic acid",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3-chlorobenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "3-chlorobenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3-chlorobenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "3-chlorobenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3-fluorobenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "3-fluorobenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3-fluorobenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "3-fluorobenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3-formylbenzonitrile",
+          "cadaverine"
+        ],
+        "products": [
+          "3-(aminomethyl)benzonitrile",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3-formylbenzonitrile",
+          "isopropylamine"
+        ],
+        "products": [
+          "3-(aminomethyl)benzonitrile",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3-methoxybenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "3-methoxybenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3-methoxybenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "3-methoxybenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3-nitrobenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "3-nitrobenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "3-nitrobenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "3-nitrobenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-acetylbenzoic acid",
+          "cadaverine"
+        ],
+        "products": [
+          "4-(1-aminoethyl)benzoic acid",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-acetylbenzoic acid",
+          "isopropylamine"
+        ],
+        "products": [
+          "4-(1-aminoethyl)benzoic acid",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-chlorobenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "4-chlorobenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-chlorobenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "4-chlorobenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-fluorobenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "4-fluorobenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-fluorobenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "4-fluorobenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-formylbenzoic acid",
+          "cadaverine"
+        ],
+        "products": [
+          "4-(aminomethyl)benzoic acid",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-formylbenzoic acid",
+          "isopropylamine"
+        ],
+        "products": [
+          "4-(aminomethyl)benzoic acid",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-formylbenzonitrile",
+          "cadaverine"
+        ],
+        "products": [
+          "4-(aminomethyl)benzonitrile",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-formylbenzonitrile",
+          "isopropylamine"
+        ],
+        "products": [
+          "4-(aminomethyl)benzonitrile",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-nitrobenzaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "4-nitrobenzylamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "4-nitrobenzaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "4-nitrobenzylamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "5-chlorothiophene-2-carbaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "1-(5-chlorothiophen-2-yl)methanamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "5-chlorothiophene-2-carbaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "1-(5-chlorothiophen-2-yl)methanamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "5-formylthiophene-2-carboxylic acid",
+          "cadaverine"
+        ],
+        "products": [
+          "5-(aminomethyl)thiophene-2-carboxylic acid",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "5-formylthiophene-2-carboxylic acid",
+          "isopropylamine"
+        ],
+        "products": [
+          "5-(aminomethyl)thiophene-2-carboxylic acid",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "5-methylfuran-2-carbaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "1-(5-methylfuran-2-yl)methanamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "5-methylfuran-2-carbaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "1-(5-methylfuran-2-yl)methanamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "6-acetylpyridine-2-carboxylic acid",
+          "cadaverine"
+        ],
+        "products": [
+          "6-(1-aminoethyl)pyridine-2-carboxylic acid",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "6-acetylpyridine-2-carboxylic acid",
+          "isopropylamine"
+        ],
+        "products": [
+          "6-(1-aminoethyl)pyridine-2-carboxylic acid",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "6-methoxypyridine-3-carbaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "1-(6-methoxypyridin-3-yl)methanamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "6-methoxypyridine-3-carbaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "1-(6-methoxypyridin-3-yl)methanamine",
+          "acetone",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "cadaverine",
+          "2-oxoglutarate"
+        ],
+        "products": [
+          "piperideine",
+          "L-glutamate",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "isopropylamine",
+          "2-oxoglutarate"
+        ],
+        "products": [
+          "acetone",
+          "L-glutamate",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "quinoline-3-carbaldehyde",
+          "cadaverine"
+        ],
+        "products": [
+          "1-(quinolin-3-yl)methanamine",
+          "piperideine",
+          "H2O"
+        ]
+      },
+      {
+        "substrates": [
+          "quinoline-3-carbaldehyde",
+          "isopropylamine"
+        ],
+        "products": [
+          "1-(quinolin-3-yl)methanamine",
+          "acetone",
+          "H2O"
+        ]
+      }
+    ],
+    "kinetics": {}
+  },
+  "Q0PVD3": {
+    "ec_number": "3.4.21.72",
+    "name": "IgA-specific serine endopeptidase",
+    "sequence": "MKTKRFKINAISLSIFLAYALTPYSEAALVRDDVDYQIFRDFAENKGKFFVGATDLSVKNKQGQNIGNALSNVPMIDFSVADVNKRIATVVDPQYAVSVKHAKAEVHTFYYGQYNGHNDVADKENEYRVVEQNNYKPHKAWNASNLGRLEDYNMARFNKFVTEVAPIAPTDAGGGLDTYKDKNRFSSFVRVGAGRQLVYEKGAYHPEGKEKGYDLRDLSQAYRYAIAGTPYKDINIDQTMNTEGLIGFGNHNKQYSAEELKQALSQDALTNYGVLGDSGSPLFAFDKQKNQWVFLGTYDYWADYGKKSWQEWNIYKKEFADEIKQRDNAGTIKGYGEHHWKTTGTNSHIGSTAVRLAGNERGANNGQNVTFENNGTLVLDQNINQGAGGLFFKGDYTVKGINNDITWLGAGIDVADGKKVVWQVKNPNGDRLAKIGKGTLEINGTGVNQGQLKVGDGTVILNQKADSNQKVQAFSQVGIVSGRGTLVLNSPNQINPDNLYFGFRGGRLDANGNDLTFEHIRNVDEGARIVNHNTGHTSTITLTGKSLITNPNSLSVHSIQNDYDEDDYSYYYRPRRPIPQGKDLYYKNYRYYALKSGGSVNAPMPENGQTENNDWILMGSTQEEAKKNAMNHKNNQRISGFSGFFGEENGKGHNGALNLNFNGKSAQNRFLLTGGTNLNGKISVTQGNVLLSGRPTPHARDFVNKSSARKDAHFSKNNEVVFEDDWINRTFKATEIAVNQSASFSSGRNVSDITANITATDNAKVNLGYKNGDEVCVRSDYTGYVTCNTDNLSDKALNSFGATQINGNVNLSQNAALTLGKAALWGQIQGQGNSRVSLNQHSKWHLTGDSQVHNLSLADSHIHLNNASDAQSANKYHTLKINHLSGNGHFHYLTHLAKNLGDKVLVKESASGHYQLHVQDKTGEPNQEGLNLFDASSVRDRSHLSVSLANNHVDLGALRYTIKTENGITRLYNPYAENRRRVKPAPSPATNTASQAQTDSAQIAKPQNIVVAPPSPQANQAEEAKRQQAKAEQVKRQQAEAERKSAELAKQKAEAEREARELATRQKAEQERSSAELARRHEKEREAAELSAKQKVEAEREAQALAVRRKAEAEEAKRQAAELARRHEKEREAAELSAKQRVGEEERRQTAQSQPQRRKRRAAPQDYMAASQDRPKRRGHRSVQQNNVEIAQAQAELARRQQEERKAAELLAKQRAEAEREAQALAARRKAEAEEAKRQAAELAHRQEAERKAAELSANQKAAAEAQALAARQQKALARQQEEARKAAELAVKQKAETERKTAELAKQRAAAEAAKRQQEARQTAELARRQEAERQAAELSAKQKAETDREAAESAKRKAEEEEHRQAAQSQPQRRKRRAAPQDYMAASQNRPKRRGRRSTLPAPPSPSFDSSAYAAPRALHNPDWYENDYEEIPLDALEDENVSESVDTSDKQPQDNTELHEKYENDYEEIPLDALEDEDVSESVDTSDKQPQDNTELHEKVETVSLQPRAAQPRAQAAAQPQAQADAVSTNTNSALSDAMASTQSILLDTGASLTRHIAQKSRADAEKNSVWMSNIGYGRDYASAQYRRFSSKRTQTQIGIDRSLSENMQIGGVLTYSDSQHTFDQASGKNTFVQANLYGKYYLNDAWYVAGDIGAGSLRSRLQTQQKANFNRTSIQTGLTLGNTLKINQFEIVPSAGIRYSRLSSADYKLGNDSVKVSSMSVKTLTAGLDFAYRFKVGNLTVKPLLSAAYFANYGKGGVNVGGNSFAYKADNQQQYSAGAALLYRNVTLNVNGSITKGKQLEKQKSGQIKIQIRF",
+    "reaction": [
+      {
+        "substrates": [
+          "surface-exposed SD domain",
+          "H2O"
+        ],
+        "products": [
+          "?"
+        ]
+      }
+    ],
+    "kinetics": {}
+  },
+  "Q9NRN7": {
+    "ec_number": "2.7.8.7",
+    "name": "holo-[acyl-carrier-protein] synthase",
+    "sequence": "MVFPAKRFCLVPSMEGVRWAFSCGTWLPSRAEWLLAVRSIQPEEKERIGQFVFARDAKAAMAGRLMIRKLVAEKLNIPWNHIRLQRTAKGKPVLAKDSSNPYPNFNFNISHQGDYAVLAAEPELQVGIDIMKTSFPGRGSIPEFFHIMKRKFTNKEWETIRSFKDEWTQLDMFYRNWALKESFIKAIGVGLGFELQRLEFDLSPLNLDIGQVYKETRLFLDGEEEKEWAFEESKIDEHHFVAVALRKPDGSRHQDVPSQDDSKPTQRQFTILNFNDLMSSAVPMTPEDPSFWDCFCFTEEIPIRNGTKS",
+    "reaction": [
+      {
+        "substrates": [
+          "CoA-[4'-phosphopantetheine]",
+          "apo-[acyl-carrier protein]"
+        ],
+        "products": [
+          "adenosine 3',5'-bisphosphate",
+          "holo-[acyl-carrier protein]"
+        ]
+      },
+      {
+        "substrates": [
+          "apo-[acyl-carrier protein]",
+          "acetyl-CoA"
+        ],
+        "products": [
+          "CoA",
+          "acetyl-[acyl-carrier protein]"
+        ]
+      }
+    ],
+    "kinetics": {
+      "km_values": [
+        {
+          "substrate": "acetyl-CoA",
+          "value": 0.095,
+          "comment": "#38# +/-0.033 mM, mutant H111A <39>"
+        },
+        {
+          "substrate": "Mg2+",
+          "value": 4.6,
+          "comment": "#38# +/-0.3 mM, mutant D129A <39>"
+        },
+        {
+          "substrate": "Mg2+",
+          "value": 3.3,
+          "comment": "#38# +/-1 mM, mutant R47A <39>"
+        },
+        {
+          "substrate": "acetyl-CoA",
+          "value": 0.076,
+          "comment": "#38# +/-0.0038 mM, mutant R47A <39>"
+        },
+        {
+          "substrate": "Mg2+",
+          "value": 1.1,
+          "comment": "#38# +/-0.1 mM, mutant K185A <39>"
+        },
+        {
+          "substrate": "Mg2+",
+          "value": 0.75,
+          "comment": "#38# +/-0.24 mM, mutant Q112E <39>"
+        },
+        {
+          "substrate": "acetyl-CoA",
+          "value": 0.047,
+          "comment": "#38# +/-0.023 mM, mutant Q112E <39>"
+        },
+        {
+          "substrate": "acetyl-CoA",
+          "value": 0.081,
+          "comment": "#38# +/-0.0013 mM, mutant E181Q <39>"
+        },
+        {
+          "substrate": "acetyl-CoA",
+          "value": 0.093,
+          "comment": "#38# +/-0.001 mM, double mutant Q112E, E181Q <39>"
+        },
+        {
+          "substrate": "Mg2+",
+          "value": 15.0,
+          "comment": "#38# +/-3 mM, mutant R86A <39>"
+        },
+        {
+          "substrate": "Mg2+",
+          "value": 0.44,
+          "comment": "#38# +/-0.04 mM, wild-type <39>"
+        },
+        {
+          "substrate": "Mg2+",
+          "value": 7.6,
+          "comment": "#38# +/-4.6 mM, mutant E181Q <39>"
+        },
+        {
+          "substrate": "Mg2+",
+          "value": 34.5,
+          "comment": "#38# +/-5.6 mM, mutant H111A <39>"
+        },
+        {
+          "substrate": "acetyl-CoA",
+          "value": 0.142,
+          "comment": "#38# +/-0.035 mM, mutant D129A <39>"
+        },
+        {
+          "substrate": "Mg2+",
+          "value": 18.3,
+          "comment": "#38# +/-0.7 mM, mutant E181A <39>"
+        },
+        {
+          "substrate": "acetyl-CoA",
+          "value": 0.0249,
+          "comment": "#38# +/-0.003 mM, wild-type <39>"
+        },
+        {
+          "substrate": "acetyl-CoA",
+          "value": 0.0247,
+          "comment": "#38# +/-0.0036 mM, mutant K185A <39>"
+        },
+        {
+          "substrate": "acetyl-CoA",
+          "value": 0.0454,
+          "comment": "#38# +/-0.0038 mM, mutant E181A <39>"
+        },
+        {
+          "substrate": "acetyl-CoA",
+          "value": 0.399,
+          "comment": "#38# +/-0.041 mM, mutant R86A <39>"
+        },
+        {
+          "substrate": "Mg2+",
+          "value": 104.1,
+          "comment": "#38# +/-51 mM, double mutant Q112E, E181Q <39>"
+        }
+      ]
+    },
+    "engineering": [
+      {
+        "mutation": "D129A",
+        "effect": "reduced Mg2+ affinity and catalytic efficiency, D129 plays a role in Mg2+-coordination"
+      },
+      {
+        "mutation": "E181A",
+        "effect": "significant loss in enzyme activity, reduced Mg2+ affinity and catalytic efficiency"
+      },
+      {
+        "mutation": "R47A",
+        "effect": "reduced coenzymeA and Mg2+ affinity, increased catalytic efficiency"
+      },
+      {
+        "mutation": "E181Q",
+        "effect": "significant loss in enzyme activity, reduced Mg2+ affinity (20fold) and catalytic efficiency (300fold)"
+      },
+      {
+        "mutation": "R86A",
+        "effect": "reduced coenzymeA and Mg2+ affinity, increased catalytic efficiency"
+      },
+      {
+        "mutation": "Q112E",
+        "effect": "slightly reduced catalytic efficiency"
+      },
+      {
+        "mutation": "Q112E, E181Q",
+        "effect": "double mutant, reduced Mg2+ affinity (200fold) and catalytic efficiency"
+      },
+      {
+        "mutation": "K185",
+        "effect": "significant loss in enzyme activity, reduced catalytic efficiency"
+      }
+    ],
+    "general_information": [
+      "phosphopantetheinyl transferase activates biosynthetic pathways that synthesize both primary and secondary metabolites in bacteria <54>; #50,51,52,53,55# phosphopantetheinyl transferases (PPTases) catalyze the phosphopantetheinylation of acyl carrier proteins (ACPs) in polyketide synthases (PKSs), peptidyl carrier proteins (PCPs) in nonribosomal peptide synthetases (NRPSs), and ACPs in fatty acid synthases (FASs) from inactive apo-forms into active holo-form. PPTases are essential to both primary metabolisms and secondary metabolisms. Phosphopantetheinylation of the ACP/PCP is involved in FK506 biosynthesis, FK506 (tacrolimus) is a clinical immunosuppressant widely used after allogeneic kidney, liver, and heart transplantations <63>; #43# phosphopantetheinyl transferases play an essential role in the biosyntheses of fatty acids, polyketides, and nonribosomal peptides <52>; #73# PPTase AcpS is essential in Salmonella. Acyl carrier proteins are mainly involved in fatty acid biosynthesis, and they require posttranslational maturation by addition of a 4-phosphopantetheine prosthetic group to be functional, analysis of SPI-1 or IacP, a homologue of acyl carrier proteins, maturation in vivo, overview. Although IacP is similar to ACP and matured by using the same enzyme, IacP cannot replace the essential function of ACP in fatty acid synthesis <55>; #37# PPTases posttranslationally modify modular and iterative synthases acting in a processive fashion, namely fatty acid synthases, polyketide synthases, and non-ribosomal peptide syntethases. The central component of these chain elongating synthases is non-catalytic and either a translationally linked domain of a larger polypeptide chain or an independently translated protein. Regardless, this protein component is referred to as a carrier protein, or alternatively a thiolation domain. The CP tethers the growing intermediates on a 4-phosphopantetheine (PPant) arm of 20 A through a reactive thioester linkage. PPants are thought of as prosthetic arms on which all substrates and intermediates of these pathways are covalently yet transiently held during the orderly progression of enzymatic modifications to the extending chain. PPTases mediate the transfer and covalent attachment of PPant arms from coenzyme A (CoA) to conserved serine residues of the carrier protein domain through phosphoester bonds. These essential posttranslation protein modifications convert inactive apo-synthases to active holo-synthases. Mechanistically distinct classes of enzymes have been identified that require PPant arms for biosynthetic catalysis. These include enzymes involved in the biosynthesis of lipid A, D-alanyllipoteichoic acid, lipo-chitin nodulation factor, beta-alanine-dopamine conjugates, carboxylic acid reductions, and dehydrogenation of alpha-aminoadipate semialdehyde (lysine biosynthesis) and 10-formyl-tetrahydrofolate. Essential enzymatic role of PPTases in general fatty acid biosynthesis. AcpSs are primarily used for post-translational modification and activation of the carrier proteins of FASs (primary metabolism) across a diversity of organisms making them the most commonly found PPTase <59>; #56,57,58# PPTases posttranslationally modify modular and iterative synthases acting in a processive fashion, namely fatty acid synthases, polyketide synthases, and non-ribosomal peptide syntethases. The central component of these chain elongating synthases is non-catalytic and either a translationally linked domain of a larger polypeptide chain or an independently translated protein. Regardless, this protein component is referred to as a carrier protein, or alternatively a thiolation domain. The CP tethers the growing intermediates on a 4-phosphopantetheine (PPant) arm of 20 A through a reactive thioester linkage. PPants are thought of as prosthetic arms on which all substrates and intermediates of these pathways are covalently yet transiently held during the orderly progression of enzymatic modifications to the extending chain. PPTases mediate the transfer and covalent attachment of PPant arms from coenzyme A (CoA) to conserved serine residues of the carrier protein domain through phosphoester bonds. These essential posttranslation protein modifications convert inactive apo-synthases to active holo-synthases. Mechanistically distinct classes of enzymes have been identified that require PPant arms for biosynthetic catalysis. These include enzymes involved in the biosynthesis of lipid A, D-alanyllipoteichoic acid, lipo-chitin nodulation factor, beta-alanine-dopamine conjugates, carboxylic acid reductions, and dehydrogenation of alpha-aminoadipate semialdehyde (lysine biosynthesis) and 10-formyl-tetrahydrofolate. Essential enzymatic role of PPTases in general fatty acid biosynthesis <59>; #2# PPTases posttranslationally modify modular and iterative synthases acting in a processive fashion, namely fatty acid synthases, polyketide synthases, and non-ribosomal peptide syntethases. The central component of these chain elongating synthases is non-catalytic and either a translationally linked domain of a larger polypeptide chain or an independently translated protein. Regardless, this protein component is referred to as a carrier protein, or alternatively a thiolation domain. The CP tethers the growing intermediates on a 4-phosphopantetheine (PPant) arm of 20 A through a reactive thioester linkage. PPants are thought of as prosthetic arms on which all substrates and intermediates of these pathways are covalently yet transiently held during the orderly progression of enzymatic modifications to the extending chain. PPTases mediate the transfer and covalent attachment of PPant arms from coenzyme A (CoA) to conserved serine residues of the carrier protein domain through phosphoester bonds. These essential posttranslation protein modifications convert inactive apo-synthases to active holo-synthases. Mechanistically distinct classes of enzymes have been identified that require PPant arms for biosynthetic catalysis. These include enzymes involved in the biosynthesis of lipid A, D-alanyllipoteichoic acid, lipo-chitin nodulation factor, beta-alanine-dopamine conjugates, carboxylic acid reductions, and dehydrogenation of alpha-aminoadipate semialdehyde (lysine biosynthesis) and 10-formyl-tetrahydrofolate. Essential enzymatic role of PPTases in general fatty acid biosynthesis. Enzyme Gsp plays a role in gramicidin S biosynthesis <59>; #59# PPTases posttranslationally modify modular and iterative synthases acting in a processive fashion, namely fatty acid synthases, polyketide synthases, and non-ribosomal peptide syntethases. The central component of these chain elongating synthases is non-catalytic and either a translationally linked domain of a larger polypeptide chain or an independently translated protein. Regardless, this protein component is referred to as a carrier protein, or alternatively a thiolation domain. The CP tethers the growing intermediates on a 4-phosphopantetheine (PPant) arm of 20 A through a reactive thioester linkage. PPants are thought of as prosthetic arms on which all substrates and intermediates of these pathways are covalently yet transiently held during the orderly progression of enzymatic modifications to the extending chain. PPTases mediate the transfer and covalent attachment of PPant arms from coenzyme A (CoA) to conserved serine residues of the carrier protein domain through phosphoester bonds. These essential posttranslation protein modifications convert inactive apo-synthases to active holo-synthases. Mechanistically distinct classes of enzymes have been identified that require PPant arms for biosynthetic catalysis. These include enzymes involved in the biosynthesis of lipid A, D-alanyllipoteichoic acid, lipo-chitin nodulation factor, beta-alanine-dopamine conjugates, carboxylic acid reductions, and dehydrogenation of alpha-aminoadipate semialdehyde (lysine biosynthesis) and 10-formyl-tetrahydrofolate. The PPTase ClbA can activate both siderophore and genotoxin biosynthesis <59>; #67# some Vibrio anguillarum strains produce the siderophore vanchrobactin utilizing the NRPS VabF. VabD is the dedicated PPTase used for 4-phosphopantetheinylation of VabF. Vibrio anguillarum strains also contain a second, more dominant, siderophore anguibactin, located on the pJM1 plasmid. Anguibactin is also synthesized by an NRPS and requires the PPTase AngD. Both VabD and AngD can complement one another, but since anguibactin is the more potent siderophore, some strains have lost the vanchrobactin biosynthesis pathway <59>; #18,62# Streptomyces coelicolor contains 25 biosynthetic secondary metabolite clusters that produce natural products, including actinorhodin, coelichelin, coelibactin, TW95a, EPA, methylenomycin (encoded on a giant linear plasmid), prodiginines and the antibiotic CDA. All of these natural products are produced by synthases that require phoshopantetheinylation by an AcpS-type PPTase, which shows a high level of permissiveness for CoA substrates as well as carrier proteins. For example, type I mammalian FAS, type I fungal PKS, and several type II bacterial ACPs are efficiently phosphopantetheinylated. The genome of Streptomyces coelicolor contains two other PPTases"
+    ],
+    "metals_ions": [
+      "Mg2+"
+    ]
+  },
+  "Q71SU5": {
+    "ec_number": "3.1.1.7",
+    "name": "acetylcholinesterase",
+    "sequence": "MSLGIMKNMNYYLITSFLLLNNGLSFKTNTIDNVNNIHLQSSIENTMINNNNSNLVHTDLHNDKTITCLSDNPIVHTSVGIYCGLREIVHWPNGPASMVDVYYGIRYAQSPTGSLRFKKPVEPIPEPKKIFMADKLPSTCPQPKDTMFQNSAAARMWVPNTPMSEDCLFLNIWVPLKESNSSHSNSKEKLAVMLWIYGGSFYMGTATLSVYDARFLAARQNIIVASMNYRLGSFGFLYMNTEEAPGNMGLWDQRLAMKWIKDHIENFGGDPHRITLFGESAGAVSVSTHVVSPWSHSYYNNAIMQSGSIFSNWGLATSEVSLNQTQRLAKILGCGYRSSMDQIKCLRSKSIKEILDAHDTMYDPASYFSVPFPPVLDNNFFPYENSQSFRQLKYLKPSGALMFGINKNEGSYFLLYAFVSNSKWMKNLTDLPITNRMDYLRCLRQVLDLDDDDRPEFTEPLIRYTDFEYQTYQQLPTLESWTERLEEISSDRSFKCPTINMATAVTNDYRIPGRRRAHTLPVYFYEFQHRTLSLPMPKWTGTMHGYEIEYVFGIPFSPQFQASFYRFTDEERQLSDIMMTYWANFARTGDPNILPDGRHVTDNVNPEDPDEITGGELEDSLNHKQGRKNPFIGWPEFRNSTKAYIVFRSAPANLLVSTRPRHRQCLFWRRWYPALLQQVERNRQHCLGV",
+    "reaction": [
+      {
+        "substrates": [
+          "acetylthiocholine",
+          "H2O"
+        ],
+        "products": [
+          "thiocholine",
+          "acetate"
+        ]
+      },
+      {
+        "substrates": [
+          "butyrylthiocholine",
+          "H2O"
+        ],
+        "products": [
+          "butyrate",
+          "thiocholine"
+        ]
+      }
+    ],
+    "kinetics": {
+      "km_values": [
+        {
+          "substrate": "acetylthiocholine",
+          "value": 0.189,
+          "comment": ""
+        },
+        {
+          "substrate": "butyrylthiocholine",
+          "value": 0.395,
+          "comment": ""
+        }
+      ]
+    }
+  },
+  "Q28948": {
+    "ec_number": "2.7.11.1",
+    "name": "non-specific serine/threonine protein kinase",
+    "sequence": "MAEKQKHDGRVKIGHYVLGDTLGVGTFGKVKIGEHQLTGHKVAVKILNRQKIRSLDVVGKIKREIQNLKLFRHPHIIKLYQVISTPTDFFMVMEYVSGGELFDYICKHGRVEEMEARRLFQQILSAVDYCHRHMVVHRDLKPENVLLDAQMNAKIADFGLSNMMSDGEFLRTSCGSPNYAAPEVISGRLYAGPEVDIWSCGVILYALLCGTLPFDDEHVPTLFKKIRGGVFYIPEYLNRSVATLLMHMLQVDPLKRATIKDIREHEWFKQDLPSYLFPEDPSYDANVIDDEAVKEVCEKFECTESEVMNSLYSGDPQDQLAVAYHLVIDNRRIMNQASEFYLASSPPTGSFMDDSAMHIPPGLKPHPERMPPLIADSPKARCPLDALNTTKPKSLAVKKAKWHLGIRSQSKPYDIMAEVYRAMKQLDFEWKVVNAYHLRVRRKNPVTGNYVKMSLQLYLVDNRSYLLDFKSIDDEVLEQRSGSSTPQRSCSAAGLHRPRSSLDSVTAESHSLSGSLSGSLTGSMLPSVPPRLGSHTMDFFEMCASLITTLAR",
+    "reaction": [],
+    "kinetics": {}
   }
 }
