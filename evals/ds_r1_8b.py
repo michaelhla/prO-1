@@ -13,7 +13,7 @@ from stability_reward import StabilityRewardCalculator
 load_dotenv()
 
 # Initialize model and tokenizer
-model_name = "deepseek-ai/deepseek-coder-1.3b-instruct"
+model_name = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
 
@@ -24,24 +24,30 @@ def get_stability_score(sequence: str) -> float:
     """Calculate protein stability score using ESMFold and PyRosetta"""
     return stability_calculator.calculate_stability(sequence)
 
-def propose_mutations(sequence: str) -> List[str]:
+def propose_mutations(sequence: str, enzyme_data: Dict) -> str:
     """Get mutation proposals from DeepSeek"""
-    prompt = f"""Given this enzyme sequence: {sequence}
+    base_prompt = f"""You are an expert protein engineer in rational protein design. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
 
-Please propose 3-7 mutations that would increase the stability of this enzyme. 
-Format your response as a list of mutations in the format 'X123Y' where:
-- X is the original amino acid
-- 123 is the position (1-indexed)
-- Y is the proposed new amino acid
+ENZYME NAME: {enzyme_data['name']}
+ENZYME SEQUENCE: {sequence}
+GENERAL INFORMATION: {enzyme_data['general_information']}
+ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in enzyme_data['active_site_residues']])}
 
-Copy the sequence with the mutations applied below. Wrap the sequence in <sequence> tags."""
+Propose 3-7 mutations to optimize the stability of the enzyme given the information above. YOUR MUTATIONS MUST BE POSITION SPECIFIC TO THE SEQUENCE. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning. 
+
+****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions.****
+
+COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE:"""
+
+    prompt = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> REASONING PROCESS HERE </think>
+<answer> ANSWER HERE </answer>. Follow the formatting instructions exactly as specified. [USER]: {base_prompt}. [ASSISTANT]:"""
 
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
-            max_new_tokens=512,
+            max_new_tokens=2048,
             temperature=0.7,
             top_p=0.95,
             do_sample=True,
@@ -49,8 +55,19 @@ Copy the sequence with the mutations applied below. Wrap the sequence in <sequen
         )
     
     response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    mutations = response.strip().split('\n')
-    return [m.strip() for m in mutations if m.strip() and len(m.strip()) > 0 and 'X' in m and 'Y' in m]
+    return response
+
+def extract_sequence(response: str) -> str:
+    """Extract sequence from model response"""
+    try:
+        # Look for sequence in \boxed{} format
+        if '\\boxed{' in response and '}' in response:
+            start = response.find('\\boxed{') + 7
+            end = response.find('}', start)
+            return response[start:end].strip()
+        return None
+    except Exception:
+        return None
 
 def apply_mutations(sequence: str, mutations: List[str]) -> str:
     """Apply a list of mutations to a sequence"""
@@ -76,6 +93,16 @@ def main():
     
     # Randomly select 100 enzymes
     selected_enzymes = random.sample(list(enzymes.items()), 100)
+    # Save selected enzymes to a new dataset
+    selected_dataset = {enzyme_id: data for enzyme_id, data in selected_enzymes}
+    
+    # Create results directory if it doesn't exist
+    output_dir = Path('results')
+    output_dir.mkdir(exist_ok=True)
+    
+    # Save selected enzymes dataset
+    with open(output_dir / 'selected_enzymes.json', 'w') as f:
+        json.dump(selected_dataset, f, indent=2)
     
     results = []
     
@@ -84,12 +111,28 @@ def main():
         original_stability = get_stability_score(sequence)
         
         try:
-            # Get mutation proposals
-            proposed_mutations = propose_mutations(sequence)
+            # Format enzyme data for the prompt
+            enzyme_data = {
+                "name": data.get('name', 'Unknown Enzyme'),
+                "ec_number": data.get('ec_number', 'Unknown'),
+                "general_information": data.get('description', 'No description available'),
+                "reaction": [{
+                    "substrates": data.get('substrates', ['Unknown']),
+                    "products": data.get('products', ['Unknown'])
+                }],
+                "active_site_residues": data.get('active_site_residues', [])
+            }
             
-            # Apply mutations
-            mutated_sequence = apply_mutations(sequence, proposed_mutations)
+            # Get model response
+            response = propose_mutations(sequence, enzyme_data)
             
+            # Extract mutated sequence
+            mutated_sequence = extract_sequence(response)
+            
+            if mutated_sequence is None:
+                print(f"Failed to extract sequence for enzyme {enzyme_id}")
+                continue
+                
             # Calculate new stability
             new_stability = get_stability_score(mutated_sequence)
             
@@ -97,7 +140,7 @@ def main():
                 'enzyme_id': enzyme_id,
                 'original_sequence': sequence,
                 'original_stability': original_stability,
-                'proposed_mutations': proposed_mutations,
+                'model_response': response,
                 'mutated_sequence': mutated_sequence,
                 'new_stability': new_stability,
                 'stability_change': new_stability - original_stability,
