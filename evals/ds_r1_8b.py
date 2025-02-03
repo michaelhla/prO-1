@@ -1,4 +1,8 @@
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import json
 import random
 import numpy as np
@@ -6,16 +10,29 @@ from pathlib import Path
 from tqdm import tqdm
 from dotenv import load_dotenv
 from typing import List, Dict
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TextIteratorStreamer
 import torch
 from stability_reward import StabilityRewardCalculator
+import threading
 
 load_dotenv()
 
 # Initialize model and tokenizer
 model_name = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
+
+# Configure 8-bit quantization
+quantization_config = BitsAndBytesConfig(
+    load_in_8bit=True,
+)
+
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    quantization_config=quantization_config,
+    device_map="auto",
+    torch_dtype=torch.float16,
+    use_cache=True
+)
 
 # Initialize stability calculator
 stability_calculator = StabilityRewardCalculator()
@@ -25,7 +42,7 @@ def get_stability_score(sequence: str) -> float:
     return stability_calculator.calculate_stability(sequence)
 
 def propose_mutations(sequence: str, enzyme_data: Dict) -> str:
-    """Get mutation proposals from DeepSeek"""
+    """Get mutation proposals from DeepSeek with streaming output"""
     base_prompt = f"""You are an expert protein engineer in rational protein design. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
 
 ENZYME NAME: {enzyme_data['name']}
@@ -37,25 +54,39 @@ Propose 3-7 mutations to optimize the stability of the enzyme given the informat
 
 ****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions.****
 
-COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE:"""
+COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. YOU MUST FOLLOW THIS INSTRUCTION/FORMAT. EX; \\boxed{{MALWMTLLLLPVPDGPK...}}"""
 
     prompt = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> REASONING PROCESS HERE </think>
 <answer> ANSWER HERE </answer>. Follow the formatting instructions exactly as specified. [USER]: {base_prompt}. [ASSISTANT]:"""
 
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=2048,
-            temperature=0.7,
-            top_p=0.95,
-            do_sample=True,
-            pad_token_id=tokenizer.eos_token_id
-        )
+    # Create streamer
+    streamer = TextIteratorStreamer(tokenizer, skip_special_tokens=True)
     
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return response
+    # Create generation kwargs
+    generation_kwargs = dict(
+        **inputs,
+        max_new_tokens=2048,
+        temperature=0.7,
+        top_p=0.95,
+        do_sample=True,
+        streamer=streamer
+    )
+    
+    # Create thread to run generation
+    with torch.no_grad():
+        thread = threading.Thread(target=model.generate, kwargs=generation_kwargs)
+        thread.start()
+    
+    # Print tokens as they're generated
+    generated_text = ""
+    for new_text in streamer:
+        print(new_text, end="", flush=True)
+        generated_text += new_text
+    print()
+    
+    return generated_text
 
 def extract_sequence(response: str) -> str:
     """Extract sequence from model response"""

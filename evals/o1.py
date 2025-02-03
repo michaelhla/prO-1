@@ -1,86 +1,100 @@
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import json
 import random
 import numpy as np
 from pathlib import Path
-import openai
 from tqdm import tqdm
 from dotenv import load_dotenv
 from typing import List, Dict
+import openai
 from stability_reward import StabilityRewardCalculator
 
 load_dotenv()
 client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Initialize the calculator once as a global variable to reuse
+# Initialize stability calculator
 stability_calculator = StabilityRewardCalculator()
 
 def get_stability_score(sequence: str) -> float:
     """Calculate protein stability score using ESMFold and PyRosetta"""
     return stability_calculator.calculate_stability(sequence)
 
-def propose_mutations(sequence: str) -> List[str]:
-    """Get mutation proposals from GPT-4"""
-    prompt = f"""Given this enzyme sequence: {sequence}
+def propose_mutations(sequence: str, enzyme_data: Dict) -> str:
+    """Get mutation proposals from GPT-3.5"""
+    base_prompt = f"""You are an expert protein engineer in rational protein design. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
 
-Please propose 3-7 mutations that would increase the stability of this enzyme. 
-Format your response as a list of mutations in the format 'X123Y' where:
-- X is the original amino acid
-- 123 is the position (1-indexed)
-- Y is the proposed new amino acid
+ENZYME NAME: {enzyme_data['name']}
+ENZYME SEQUENCE: {sequence}
+GENERAL INFORMATION: {enzyme_data['general_information']}
+ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in enzyme_data['active_site_residues']])}
 
-Copy the sequence with the mutations applied below. Wrap the sequence in <sequence> tags."""
+Propose 3-7 mutations to optimize the stability of the enzyme given the information above. YOUR MUTATIONS MUST BE POSITION SPECIFIC TO THE SEQUENCE. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning. 
+
+****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions.****
+
+COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. YOU MUST FOLLOW THIS INSTRUCTION/FORMAT. EX; \\boxed{{MALWMTLLLLPVPDGPK...}}"""
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are an expert protein engineer focused on enzyme stabilization."},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": base_prompt}
         ],
         temperature=0.7
     )
-
-    mutations = response.choices[0].message.content.strip().split('\n')
-    return [m.strip() for m in mutations if m.strip()]
-
-def apply_mutations(sequence: str, mutations: List[str]) -> str:
-    """Apply a list of mutations to a sequence"""
-    seq_list = list(sequence)
-    for mutation in mutations:
-        # Parse mutation format 'X123Y'
-        orig_aa = mutation[0]
-        new_aa = mutation[-1]
-        pos = int(mutation[1:-1]) - 1  # Convert to 0-indexed
-        
-        if seq_list[pos] != orig_aa:
-            print(f"Warning: Expected {orig_aa} at position {pos+1} but found {seq_list[pos]}")
-            continue
-            
-        seq_list[pos] = new_aa
     
-    return ''.join(seq_list)
+    return response.choices[0].message.content
+
+def extract_sequence(response: str) -> str:
+    """Extract sequence from model response"""
+    try:
+        # Look for sequence in \boxed{} format
+        if '\\boxed{' in response and '}' in response:
+            start = response.find('\\boxed{') + 7
+            end = response.find('}', start)
+            return response[start:end].strip()
+        return None
+    except Exception:
+        return None
 
 def main():
-    # Load enzyme sequences
-    with open('data/transformed_brenda.json', 'r') as f:
-        enzymes = json.load(f)
-    
-    # Randomly select 100 enzymes
-    selected_enzymes = random.sample(list(enzymes.items()), 100)
+    # Load selected enzyme sequences
+    with open('results/selected_enzymes.json', 'r') as f:
+        selected_enzymes = json.load(f)
     
     results = []
     
-    for enzyme_id, data in tqdm(selected_enzymes, desc="Processing enzymes"):
+    for enzyme_id, data in tqdm(selected_enzymes.items(), desc="Processing enzymes"):
         sequence = data['sequence']
         original_stability = get_stability_score(sequence)
         
         try:
-            # Get mutation proposals
-            proposed_mutations = propose_mutations(sequence)
+            # Format enzyme data for the prompt
+            enzyme_data = {
+                "name": data.get('name', 'Unknown Enzyme'),
+                "ec_number": data.get('ec_number', 'Unknown'),
+                "general_information": data.get('description', 'No description available'),
+                "reaction": [{
+                    "substrates": data.get('substrates', ['Unknown']),
+                    "products": data.get('products', ['Unknown'])
+                }],
+                "active_site_residues": data.get('active_site_residues', [])
+            }
             
-            # Apply mutations
-            mutated_sequence = apply_mutations(sequence, proposed_mutations)
+            # Get model response
+            response = propose_mutations(sequence, enzyme_data)
             
+            # Extract mutated sequence
+            mutated_sequence = extract_sequence(response)
+            
+            if mutated_sequence is None:
+                print(f"Failed to extract sequence for enzyme {enzyme_id}")
+                continue
+                
             # Calculate new stability
             new_stability = get_stability_score(mutated_sequence)
             
@@ -88,7 +102,7 @@ def main():
                 'enzyme_id': enzyme_id,
                 'original_sequence': sequence,
                 'original_stability': original_stability,
-                'proposed_mutations': proposed_mutations,
+                'model_response': response,
                 'mutated_sequence': mutated_sequence,
                 'new_stability': new_stability,
                 'stability_change': new_stability - original_stability,
@@ -103,7 +117,7 @@ def main():
     output_dir = Path('results')
     output_dir.mkdir(exist_ok=True)
     
-    with open(output_dir / 'stability_mutations.json', 'w') as f:
+    with open(output_dir / 'o1_stability_mutations.json', 'w') as f:
         json.dump(results, f, indent=2)
     
     # Print summary statistics
