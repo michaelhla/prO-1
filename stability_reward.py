@@ -18,8 +18,8 @@ class StabilityRewardCalculator:
         self.device = device
         self.cached_structures = {}
         
-        # Initialize PyRosetta
-        pyrosetta.init()
+        # Initialize PyRosetta with Cartesian energy functions
+        pyrosetta.init("-cartesian_ddg -beta_cart -relax:constrain_relax_to_start_coords -relax:ramp_constraints false")
         
     def _load_protein_model(self, model_path, device):
         """Load ESMFold model for structure prediction"""
@@ -97,29 +97,28 @@ class StabilityRewardCalculator:
         return pdb_files
 
     def calculate_stability(self, sequence):
+        """Calculate stability score using Cartesian Rosetta implementation"""
         start_time = time.time()
-        """Calculate stability score using Rosetta with optimization"""
+        
         # Get structure prediction
         pdb_file = self.predict_structure(sequence)
         
         # Load structure into PyRosetta
         pose = pyrosetta.pose_from_pdb(pdb_file)
         
-        # Create score function
-        scorefxn = pyrosetta.get_fa_scorefxn()
+        # Create score function with cartesian ddG weights
+        scorefxn = pyrosetta.rosetta.core.scoring.get_score_function()
+        scorefxn.set_weight(pyrosetta.rosetta.core.scoring.cart_bonded, 0.5)
         
-        # Setup packer task for side chain optimization
-        task = pyrosetta.standard_packer_task(pose)
-        task.restrict_to_repacking()  # Only repack side chains, don't change sequence
+        # Setup movemap for minimization
+        movemap = pyrosetta.rosetta.core.kinematics.MoveMap()
+        movemap.set_bb(True)
+        movemap.set_chi(True)
         
-        # Optimize side chain conformations
-        packer = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn, task)
-        packer.apply(pose)
-        
-        # Perform energy minimization
-        min_mover = pyrosetta.rosetta.protocols.minimization_packing.MinMover()
-        min_mover.score_function(scorefxn)
-        min_mover.apply(pose)
+        # Perform minimization using Cartesian ddG protocol
+        minimizer = pyrosetta.rosetta.protocols.relax.FastRelax(scorefxn, 5)
+        minimizer.set_movemap(movemap)
+        minimizer.apply(pose)
         
         # Calculate final stability score
         stability_score = scorefxn(pose)

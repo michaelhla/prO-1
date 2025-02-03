@@ -42,7 +42,7 @@ def get_stability_score(sequence: str) -> float:
     return stability_calculator.calculate_stability(sequence)
 
 def propose_mutations(sequence: str, enzyme_data: Dict) -> str:
-    """Get mutation proposals from DeepSeek with streaming output"""
+    """Get mutation proposals from DeepSeek"""
     base_prompt = f"""You are an expert protein engineer in rational protein design. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
 
 ENZYME NAME: {enzyme_data['name']}
@@ -61,32 +61,17 @@ COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. 
 
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     
-    # Create streamer
-    streamer = TextIteratorStreamer(tokenizer, skip_special_tokens=True)
-    
-    # Create generation kwargs
-    generation_kwargs = dict(
-        **inputs,
-        max_new_tokens=2048,
-        temperature=0.7,
-        top_p=0.95,
-        do_sample=True,
-        streamer=streamer
-    )
-    
-    # Create thread to run generation
     with torch.no_grad():
-        thread = threading.Thread(target=model.generate, kwargs=generation_kwargs)
-        thread.start()
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=2048,
+            temperature=0.7,
+            top_p=0.95,
+            do_sample=True
+        )
     
-    # Print tokens as they're generated
-    generated_text = ""
-    for new_text in streamer:
-        print(new_text, end="", flush=True)
-        generated_text += new_text
-    print()
-    
-    return generated_text
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return response
 
 def extract_sequence(response: str) -> str:
     """Extract sequence from model response"""
@@ -122,8 +107,7 @@ def main():
     with open('data/transformed_brenda.json', 'r') as f:
         enzymes = json.load(f)
     
-    # Randomly select 100 enzymes
-    selected_enzymes = random.sample(list(enzymes.items()), 100)
+    selected_enzymes = random.sample(list(enzymes.items()), 40)
     # Save selected enzymes to a new dataset
     selected_dataset = {enzyme_id: data for enzyme_id, data in selected_enzymes}
     
@@ -139,7 +123,12 @@ def main():
     
     for enzyme_id, data in tqdm(selected_enzymes, desc="Processing enzymes"):
         sequence = data['sequence']
-        original_stability = get_stability_score(sequence)
+        try:
+            original_stability = get_stability_score(sequence)
+        except Exception as e:
+            print(f"Error calculating stability for enzyme {enzyme_id}: {str(e)}")
+            print('Sequence length: ', len(str(sequence)))
+            continue
         
         try:
             # Format enzyme data for the prompt
@@ -156,7 +145,6 @@ def main():
             
             # Get model response
             response = propose_mutations(sequence, enzyme_data)
-            
             # Extract mutated sequence
             mutated_sequence = extract_sequence(response)
             
@@ -175,11 +163,23 @@ def main():
                 'mutated_sequence': mutated_sequence,
                 'new_stability': new_stability,
                 'stability_change': new_stability - original_stability,
-                'is_improvement': new_stability > original_stability
+                'is_improvement': new_stability < original_stability,
+                'correct_format': True
             })
             
         except Exception as e:
             print(f"Error processing enzyme {enzyme_id}: {str(e)}")
+            results.append({
+                'enzyme_id': enzyme_id,
+                'original_sequence': sequence,
+                'original_stability': original_stability,
+                'model_response': response,
+                'mutated_sequence': None,
+                'new_stability': None,
+                'stability_change': None,
+                'is_improvement': False,
+                'correct_format': False
+            })
             continue
     
     # Save results
@@ -201,4 +201,17 @@ def main():
     print(f"Max stability improvement: {max(r['stability_change'] for r in results):.3f}")
 
 if __name__ == "__main__":
-    main()
+    try:
+        torch.cuda.empty_cache()
+        main()
+    except Exception as e:
+        print(f"Critical error encountered: {str(e)}")
+        # Save current results before exit
+        output_dir = Path('results')
+        output_dir.mkdir(exist_ok=True)
+        with open(output_dir / 'ds_r1_stability_mutations_error_state.json', 'w') as f:
+            if 'results' in locals():
+                json.dump(results, f, indent=2)
+            else:
+                json.dump({"error": "Failed before results initialization"}, f, indent=2)
+        raise e

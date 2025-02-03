@@ -1,0 +1,1 @@
+## randomly select mutations in the sequence, in theory should be 50 percent but curious if this is actually true 
