@@ -36,7 +36,7 @@ Propose 3-7 mutations to optimize the stability of the enzyme given the informat
 
 ****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions.****
 
-COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. YOU MUST FOLLOW THIS INSTRUCTION/FORMAT. EX; \\boxed{{MALWMTLLLLPVPDGPK...}}"""
+COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. YOU MUST FOLLOW THIS INSTRUCTION/FORMAT. EX: \\boxed{{MALWMTLLLLPVPDGPK...}}"""
 
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -66,12 +66,33 @@ def main():
     with open('results/selected_enzymes.json', 'r') as f:
         selected_enzymes = json.load(f)
     
+    # Try to load existing results to get original stability values
+    existing_results = {}
+    try:
+        with open('results/ds_r1_stability_mutations.json', 'r') as f:
+            for result in json.load(f):
+                if result.get('original_stability') is not None:
+                    existing_results[result['enzyme_id']] = result['original_stability']
+    except Exception as e:
+        print(f"Could not load existing results: {str(e)}")
+    
     results = []
     
     for enzyme_id, data in tqdm(selected_enzymes.items(), desc="Processing enzymes"):
         sequence = data['sequence']
-        original_stability = get_stability_score(sequence)
         
+        # Try to get stability from existing results first
+        original_stability = existing_results.get(enzyme_id)
+        
+        # If not found in existing results, calculate it
+        if original_stability is None:
+            try:
+                original_stability = get_stability_score(sequence)
+            except Exception as e:
+                print(f"Error calculating stability for enzyme {enzyme_id}: {str(e)}")
+                print('Sequence length: ', len(str(sequence)))
+                continue
+            
         try:
             # Format enzyme data for the prompt
             enzyme_data = {
@@ -87,12 +108,22 @@ def main():
             
             # Get model response
             response = propose_mutations(sequence, enzyme_data)
-            
             # Extract mutated sequence
             mutated_sequence = extract_sequence(response)
             
             if mutated_sequence is None:
                 print(f"Failed to extract sequence for enzyme {enzyme_id}")
+                results.append({
+                    'enzyme_id': enzyme_id,
+                    'original_sequence': sequence,
+                    'original_stability': original_stability,
+                    'model_response': response,
+                    'mutated_sequence': None,
+                    'new_stability': None,
+                    'stability_change': None,
+                    'is_improvement': False,
+                    'correct_format': False
+                })
                 continue
                 
             # Calculate new stability
@@ -106,11 +137,23 @@ def main():
                 'mutated_sequence': mutated_sequence,
                 'new_stability': new_stability,
                 'stability_change': new_stability - original_stability,
-                'is_improvement': new_stability > original_stability
+                'is_improvement': new_stability < original_stability,
+                'correct_format': True
             })
             
         except Exception as e:
             print(f"Error processing enzyme {enzyme_id}: {str(e)}")
+            results.append({
+                'enzyme_id': enzyme_id,
+                'original_sequence': sequence,
+                'original_stability': original_stability,
+                'model_response': response if 'response' in locals() else None,
+                'mutated_sequence': None,
+                'new_stability': None,
+                'stability_change': None,
+                'is_improvement': False,
+                'correct_format': False
+            })
             continue
     
     # Save results
@@ -132,4 +175,16 @@ def main():
     print(f"Max stability improvement: {max(r['stability_change'] for r in results):.3f}")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"Critical error encountered: {str(e)}")
+        # Save current results before exit
+        output_dir = Path('results')
+        output_dir.mkdir(exist_ok=True)
+        with open(output_dir / '4o_stability_mutations_error_state.json', 'w') as f:
+            if 'results' in locals():
+                json.dump(results, f, indent=2)
+            else:
+                json.dump({"error": "Failed before results initialization"}, f, indent=2)
+        raise e
