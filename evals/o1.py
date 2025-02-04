@@ -24,7 +24,6 @@ def get_stability_score(sequence: str) -> float:
     return stability_calculator.calculate_stability(sequence)
 
 def propose_mutations(sequence: str, enzyme_data: Dict) -> str:
-    """Get mutation proposals from GPT-3.5"""
     base_prompt = f"""You are an expert protein engineer in rational protein design. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
 
 ENZYME NAME: {enzyme_data['name']}
@@ -39,24 +38,74 @@ Propose 3-7 mutations to optimize the stability of the enzyme given the informat
 COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. YOU MUST FOLLOW THIS INSTRUCTION/FORMAT. EX; \\boxed{{MALWMTLLLLPVPDGPK...}}"""
 
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="o1-preview",
         messages=[
-            {"role": "system", "content": "You are an expert protein engineer focused on enzyme stabilization."},
             {"role": "user", "content": base_prompt}
         ],
-        temperature=0.7
     )
     
     return response.choices[0].message.content
-
 def extract_sequence(response: str) -> str:
     """Extract sequence from model response"""
     try:
         # Look for sequence in \boxed{} format
         if '\\boxed{' in response and '}' in response:
             start = response.find('\\boxed{') + 7
-            end = response.find('}', start)
-            return response[start:end].strip()
+            
+            # Find matching closing bracket by counting brackets
+            bracket_count = 1
+            pos = start
+            while bracket_count > 0 and pos < len(response):
+                pos += 1
+                if pos >= len(response):
+                    return None
+                if response[pos] == '{':
+                    bracket_count += 1
+                elif response[pos] == '}':
+                    bracket_count -= 1
+            
+            if bracket_count == 0:
+                end = pos
+                sequence = response[start:end].strip()
+                
+                # Remove any LaTeX commands (\command{X}) but keep X
+                while '\\' in sequence:
+                    backslash_idx = sequence.find('\\')
+                    if backslash_idx == -1:
+                        break
+                    
+                    # Find where the command name ends (at the next { or space)
+                    command_end = backslash_idx + 1
+                    while command_end < len(sequence) and sequence[command_end].isalpha():
+                        command_end += 1
+                    
+                    # Find the corresponding opening brace
+                    open_brace = sequence.find('{', command_end)
+                    if open_brace == -1:
+                        break
+                    
+                    # Find matching closing brace
+                    bracket_count = 1
+                    pos = open_brace + 1
+                    while bracket_count > 0 and pos < len(sequence):
+                        if sequence[pos] == '{':
+                            bracket_count += 1
+                        elif sequence[pos] == '}':
+                            bracket_count -= 1
+                        pos += 1
+                    
+                    if bracket_count > 0:
+                        break
+                    
+                    close_brace = pos - 1
+                    
+                    # Keep just what's inside the braces
+                    inner_content = sequence[open_brace+1:close_brace]
+                    sequence = sequence[:backslash_idx] + inner_content + sequence[close_brace+1:]
+                
+                # Remove any whitespace between characters
+                sequence = ''.join(sequence.split())
+                return sequence
         return None
     except Exception:
         return None
@@ -66,12 +115,33 @@ def main():
     with open('results/selected_enzymes.json', 'r') as f:
         selected_enzymes = json.load(f)
     
+    # Try to load existing results to get original stability values
+    existing_results = {}
+    try:
+        with open('results/ds_r1_stability_mutations.json', 'r') as f:
+            for result in json.load(f):
+                if result.get('original_stability') is not None:
+                    existing_results[result['enzyme_id']] = result['original_stability']
+    except Exception as e:
+        print(f"Could not load existing results: {str(e)}")
+    
     results = []
     
     for enzyme_id, data in tqdm(selected_enzymes.items(), desc="Processing enzymes"):
         sequence = data['sequence']
-        original_stability = get_stability_score(sequence)
         
+        # Try to get stability from existing results first
+        original_stability = existing_results.get(enzyme_id)
+        
+        # If not found in existing results, calculate it
+        if original_stability is None:
+            try:
+                original_stability = get_stability_score(sequence)
+            except Exception as e:
+                print(f"Error calculating stability for enzyme {enzyme_id}: {str(e)}")
+                print('Sequence length: ', len(str(sequence)))
+                continue
+            
         try:
             # Format enzyme data for the prompt
             enzyme_data = {
@@ -87,12 +157,24 @@ def main():
             
             # Get model response
             response = propose_mutations(sequence, enzyme_data)
-            
             # Extract mutated sequence
             mutated_sequence = extract_sequence(response)
+
+            print(f'Mutated sequence {enzyme_id}: ', mutated_sequence)
             
             if mutated_sequence is None:
                 print(f"Failed to extract sequence for enzyme {enzyme_id}")
+                results.append({
+                    'enzyme_id': enzyme_id,
+                    'original_sequence': sequence,
+                    'original_stability': original_stability,
+                    'model_response': response,
+                    'mutated_sequence': None,
+                    'new_stability': None,
+                    'stability_change': None,
+                    'is_improvement': False,
+                    'correct_format': False
+                })
                 continue
                 
             # Calculate new stability
@@ -106,11 +188,23 @@ def main():
                 'mutated_sequence': mutated_sequence,
                 'new_stability': new_stability,
                 'stability_change': new_stability - original_stability,
-                'is_improvement': new_stability > original_stability
+                'is_improvement': new_stability < original_stability,  # Fixed comparison
+                'correct_format': True
             })
             
         except Exception as e:
             print(f"Error processing enzyme {enzyme_id}: {str(e)}")
+            results.append({
+                'enzyme_id': enzyme_id,
+                'original_sequence': sequence,
+                'original_stability': original_stability,
+                'model_response': response if 'response' in locals() else None,
+                'mutated_sequence': None,
+                'new_stability': None,
+                'stability_change': None,
+                'is_improvement': False,
+                'correct_format': False
+            })
             continue
     
     # Save results
@@ -129,7 +223,25 @@ def main():
     print(f"Number of enzymes processed: {total_attempts}")
     print(f"Number of successful improvements: {successful_attempts}")
     print(f"Success rate: {success_rate:.1f}%")
-    print(f"Max stability improvement: {max(r['stability_change'] for r in results):.3f}")
+    
+    # Fix max calculation to handle None values
+    stability_changes = [r['stability_change'] for r in results if r['stability_change'] is not None]
+    if stability_changes:
+        print(f"Max stability improvement: {max(stability_changes):.3f}")
+    else:
+        print("No valid stability improvements found")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"Critical error encountered: {str(e)}")
+        # Save current results before exit
+        output_dir = Path('results')
+        output_dir.mkdir(exist_ok=True)
+        with open(output_dir / 'o1_stability_mutations_error_state.json', 'w') as f:
+            if 'results' in locals():
+                json.dump(results, f, indent=2)
+            else:
+                json.dump({"error": "Failed before results initialization"}, f, indent=2)
+        raise e
