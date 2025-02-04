@@ -16,6 +16,12 @@ from stability_reward import StabilityRewardCalculator
 load_dotenv()
 client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+## Results summary:
+# Number of enzymes processed: 32
+# Number of successful improvements: 8
+# Success rate: 25.0%
+# Max stability improvement: 920.675
+
 # Initialize stability calculator
 stability_calculator = StabilityRewardCalculator()
 
@@ -35,7 +41,7 @@ Propose 3-7 mutations to optimize the stability of the enzyme given the informat
 
 ****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions.****
 
-COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. YOU MUST FOLLOW THIS INSTRUCTION/FORMAT. EX; \\boxed{{MALWMTLLLLPVPDGPK...}}"""
+COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. YOU MUST FOLLOW THIS INSTRUCTION/FORMAT. EX; \\boxed{{MALWMTLLLLPVPDGPK...}} Do not use any coloring or other formatting within the boxed term, we only want the sequence in those brackets."""
 
     response = client.chat.completions.create(
         model="o1-preview",
@@ -68,19 +74,14 @@ def extract_sequence(response: str) -> str:
                 end = pos
                 sequence = response[start:end].strip()
                 
-                # Remove any LaTeX commands (\command{X}) but keep X
+                # Remove any LaTeX commands but keep their content
                 while '\\' in sequence:
                     backslash_idx = sequence.find('\\')
                     if backslash_idx == -1:
                         break
                     
-                    # Find where the command name ends (at the next { or space)
-                    command_end = backslash_idx + 1
-                    while command_end < len(sequence) and sequence[command_end].isalpha():
-                        command_end += 1
-                    
-                    # Find the corresponding opening brace
-                    open_brace = sequence.find('{', command_end)
+                    # Skip the backslash and find the opening brace
+                    open_brace = sequence.find('{', backslash_idx)
                     if open_brace == -1:
                         break
                     
@@ -227,7 +228,7 @@ def main():
     # Fix max calculation to handle None values
     stability_changes = [r['stability_change'] for r in results if r['stability_change'] is not None]
     if stability_changes:
-        print(f"Max stability improvement: {max(stability_changes):.3f}")
+        print(f"Max stability improvement: {min(stability_changes):.3f}")
     else:
         print("No valid stability improvements found")
 
@@ -245,3 +246,8 @@ if __name__ == "__main__":
             else:
                 json.dump({"error": "Failed before results initialization"}, f, indent=2)
         raise e
+
+
+## rerun: MPRYGASLRQSCPRSGREQGQDredAblackTAGAPGLLWMGLALALALALALALSredPblackDSRVLWAPAEAHPLSPQGHPARCHRIVPRLRDVFGWGNLTCPICKGLFTAINLGLKKEPredDblackVARVGSVAIKLCNLLKIAPPAVCredEblackSIVHLFEDDMVEVWRRSVLSPSEACGLLLGSTCGHWDIFSSWNISLPTVPKPPPKPPSPPAPGAPVSRILFredCblackTDLHWDHDYLEGTDPDCADPLCCRRGSGLPPASRPGAGYWGEYSKCDLPLRTLESLLSGLGPAGPFDMVYWTGDIPAHDVWHQTRQDQLRALTTVTALVRKFLGPVPVYPAVGNHESTPVNSFPPPFIEGNHSSRWLYEAMAKAWEPWLPAEALRTLRCI
+##        MSEQIPKTQKAVVFred{D}TDGGQLVYKDYPVPTPKPNELLIHVKYSGVCHTDLHAWKGDWPLATKLPLVGGHEGAGVVVred{L}GENVKGWKIGDFAGIKWLNGSred{L}SCEFCQQGAEPNCGEADLSGYTHDGSFEQYATADAVQAAKIPAGTDLANVAPILCAGVTVYKALKTADLAAGQWVAISGAGGGLGSLAVQYARAMGLRVVAIDGGDEKGEFVKSLGAEAYVDFTKDKDIVEAVKKATDGGPHGAINVSVSEKAIDQSVEYVRPLGKVVLVGLPAHAKVTAPVFDAVVKSIEIKGSYVGNRKDTAEAIDFFSRGLIKCPIKIVGLSDLPEVFKLMEEGKILGRYVLDTSK
+##        MTRALCSALRQALLLLAAAAELSPGLKCVCLLCDSSNFTCQTEGACWASVMLTNGKEQVIKSCVSLPELNAQVFCHSSred{D}NVTKTECCFTDFCred{D}NITLHLPTASPNAPKLGPMELAIIITVPVCLLSIAAMLTVWACQGRQCSYRKKKRPNVEEPLSECNLVNAGKTLKDLIYDVTASGSGSGLPLLVQRTIARTIVLQEIVGKGRFGEVWHGRWCGEDVAVKIFSSRDERSWFREAEIYQTVMLRHENILGFIAADNKDNGTWTQLWLVSEYHEQGSLYDYLNRred{D}IVTVAGMIKLALSIASGLAHLHMEIVGTQGKPAIAHRDIKSKNILVKKCETCAIADLGLAVKHDSILNTIDIPQNPKVGTKRYMAPEMLDDTMred{D}VNIFESFKRADIYSVGLVYWEIARRCSVGGIVEEYQLPYYDMVPSDPSIEEMRKVVCDQKFRPSIPNQWQSCEALRVMGRIMRECWYANGAARLTALRIKKTISQLCVKEDCKA
