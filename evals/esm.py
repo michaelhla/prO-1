@@ -1,4 +1,9 @@
-# gradient based sequence optimization using evoprotgrad. compare to critic with access to reward signal 
+# gradient based sequence optimization using evoprotgrad
+# Results summary:
+# Number of enzymes processed: 35
+# Number of successful improvements: 12
+# Success rate: 34.3%
+# Max stability improvement: -517.253
 
 import os
 import sys
@@ -15,6 +20,7 @@ from tqdm import tqdm
 import evo_prot_grad
 from transformers import AutoTokenizer, EsmForMaskedLM
 from stability_reward import StabilityRewardCalculator
+import torch
 
 # Initialize models
 esm2_model = EsmForMaskedLM.from_pretrained("facebook/esm2_t30_150M_UR50D")
@@ -22,38 +28,50 @@ tokenizer = AutoTokenizer.from_pretrained("facebook/esm2_t30_150M_UR50D")
 stability_calculator = StabilityRewardCalculator()
 
 def optimize_sequence(sequence):
-    # Create temporary FASTA file
+
+    # Create temporary FASTA file with proper formatting
+    # Ensure sequence is in uppercase, properly formatted, and remove spaces
+    sequence = ''.join(sequence.upper().strip().split())
     fasta_format = f">Input_Sequence\n{sequence}"
     temp_fasta_path = "temp_input_sequence.fasta"
-    with open(temp_fasta_path, "w") as f:
-        f.write(fasta_format)
+    
+    try:
+        with open(temp_fasta_path, "w") as f:
+            f.write(fasta_format)
 
-    # Initialize ESM expert
-    esm2_expert = evo_prot_grad.get_expert(
-        'esm',
-        model=esm2_model,
-        tokenizer=tokenizer,
-        temperature=0.95,
-        device='cuda' if torch.cuda.is_available() else 'cpu'
-    )
+        # Initialize ESM expert with more conservative parameters
+        esm2_expert = evo_prot_grad.get_expert(
+            'esm',
+            model=esm2_model,
+            tokenizer=tokenizer,
+            temperature=0.8,  # Reduced from 0.95
+            device='cuda' if torch.cuda.is_available() else 'cpu',
+            scoring_strategy='mutant_marginal',
+        )
 
-    # Run directed evolution
-    evolution = evo_prot_grad.DirectedEvolution(
-        wt_fasta=temp_fasta_path,
-        output='best',
-        experts=[esm2_expert],
-        parallel_chains=1,
-        n_steps=20,
-        max_mutations=10,
-        verbose=False
-    )
+        # Run directed evolution with more conservative parameters
+        output = evo_prot_grad.DirectedEvolution(
+            wt_fasta=temp_fasta_path,
+            output='best',
+            experts=[esm2_expert],
+            parallel_chains=1,
+            n_steps=10,  # Reduced from 20
+            max_mutations=7,  # Reduced from 10
+            verbose=True  # Enable verbose output for debugging
+        )()
+        variants, scores = output
+        return variants[0]
     
-    variants, scores = evolution()
+    except Exception as e:
+        print(f"Error details:")
+        print(f"Sequence length: {len(sequence)}")
+        print(f"First 50 chars: {sequence[:50]}")
+        print(f"Last 50 chars: {sequence[-50:] if len(sequence) > 50 else sequence}")
+        raise e
     
-    # Clean up temporary file
-    os.remove(temp_fasta_path)
-    
-    return variants[0]  # Return the best variant
+    finally:
+        if os.path.exists(temp_fasta_path):
+            os.remove(temp_fasta_path)
 
 def main():
     # Load previous results
@@ -65,10 +83,14 @@ def main():
     for enzyme_id, data in tqdm(selected_enzymes.items(), desc="Processing enzymes"):
         sequence = data['sequence']
         
-        try:
+        try: 
             # Calculate original stability
             original_stability = stability_calculator.calculate_stability(sequence)
-            
+        except Exception as e:
+            print(f"Error calculating original stability for {enzyme_id}: {str(e)}")
+            continue
+
+        try:    
             # Generate new sequence with EvoProtGrad
             mutated_sequence = optimize_sequence(sequence)
             
@@ -97,7 +119,7 @@ def main():
                 'is_improvement': False
             })
             continue
-    
+        
     # Save results
     output_dir = Path('results')
     output_dir.mkdir(exist_ok=True)
