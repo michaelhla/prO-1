@@ -16,11 +16,11 @@ from stability_reward import StabilityRewardCalculator
 load_dotenv()
 client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-## Results summary:
+# Results summary:
 # Number of enzymes processed: 32
-# Number of successful improvements: 8
-# Success rate: 25.0%
-# Max stability improvement: 920.675
+# Number of successful improvements: 9
+# Success rate: 28.1%
+# Max stability improvement: -240.231
 
 # Initialize stability calculator
 stability_calculator = StabilityRewardCalculator()
@@ -112,37 +112,24 @@ def extract_sequence(response: str) -> str:
         return None
 
 def main():
-    # Load selected enzyme sequences
+    # Load previous results instead of selected enzymes
+    with open('results/o1_stability_mutations.json', 'r') as f:
+        results = json.load(f)
+    
+    # Load selected enzyme sequences for reference
     with open('results/selected_enzymes.json', 'r') as f:
         selected_enzymes = json.load(f)
     
-    # Try to load existing results to get original stability values
-    existing_results = {}
-    try:
-        with open('results/ds_r1_stability_mutations.json', 'r') as f:
-            for result in json.load(f):
-                if result.get('original_stability') is not None:
-                    existing_results[result['enzyme_id']] = result['original_stability']
-    except Exception as e:
-        print(f"Could not load existing results: {str(e)}")
-    
-    results = []
-    
-    for enzyme_id, data in tqdm(selected_enzymes.items(), desc="Processing enzymes"):
-        sequence = data['sequence']
-        
-        # Try to get stability from existing results first
-        original_stability = existing_results.get(enzyme_id)
-        
-        # If not found in existing results, calculate it
-        if original_stability is None:
-            try:
-                original_stability = get_stability_score(sequence)
-            except Exception as e:
-                print(f"Error calculating stability for enzyme {enzyme_id}: {str(e)}")
-                print('Sequence length: ', len(str(sequence)))
-                continue
+    for i, result in tqdm(enumerate(results), desc="Processing enzymes"):
+        # Skip if already has valid mutated sequence
+        if result['mutated_sequence'] is not None:
+            continue
             
+        enzyme_id = result['enzyme_id']
+        data = selected_enzymes[enzyme_id]
+        sequence = result['original_sequence']
+        original_stability = result['original_stability']
+        
         try:
             # Format enzyme data for the prompt
             enzyme_data = {
@@ -156,7 +143,7 @@ def main():
                 "active_site_residues": data.get('active_site_residues', [])
             }
             
-            # Get model response
+            # Get new model response
             response = propose_mutations(sequence, enzyme_data)
             # Extract mutated sequence
             mutated_sequence = extract_sequence(response)
@@ -165,10 +152,7 @@ def main():
             
             if mutated_sequence is None:
                 print(f"Failed to extract sequence for enzyme {enzyme_id}")
-                results.append({
-                    'enzyme_id': enzyme_id,
-                    'original_sequence': sequence,
-                    'original_stability': original_stability,
+                results[i].update({
                     'model_response': response,
                     'mutated_sequence': None,
                     'new_stability': None,
@@ -181,24 +165,18 @@ def main():
             # Calculate new stability
             new_stability = get_stability_score(mutated_sequence)
             
-            results.append({
-                'enzyme_id': enzyme_id,
-                'original_sequence': sequence,
-                'original_stability': original_stability,
+            results[i].update({
                 'model_response': response,
                 'mutated_sequence': mutated_sequence,
                 'new_stability': new_stability,
                 'stability_change': new_stability - original_stability,
-                'is_improvement': new_stability < original_stability,  # Fixed comparison
+                'is_improvement': new_stability < original_stability,
                 'correct_format': True
             })
             
         except Exception as e:
             print(f"Error processing enzyme {enzyme_id}: {str(e)}")
-            results.append({
-                'enzyme_id': enzyme_id,
-                'original_sequence': sequence,
-                'original_stability': original_stability,
+            results[i].update({
                 'model_response': response if 'response' in locals() else None,
                 'mutated_sequence': None,
                 'new_stability': None,
@@ -208,7 +186,7 @@ def main():
             })
             continue
     
-    # Save results
+    # Save updated results
     output_dir = Path('results')
     output_dir.mkdir(exist_ok=True)
     
@@ -225,7 +203,6 @@ def main():
     print(f"Number of successful improvements: {successful_attempts}")
     print(f"Success rate: {success_rate:.1f}%")
     
-    # Fix max calculation to handle None values
     stability_changes = [r['stability_change'] for r in results if r['stability_change'] is not None]
     if stability_changes:
         print(f"Max stability improvement: {min(stability_changes):.3f}")
@@ -246,8 +223,3 @@ if __name__ == "__main__":
             else:
                 json.dump({"error": "Failed before results initialization"}, f, indent=2)
         raise e
-
-
-## rerun: MPRYGASLRQSCPRSGREQGQDredAblackTAGAPGLLWMGLALALALALALALSredPblackDSRVLWAPAEAHPLSPQGHPARCHRIVPRLRDVFGWGNLTCPICKGLFTAINLGLKKEPredDblackVARVGSVAIKLCNLLKIAPPAVCredEblackSIVHLFEDDMVEVWRRSVLSPSEACGLLLGSTCGHWDIFSSWNISLPTVPKPPPKPPSPPAPGAPVSRILFredCblackTDLHWDHDYLEGTDPDCADPLCCRRGSGLPPASRPGAGYWGEYSKCDLPLRTLESLLSGLGPAGPFDMVYWTGDIPAHDVWHQTRQDQLRALTTVTALVRKFLGPVPVYPAVGNHESTPVNSFPPPFIEGNHSSRWLYEAMAKAWEPWLPAEALRTLRCI
-##        MSEQIPKTQKAVVFred{D}TDGGQLVYKDYPVPTPKPNELLIHVKYSGVCHTDLHAWKGDWPLATKLPLVGGHEGAGVVVred{L}GENVKGWKIGDFAGIKWLNGSred{L}SCEFCQQGAEPNCGEADLSGYTHDGSFEQYATADAVQAAKIPAGTDLANVAPILCAGVTVYKALKTADLAAGQWVAISGAGGGLGSLAVQYARAMGLRVVAIDGGDEKGEFVKSLGAEAYVDFTKDKDIVEAVKKATDGGPHGAINVSVSEKAIDQSVEYVRPLGKVVLVGLPAHAKVTAPVFDAVVKSIEIKGSYVGNRKDTAEAIDFFSRGLIKCPIKIVGLSDLPEVFKLMEEGKILGRYVLDTSK
-##        MTRALCSALRQALLLLAAAAELSPGLKCVCLLCDSSNFTCQTEGACWASVMLTNGKEQVIKSCVSLPELNAQVFCHSSred{D}NVTKTECCFTDFCred{D}NITLHLPTASPNAPKLGPMELAIIITVPVCLLSIAAMLTVWACQGRQCSYRKKKRPNVEEPLSECNLVNAGKTLKDLIYDVTASGSGSGLPLLVQRTIARTIVLQEIVGKGRFGEVWHGRWCGEDVAVKIFSSRDERSWFREAEIYQTVMLRHENILGFIAADNKDNGTWTQLWLVSEYHEQGSLYDYLNRred{D}IVTVAGMIKLALSIASGLAHLHMEIVGTQGKPAIAHRDIKSKNILVKKCETCAIADLGLAVKHDSILNTIDIPQNPKVGTKRYMAPEMLDDTMred{D}VNIFESFKRADIYSVGLVYWEIARRCSVGGIVEEYQLPYYDMVPSDPSIEEMRKVVCDQKFRPSIPNQWQSCEALRVMGRIMRECWYANGAARLTALRIKKTISQLCVKEDCKA

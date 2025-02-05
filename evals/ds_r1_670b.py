@@ -17,9 +17,13 @@ from pathlib import Path
 from tqdm import tqdm
 from together import Together
 from stability_reward import StabilityRewardCalculator
+from dotenv import load_dotenv
+from typing import List, Dict  # Add typing imports
+
+load_dotenv()
 
 # Initialize Together client
-client = Together()
+client = Together(api_key=os.getenv('TOGETHER_API_KEY'))
 
 # Initialize stability calculator
 stability_calculator = StabilityRewardCalculator()
@@ -47,7 +51,11 @@ COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. 
         messages=[
             {"role": "user", "content": base_prompt}
         ],
+        stream=True
     )
+
+    for chunk in response:
+        print(chunk.choices[0].delta.content or "", end="", flush=True)
     
     return response.choices[0].message.content
 
