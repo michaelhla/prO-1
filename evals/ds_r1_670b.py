@@ -33,6 +33,9 @@ def get_stability_score(sequence: str) -> float:
     return stability_calculator.calculate_stability(sequence)
 
 def propose_mutations(sequence: str, enzyme_data: Dict) -> str:
+    # Format sequence into residue-number pairs
+    # formatted_sequence = ', '.join(f"{res}{i+1}" for i, res in enumerate(sequence))
+    
     base_prompt = f"""You are an expert protein engineer in rational protein design. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
 
 ENZYME NAME: {enzyme_data['name']}
@@ -40,7 +43,7 @@ ENZYME SEQUENCE: {sequence}
 GENERAL INFORMATION: {enzyme_data['general_information']}
 ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in enzyme_data['active_site_residues']])}
 
-Propose 3-7 mutations to optimize the stability of the enzyme given the information above. YOUR MUTATIONS MUST BE POSITION SPECIFIC TO THE SEQUENCE. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning. 
+Propose 3-7 mutations to optimize the stability of the enzyme given the information above. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning. 
 
 ****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions.****
 
@@ -54,10 +57,18 @@ COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. 
         stream=True
     )
 
+    # Accumulate the streamed response
+    full_response = ""
     for chunk in response:
-        print(chunk.choices[0].delta.content or "", end="", flush=True)
+        try: 
+            if chunk.choices[0].delta.content is not None:
+                content = chunk.choices[0].delta.content
+                full_response += content
+                print(content, end="", flush=True)
+        except: 
+            print('Error in chunk: ', chunk)
     
-    return response.choices[0].message.content
+    return full_response
 
 def extract_sequence(response: str) -> str:
     """Extract sequence from model response"""
@@ -203,6 +214,7 @@ def main():
             
         except Exception as e:
             print(f"Error processing enzyme {enzyme_id}: {str(e)}")
+            print(f"Error occurred at line {sys.exc_info()[2].tb_lineno}")
             results.append({
                 'enzyme_id': enzyme_id,
                 'original_sequence': sequence,
@@ -220,7 +232,7 @@ def main():
     output_dir = Path('results')
     output_dir.mkdir(exist_ok=True)
     
-    with open(output_dir / 'ds_r1_stability_mutations.json', 'w') as f:
+    with open(output_dir / 'ds_r1_670_stability_mutations.json', 'w') as f:
         json.dump(results, f, indent=2)
     
     # Print summary statistics
