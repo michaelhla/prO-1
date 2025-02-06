@@ -12,6 +12,7 @@ from pathlib import Path
 from tqdm import tqdm
 from colabdesign.mpnn import mk_mpnn_model
 from stability_reward import StabilityRewardCalculator
+import random
 
 # Results summary:
 # Number of enzymes processed: 40
@@ -20,13 +21,19 @@ from stability_reward import StabilityRewardCalculator
 # Max stability improvement: -2151.464
 # Average percentage of mutations between original and mutated sequences: 54.1% (when free flowing mpnn)
 
+# Results for restricted mpnn:
+# Number of enzymes processed: 40
+# Number of successful improvements: 20
+# Success rate: 50.0%
+# Max stability improvement: -666.664
+
 # Initialize models
 mpnn_model = mk_mpnn_model()
 stability_calculator = StabilityRewardCalculator()
 
 def main():
     # Load previous results
-    with open('results/mpnn_stability_mutations.json', 'r') as f:
+    with open('results/selected_enzymes.json', 'r') as f:
         selected_enzymes = json.load(f)
     
     results = []
@@ -35,17 +42,47 @@ def main():
         sequence = data['sequence']
                 
         try:
-            # Calculate original stability
-            if data['original_stability'] is not None:
-                original_stability = data['original_stability']
-            else:
-                original_stability = stability_calculator.calculate_stability(sequence)
+            original_stability = stability_calculator.calculate_stability(sequence)
             
             # Get structure prediction for MPNN
             pdb_file = stability_calculator.predict_structure(sequence)
             
+            # Randomly select number of positions to leave unfixed (between 3-7)
+            num_positions = random.randint(3, 7)
+            
+            # Randomly select positions to leave unfixed
+            sequence_length = len(sequence)
+            unfixed_positions = set(random.sample(range(1, sequence_length + 1), num_positions))
+            
+            # Create list of positions to fix (everything except unfixed_positions)
+            fixed_positions = sorted([i for i in range(1, sequence_length + 1) if i not in unfixed_positions])
+            
+            # Format positions for MPNN (e.g., "1-5,7-10")
+            fix_pos = []
+            start = None
+            
+            for i, pos in enumerate(fixed_positions):
+                if start is None:
+                    start = pos
+                elif pos != fixed_positions[i-1] + 1:
+                    if start == fixed_positions[i-1]:
+                        fix_pos.append(str(start))
+                    else:
+                        fix_pos.append(f"{start}-{fixed_positions[i-1]}")
+                    start = pos
+                
+                if i == len(fixed_positions) - 1:
+                    if start == pos:
+                        fix_pos.append(str(start))
+                    else:
+                        fix_pos.append(f"{start}-{pos}")
+            
+            fix_pos_str = ",".join(fix_pos)
+            print(f"Unfixed positions: {sorted(list(unfixed_positions))}")
+            print(f"Fixed positions: {fix_pos_str}")
+            
             # Generate new sequence with MPNN
-            mpnn_model.prep_inputs(pdb_filename=pdb_file)
+            mpnn_model.prep_inputs(pdb_filename=pdb_file, fix_pos=fix_pos_str)
             mutated_sequence = mpnn_model.sample()['seq'][0]            
             # Calculate new stability
             new_stability = stability_calculator.calculate_stability(mutated_sequence)
