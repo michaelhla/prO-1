@@ -7,6 +7,12 @@
 
 # speed to find a solution  (will have access to reward signal with critic)
 
+# Updated Results summary:
+# Number of enzymes processed: 33
+# Number of successful improvements: 9
+# Success rate: 27.3%
+# Max stability improvement: -318.585
+
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -19,6 +25,7 @@ from together import Together
 from stability_reward import StabilityRewardCalculator
 from dotenv import load_dotenv
 from typing import List, Dict  # Add typing imports
+from openai import OpenAI
 
 load_dotenv()
 
@@ -252,9 +259,88 @@ def main():
     else:
         print("No valid stability improvements found")
 
+def reprocess_failed_mutations():
+    # Initialize OpenAI client
+    openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+    
+    # Load results
+    results_path = Path('results/ds_r1_670_stability_mutations.json')
+    with open(results_path, 'r') as f:
+        results = json.load(f)
+    
+    # Process entries with failed sequence extraction
+    for entry in results:
+        if entry['mutated_sequence'] is None and entry['model_response'] is not None:
+            print(f"Reprocessing enzyme {entry['enzyme_id']}...")
+            
+            # Prompt for GPT-4 to identify mutations and format sequence
+            prompt = f"""Given this protein engineering response, identify the mutations mentioned and apply them to the original sequence. 
+            Output the final sequence in the format: \\boxed{{EXAMPLE MODIFIED SEQUENCE}}. YOU MUST FOLLOW THIS FORMATTING. 
+            Do not use any formatting or other instructions. Just the sequence no color or other formatting.
+
+
+            Original sequence: {entry['original_sequence']}
+            Model response: {entry['model_response']}"""
+            
+            try:
+                # Get GPT-4 response
+                response = openai_client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0
+                )
+                
+                gpt4_response = response.choices[0].message.content
+
+                print('GPT-4 response: ', gpt4_response)
+                
+                # Extract sequence using existing function
+                mutated_sequence = extract_sequence(gpt4_response)
+                
+                if mutated_sequence:
+                    # Calculate new stability
+                    new_stability = get_stability_score(mutated_sequence)
+                    
+                    # Update entry
+                    entry.update({
+                        'mutated_sequence': mutated_sequence,
+                        'new_stability': new_stability,
+                        'stability_change': new_stability - entry['original_stability'],
+                        'is_improvement': new_stability < entry['original_stability'],
+                        'correct_format': True
+                    })
+                    print(f"Successfully reprocessed enzyme {entry['enzyme_id']}")
+                else:
+                    print(f"Failed to extract sequence from GPT-4 response for enzyme {entry['enzyme_id']}")
+            
+            except Exception as e:
+                print(f"Error reprocessing enzyme {entry['enzyme_id']}: {str(e)}")
+                continue
+    
+    # Save updated results
+    with open(results_path, 'w') as f:
+        json.dump(results, f, indent=2)
+    
+    # Recalculate and print summary statistics
+    total_attempts = len(results)
+    successful_attempts = sum(1 for r in results if r['is_improvement'])
+    success_rate = (successful_attempts / total_attempts * 100) if total_attempts > 0 else 0
+    
+    print(f"\nUpdated Results summary:")
+    print(f"Number of enzymes processed: {total_attempts}")
+    print(f"Number of successful improvements: {successful_attempts}")
+    print(f"Success rate: {success_rate:.1f}%")
+    
+    # Calculate max stability improvement
+    stability_changes = [r['stability_change'] for r in results if r['stability_change'] is not None]
+    if stability_changes:
+        print(f"Max stability improvement: {min(stability_changes):.3f}")
+    else:
+        print("No valid stability improvements found")
+
 if __name__ == "__main__":
     try:
-        main()
+        reprocess_failed_mutations()
     except Exception as e:
         print(f"Critical error encountered: {str(e)}")
         # Update error state filename
@@ -266,5 +352,6 @@ if __name__ == "__main__":
             else:
                 json.dump({"error": "Failed before results initialization"}, f, indent=2)
         raise e
+
 
 

@@ -1,9 +1,15 @@
 # gradient based sequence optimization using evoprotgrad
-# Results summary:
+# Results summary (10 steps, 7 mutations):
 # Number of enzymes processed: 35
 # Number of successful improvements: 12
 # Success rate: 34.3%
 # Max stability improvement: -517.253
+
+# Results summary (100 steps, 7 mutations):
+# Number of enzymes processed: 35
+# Number of successful improvements: 13
+# Success rate: 37.1%
+# Max stability improvement: -208.565
 
 import os
 import sys
@@ -55,7 +61,7 @@ def optimize_sequence(sequence):
             output='best',
             experts=[esm2_expert],
             parallel_chains=1,
-            n_steps=10,  # Reduced from 20
+            n_steps=100,  # Reduced from 20
             max_mutations=7,  # Reduced from 10
             verbose=True  # Enable verbose output for debugging
         )()
@@ -124,7 +130,7 @@ def main():
     output_dir = Path('results')
     output_dir.mkdir(exist_ok=True)
     
-    with open(output_dir / 'esm_stability_mutations.json', 'w') as f:
+    with open(output_dir / 'esm_juiced_stability_mutations.json', 'w') as f:
         json.dump(results, f, indent=2)
     
     # Print summary statistics
