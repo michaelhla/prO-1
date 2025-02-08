@@ -11,6 +11,7 @@ from pyrosetta.rosetta.core.pose import make_pose_from_sequence
 from pyrosetta.rosetta.core.chemical import ResidueTypeSet, ChemicalManager
 from pyrosetta.rosetta.core.scoring import ScoreType
 import time
+from multiprocessing import Pool
 
 class StabilityRewardCalculator:
     def __init__(self, protein_model_path="facebook/esmfold_v1", device="cuda"):
@@ -37,15 +38,29 @@ class StabilityRewardCalculator:
         print(f"ESM loading took {time.time() - start_time:.2f} seconds")
         return model
 
-    def predict_structure(self, sequence):
+    def predict_structure(self, sequences):
         """Predict protein structure using ESMFold"""
-        if sequence in self.cached_structures:
-            return self.cached_structures[sequence]
+        if not isinstance(sequences, list):
+            sequences = [sequences]
+        
+        uncached_sequences = []
+        uncached_indices = []
+        results = [None] * len(sequences)
+        
+        for i, seq in enumerate(sequences):
+            if seq in self.cached_structures:
+                results[i] = self.cached_structures[seq]
+            else:
+                uncached_sequences.append(seq)
+                uncached_indices.append(i)
+        
+        if not uncached_sequences:
+            return results if len(results) > 1 else results[0]
             
         start_time = time.time()
         tokenizer = AutoTokenizer.from_pretrained("facebook/esmfold_v1")
         tokenized_input = tokenizer(
-            [sequence], 
+            uncached_sequences, 
             return_tensors="pt", 
             add_special_tokens=False
         )['input_ids']
@@ -56,12 +71,13 @@ class StabilityRewardCalculator:
         with torch.no_grad():
             output = self.protein_model(tokenized_input)
 
-        pdb_file = self.convert_outputs_to_pdb(output)[0]
-        
+        pdb_files = self.convert_outputs_to_pdb(output)
+            
         # Cache the result
-        self.cached_structures[sequence] = pdb_file
+        for i, seq in enumerate(uncached_sequences):
+            self.cached_structures[seq] = pdb_files[i]
         print(f"Structure prediction took {time.time() - start_time:.2f} seconds")
-        return pdb_file
+        return pdb_files
         
     def convert_outputs_to_pdb(self, outputs):
         final_atom_positions = atom14_to_atom37(outputs["positions"][-1], outputs)
@@ -96,36 +112,42 @@ class StabilityRewardCalculator:
             pdb_files.append(pdb_path)
         return pdb_files
 
-    def calculate_stability(self, sequence):
-        start_time = time.time()
-        """Calculate stability score using Rosetta with optimization"""
-        # Get structure prediction
-        pdb_file = self.predict_structure(sequence)
-        
-        # Load structure into PyRosetta
+    def _process_single_pose(self, pdb_file):
+        """Helper function for parallel Rosetta processing"""
+        # Reinitialize PyRosetta for each worker process
+        if not pyrosetta.is_initialized():
+            pyrosetta.init()
+            
         pose = pyrosetta.pose_from_pdb(pdb_file)
-        
-        # Create score function
         scorefxn = pyrosetta.get_fa_scorefxn()
-        
-        # Setup packer task for side chain optimization
         task = pyrosetta.standard_packer_task(pose)
-        task.restrict_to_repacking()  # Only repack side chains, don't change sequence
-        
-        # Optimize side chain conformations
+        task.restrict_to_repacking()
         packer = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn, task)
         packer.apply(pose)
-        
-        # Perform energy minimization
         min_mover = pyrosetta.rosetta.protocols.minimization_packing.MinMover()
         min_mover.score_function(scorefxn)
         min_mover.apply(pose)
-        
-        # Calculate final stability score
-        stability_score = scorefxn(pose)
+        return scorefxn(pose)
 
-        print(f"Stability score: {stability_score} calculated in {time.time() - start_time:.2f} seconds")
-        return stability_score
+    def calculate_stability(self, sequences):
+        """Calculate stability scores using Rosetta with parallel processing"""
+        start_time = time.time()
+        
+        # Ensure sequences is a list
+        if not isinstance(sequences, list):
+            sequences = [sequences]
+            
+        # Get structure predictions
+        pdb_files = self.predict_structure(sequences)
+        if not isinstance(pdb_files, list):
+            pdb_files = [pdb_files]
+            
+        # Process structures in parallel using multiprocessing
+        with Pool() as pool:
+            stability_scores = pool.map(self._process_single_pose, pdb_files)
+            
+        print(f"Batch stability calculation took {time.time() - start_time:.2f} seconds")
+        return stability_scores if len(stability_scores) > 1 else stability_scores[0]
 
 ## for testing, deprecated
 def get_stability_reward(sequence):
