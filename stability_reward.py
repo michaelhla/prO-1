@@ -12,15 +12,20 @@ from pyrosetta.rosetta.core.chemical import ResidueTypeSet, ChemicalManager
 from pyrosetta.rosetta.core.scoring import ScoreType
 import time
 from multiprocessing import Pool
+import multiprocessing as mp
+from functools import partial
 
 class StabilityRewardCalculator:
     def __init__(self, protein_model_path="facebook/esmfold_v1", device="cuda"):
+        # Set the start method to spawn at the beginning
+        mp.set_start_method('spawn', force=True)
+        
         self.protein_model = self._load_protein_model(protein_model_path, device)
         self.device = device
         self.cached_structures = {}
         
         # Initialize PyRosetta
-        pyrosetta.init()
+        pyrosetta.init(options='-mute all')  # Main process initialization
         
     def _load_protein_model(self, model_path, device):
         """Load ESMFold model for structure prediction"""
@@ -53,16 +58,20 @@ class StabilityRewardCalculator:
             else:
                 uncached_sequences.append(seq)
                 uncached_indices.append(i)
-        
+
         if not uncached_sequences:
             return results if len(results) > 1 else results[0]
+
+        max_length = max(len(seq) for seq in uncached_sequences)
             
         start_time = time.time()
         tokenizer = AutoTokenizer.from_pretrained("facebook/esmfold_v1")
         tokenized_input = tokenizer(
             uncached_sequences, 
             return_tensors="pt", 
-            add_special_tokens=False
+            add_special_tokens=False,
+            max_length=max_length,
+            padding='max_length',
         )['input_ids']
         
         if self.device == "cuda":
@@ -112,11 +121,14 @@ class StabilityRewardCalculator:
             pdb_files.append(pdb_path)
         return pdb_files
 
-    def _process_single_pose(self, pdb_file):
+    def _process_single_pose(self, pdb_file, batch=False):
         """Helper function for parallel Rosetta processing"""
-        # Reinitialize PyRosetta for each worker process
-        if not pyrosetta.is_initialized():
-            pyrosetta.init()
+        # # Reinitialize PyRosetta for each worker process with CPU only
+        # if not pyrosetta.is_initialized():
+        #     pyrosetta.init(options='-mute all')
+
+        if batch:
+            pyrosetta.init(options='-mute all')
             
         pose = pyrosetta.pose_from_pdb(pdb_file)
         scorefxn = pyrosetta.get_fa_scorefxn()
@@ -129,7 +141,7 @@ class StabilityRewardCalculator:
         min_mover.apply(pose)
         return scorefxn(pose)
 
-    def calculate_stability(self, sequences):
+    def calculate_stability(self, sequences, batch=False):
         """Calculate stability scores using Rosetta with parallel processing"""
         start_time = time.time()
         
@@ -137,16 +149,27 @@ class StabilityRewardCalculator:
         if not isinstance(sequences, list):
             sequences = [sequences]
             
-        # Get structure predictions
+        # Get structure predictions (this runs on GPU)
         pdb_files = self.predict_structure(sequences)
         if not isinstance(pdb_files, list):
             pdb_files = [pdb_files]
             
+        # Get the number of CPU cores available
+        num_cpu_cores = os.cpu_count()
+        # Use 75% of available cores to avoid overloading
+        num_workers = min(8, len(pdb_files))
+        
         # Process structures in parallel using multiprocessing
-        with Pool() as pool:
-            stability_scores = pool.map(self._process_single_pose, pdb_files)
+        if batch:
+            with Pool(processes=num_workers) as pool:
+                # Use partial to create a new function with batch parameter fixed
+                process_fn = partial(self._process_single_pose, batch=True)
+                stability_scores = pool.map(process_fn, pdb_files)
+        else:
+            stability_scores = [self._process_single_pose(pdb_file, batch=False) for pdb_file in pdb_files]
             
         print(f"Batch stability calculation took {time.time() - start_time:.2f} seconds")
+        print(f"Processed {len(pdb_files)} structures using {num_workers} CPU workers")
         return stability_scores if len(stability_scores) > 1 else stability_scores[0]
 
 ## for testing, deprecated
