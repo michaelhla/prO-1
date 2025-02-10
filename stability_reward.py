@@ -37,7 +37,7 @@ class StabilityRewardCalculator:
         print(f"ESM loading took {time.time() - start_time:.2f} seconds")
         return model
 
-    def predict_structure(self, sequence):
+    def predict_structure(self, sequence, uniprot_id=None):
         """Predict protein structure using ESMFold"""
         if sequence in self.cached_structures:
             return self.cached_structures[sequence]
@@ -56,14 +56,14 @@ class StabilityRewardCalculator:
         with torch.no_grad():
             output = self.protein_model(tokenized_input)
 
-        pdb_file = self.convert_outputs_to_pdb(output)[0]
+        pdb_file = self.convert_outputs_to_pdb(output, uniprot_id)[0]
 
         # Cache the result
         self.cached_structures[sequence] = pdb_file
         print(f"Structure prediction took {time.time() - start_time:.2f} seconds")
         return pdb_file
 
-    def convert_outputs_to_pdb(self, outputs):
+    def convert_outputs_to_pdb(self, outputs, uniprot_id=None):
         final_atom_positions = atom14_to_atom37(outputs["positions"][-1], outputs)
         outputs = {k: v.to("cpu").numpy() for k, v in outputs.items()}
         final_atom_positions = final_atom_positions.cpu().numpy()
@@ -90,7 +90,10 @@ class StabilityRewardCalculator:
 
         pdb_files = []
         for i, pdb in enumerate(pdbs):
-            pdb_path = os.path.join(output_dir, f"structure_{i}.pdb")
+            if uniprot_id:
+                pdb_path = os.path.join(output_dir, f"{uniprot_id}.pdb")
+            else:
+                pdb_path = os.path.join(output_dir, f"{i}.pdb")
             with open(pdb_path, "w") as f:
                 f.write(pdb)
             pdb_files.append(pdb_path)

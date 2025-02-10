@@ -6,8 +6,14 @@ import pyrosetta
 from tqdm import tqdm
 import json
 import time
+import random
 import os
-from multiprocessing import Pool
+import sys 
+from collections import defaultdict
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from stability_reward import StabilityRewardCalculator
 
 def sequence_to_pdb_string(positions, sequence):
     """Convert predicted positions to PDB format string."""
@@ -22,95 +28,85 @@ def sequence_to_pdb_string(positions, sequence):
     io_string.write("END\n")
     return io_string.getvalue()
 
-def calculate_stability(pdb_file):
-    """Calculate stability score for a single PDB file using Rosetta."""
-    if not pyrosetta.is_initialized():
-        pyrosetta.init()
-        
-    pose = pyrosetta.pose_from_pdb(pdb_file)
-    scorefxn = pyrosetta.get_fa_scorefxn()
-    task = pyrosetta.standard_packer_task(pose)
-    task.restrict_to_repacking()
-    packer = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn, task)
-    packer.apply(pose)
-    min_mover = pyrosetta.rosetta.protocols.minimization_packing.MinMover()
-    min_mover.score_function(scorefxn)
-    min_mover.apply(pose)
-    return scorefxn(pose)
+def filter_dataset(data_dict):
+    """Apply multiple filters to the dataset."""
+    print("Starting dataset filtering...")
+    original_count = len(data_dict)
+    
+    # Load evaluation dataset to get excluded UniProt IDs
+    print("Loading evaluation dataset...")
+    with open("results/selected_enzymes.json", 'r') as f:
+        eval_enzymes = json.load(f)
+    eval_uniprot_ids = set(eval_enzymes.keys())
+    
+    # Filter out evaluation enzymes
+    filtered_dict = {k: v for k, v in data_dict.items() if k not in eval_uniprot_ids}
+    print(f"After removing eval enzymes: {len(filtered_dict)} entries (removed {original_count - len(filtered_dict)})")
+    
+    # Filter sequences longer than 1024 residues and ensure sequence is a string
+    filtered_dict = {
+        k: v for k, v in filtered_dict.items() 
+        if isinstance(v.get('sequence'), str) and len(v['sequence']) <= 1024
+    }
+    print(f"After filtering by sequence length: {len(filtered_dict)} entries")
 
-def generate_structures(dataset, num_samples=1000, batch_size=4):
+    # Filter out enzymes with unknown products (marked with '?')
+    filtered_dict = {
+        k: v for k, v in filtered_dict.items()
+        if 'reaction' in v and all(
+            all(product != '?' for product in reaction.get('products', []))
+            for reaction in v['reaction']
+        )
+    }
+    print(f"After filtering unknown products: {len(filtered_dict)} entries")
+
+    # Group by EC number and select one entry per EC
+    ec_groups = defaultdict(list)
+    for uniprot_id, entry in filtered_dict.items():
+        ec_groups[entry['ec_number']].append((uniprot_id, entry))
+    
+    # Select first entry for each EC number
+    filtered_dict = {entries[0][0]: entries[0][1] for entries in ec_groups.values()}
+    print(f"After selecting one per EC: {len(filtered_dict)} entries")
+
+
+    # Filter based on general_information and engineering fields
+    filtered_dict = {
+        k: v for k, v in filtered_dict.items()
+        if (('general_information' in v and v['general_information']) or
+            ('engineering' in v and v['engineering']))
+    }
+    print(f"After filtering by information fields: {len(filtered_dict)} entries")
+    
+    # Filter out carbonic anhydrase
+    filtered_dict = {
+        k: v for k, v in filtered_dict.items()
+        if 'carbonic anhydrase' not in v.get('name', '').lower()
+    }
+    
+    return filtered_dict
+
+def generate_structures(selected_samples, num_samples=1000, batch_size=4):
     """Generate protein structures for dataset samples using ESMFold."""
-    # Load model
-    print("Loading ESMFold model...")
-    local_path = '/root/prO-1/model_cache/'
-    if os.path.exists(local_path):
-        model = EsmForProteinFolding.from_pretrained(local_path)
-    else:
-        model = EsmForProteinFolding.from_pretrained("facebook/esmfold_v1")
-        os.makedirs(os.path.dirname(local_path), exist_ok=True)
-        model.save_pretrained(local_path)
-    
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = model.to(device)
-    model.eval()
-    
-    tokenizer = AutoTokenizer.from_pretrained("facebook/esmfold_v1")
-    
-    # Select samples
-    indices = torch.randperm(len(dataset))[:num_samples].tolist()
-    selected_samples = [dataset[i] for i in indices]
-    
-    # Create output directory for PDB files
-    output_dir = "predicted_structures"
-    os.makedirs(output_dir, exist_ok=True)
+    # Initialize StabilityRewardCalculator
+    stability_calculator = StabilityRewardCalculator()
+
+    selected_samples = random.sample(selected_samples, num_samples)
     
     print(f"Generating structures for {num_samples} samples in batches of {batch_size}...")
     structures = []
     for i in tqdm(range(0, len(selected_samples), batch_size)):
         batch = selected_samples[i:i + batch_size]
-        sequences = [item['sequence'] for item in batch]
         
         try:
-            # Tokenize sequences
-            tokenized_input = tokenizer(
-                sequences,
-                return_tensors="pt",
-                add_special_tokens=False
-            )['input_ids'].to(device)
-            
-            # Generate structures
-            with torch.no_grad():
-                output = model(tokenized_input)
-            
-            # Convert to PDB format
-            final_atom_positions = atom14_to_atom37(output["positions"][-1], output)
-            output = {k: v.to("cpu").numpy() for k, v in output.items()}
-            final_atom_positions = final_atom_positions.cpu().numpy()
-            final_atom_mask = output["atom37_atom_exists"]
-            
-            # Process each structure in the batch
-            for j, (sequence, sample) in enumerate(zip(sequences, batch)):
-                aa = output["aatype"][j]
-                pred_pos = final_atom_positions[j]
-                mask = final_atom_mask[j]
-                resid = output["residue_index"][j] + 1
+            # Process each sequence in the batch
+            for j, sample in enumerate(batch):
+                sequence = sample['sequence']
+                uniprot_id = list(filtered_dict.keys())[i+j]
                 
-                pred = OFProtein(
-                    aatype=aa,
-                    atom_positions=pred_pos,
-                    atom_mask=mask,
-                    residue_index=resid,
-                    b_factors=output["plddt"][j],
-                )
-                
-                # Save PDB file
-                pdb_string = to_pdb(pred)
-                pdb_path = os.path.join(output_dir, f"structure_{i+j}.pdb")
-                with open(pdb_path, "w") as f:
-                    f.write(pdb_string)
-                
-                # Calculate stability
-                stability_score = calculate_stability(pdb_path)
+                # Get structure and stability using StabilityRewardCalculator
+                pdb_string = stability_calculator.predict_structure(sequence, uniprot_id=uniprot_id)
+                stability_score = stability_calculator.calculate_stability(sequence)
                 
                 # Add structure and stability to the sample
                 sample['structure_pdb'] = pdb_string
@@ -124,33 +120,46 @@ def generate_structures(dataset, num_samples=1000, batch_size=4):
     return structures
 
 if __name__ == "__main__":
-    start_time = time.time()
+    # start_time = time.time()
     
-    # Initialize PyRosetta
-    pyrosetta.init()
+    # # Load the dataset
+    # print("Loading dataset...")
+    # with open("data/transformed_brenda.json", 'r') as f:
+    #     data_dict = json.load(f)
     
-    # Load the dataset
-    print("Loading dataset...")
-    with open("data/transformed_brenda.json", 'r') as f:
-        data_dict = json.load(f)
-        data_list = list(data_dict.values())
+    # # Apply filters
+    # filtered_dict = filter_dataset(data_dict)
+    # data_list = list(filtered_dict.values())
     
-    # Generate structures and calculate stability
-    structured_samples = generate_structures(data_list, num_samples=1000)
+    # print(f"Final dataset size after filtering: {len(data_list)} entries")
+    # # Save filtered dataset
+    # output_path = "data/brenda_structures.json"
+    # print(f"Saving filtered dataset to {output_path}...")
+    # with open(output_path, 'w') as f:
+    #     json.dump(filtered_dict, f, indent=2)
     
-    # Update the original data_dict with structures and stability scores
-    print("Updating dataset with generated structures and stability scores...")
-    for sample in structured_samples:
-        key = sample['ec_number']  # adjust if your identifier is different
-        if key in data_dict:
-            data_dict[key]['structure_pdb'] = sample['structure_pdb']
-            data_dict[key]['stability_score'] = sample['stability_score']
+    # # Generate structures and calculate stability
+    # structured_samples = generate_structures(data_list, num_samples=1000)
     
-    # Save updated dataset
-    output_path = "data/transformed_brenda_with_structures.json"
-    print(f"Saving enhanced dataset to {output_path}...")
-    with open(output_path, 'w') as f:
-        json.dump(data_dict, f, indent=2)
+    # # Create new dataset with structures and stability scores
+    # print("Creating new dataset with generated structures and stability scores...")
+    # structured_data = {}
+    # for sample in structured_samples:
+    #     key = sample['ec_number']  # adjust if your identifier is different
+    #     if key in filtered_dict:
+    #         # Copy over all existing data
+    #         structured_data[key] = filtered_dict[key].copy()
+    #         # Add new structure and stability data
+    #         structured_data[key]['structure_pdb'] = sample['structure_pdb']
+    #         structured_data[key]['stability_score'] = sample['stability_score']
     
-    print(f"Processing completed in {time.time() - start_time:.2f} seconds")
-    print(f"Successfully generated structures for {len(structured_samples)} samples")
+    # # Save new dataset
+    # output_path = "data/brenda_structures.json"
+    # print(f"Saving new dataset to {output_path}...")
+    # with open(output_path, 'w') as f:
+    #     json.dump(structured_data, f, indent=2)
+    
+    # print(f"Processing completed in {time.time() - start_time:.2f} seconds")
+    # print(f"Successfully generated structures for {len(structured_samples)} samples")
+
+    
