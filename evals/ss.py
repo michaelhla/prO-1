@@ -26,7 +26,8 @@ from dotenv import load_dotenv
 from typing import List, Dict  # Add typing imports
 from openai import OpenAI
 from Bio.PDB import *
-from Bio.PDB.DSSP import dssp_dict_from_pdb_file
+from Bio.PDB.DSSP import DSSP
+from Bio.PDB import PDBParser
 
 load_dotenv()
 
@@ -51,17 +52,39 @@ def get_ss(enzyme_data: Dict) -> str:
     try:
         pdb_path = f"predicted_structures/{enzyme_data['enzyme_id']}.pdb"
         
+        # First, check if CRYST1 record exists, if not, add it
+        with open(pdb_path, 'r') as f:
+            pdb_content = f.readlines()
+        
+        has_cryst = any(line.startswith('CRYST1') for line in pdb_content)
+        if not has_cryst:
+            # Create temporary file with CRYST1 record
+            temp_pdb_path = f"predicted_structures/temp_{enzyme_data['enzyme_id']}.pdb"
+            with open(temp_pdb_path, 'w') as f:
+                # Add a default CRYST1 record (using common values)
+                f.write("CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1\n")
+                for line in pdb_content:
+                    f.write(line)
+            pdb_path = temp_pdb_path
+        
+        # Create parser with QUIET=True to suppress warnings
+        parser = PDBParser(QUIET=True)
+        structure = parser.get_structure(enzyme_data['enzyme_id'], pdb_path)
+        
         # Calculate DSSP
-        dssp_dict = dssp_dict_from_pdb_file(pdb_path)[0]
+        model = structure[0]
+        dssp = DSSP(model, pdb_path, dssp='mkdssp')
         
         # Extract secondary structure annotation
-        # DSSP gives one letter per residue indicating its secondary structure
         ss_string = ''
-        for key in sorted(dssp_dict.keys()):
-            ss = dssp_dict[key][2]  # Secondary structure is in position 2 of the tuple
-            # Convert blank spaces to coil symbol
+        for key in sorted(dssp.property_dict.keys()):
+            ss = dssp.property_dict[key][2]
             ss = '-' if ss == ' ' else ss
             ss_string += ss
+        
+        # Clean up temporary file if it was created
+        if not has_cryst and os.path.exists(temp_pdb_path):
+            os.remove(temp_pdb_path)
             
         return ss_string
         
@@ -183,11 +206,8 @@ def extract_sequence(response: str) -> str:
 
 def main():
     # Load selected enzyme sequences
-    with open('results/selected_enzymes.json', 'r') as f:
+    with open('data/selected_enzymes.json', 'r') as f:
         selected_enzymes = json.load(f)
-    
-    # Calculate and save structures for all enzymes first
-    get_ss(selected_enzymes)
     
     # Try to load existing results to get original stability values
     existing_results = {}

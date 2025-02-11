@@ -19,3 +19,4 @@ openpyxl
 python-dotenv
 huggingface-hub
 together
+tiktoken
