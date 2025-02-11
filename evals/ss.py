@@ -25,6 +25,8 @@ from stability_reward import StabilityRewardCalculator
 from dotenv import load_dotenv
 from typing import List, Dict  # Add typing imports
 from openai import OpenAI
+from Bio.PDB import *
+from Bio.PDB.DSSP import dssp_dict_from_pdb_file
 
 load_dotenv()
 
@@ -34,7 +36,38 @@ client = Together(api_key=os.getenv('TOGETHER_API_KEY'))
 # Initialize stability calculator
 stability_calculator = StabilityRewardCalculator()
 
-
+def get_ss(enzyme_data: Dict) -> str:
+    """Get the secondary structure of an enzyme from PDB file.
+    Returns a string representation where:
+    H = alpha helix
+    B = beta bridge
+    E = extended strand (beta sheet)
+    G = 3-10 helix
+    I = pi helix
+    T = turn
+    S = bend
+    - = coil/loop
+    """
+    try:
+        pdb_path = f"predicted_structures/{enzyme_data['enzyme_id']}.pdb"
+        
+        # Calculate DSSP
+        dssp_dict = dssp_dict_from_pdb_file(pdb_path)[0]
+        
+        # Extract secondary structure annotation
+        # DSSP gives one letter per residue indicating its secondary structure
+        ss_string = ''
+        for key in sorted(dssp_dict.keys()):
+            ss = dssp_dict[key][2]  # Secondary structure is in position 2 of the tuple
+            # Convert blank spaces to coil symbol
+            ss = '-' if ss == ' ' else ss
+            ss_string += ss
+            
+        return ss_string
+        
+    except Exception as e:
+        print(f"Error calculating secondary structure for enzyme {enzyme_data['enzyme_id']}: {str(e)}")
+        return "Secondary structure information not available"
 
 def get_stability_score(sequence: str) -> float:
     """Calculate protein stability score using ESMFold and PyRosetta"""
@@ -49,21 +82,9 @@ def read_pdb_structure(pdb_path: str) -> str:
         print(f"Error reading PDB file {pdb_path}: {str(e)}")
         return "Structure information not available"
 
-def calculate_and_save_structures(selected_enzymes: Dict) -> None:
-    """Calculate and save structures for all enzymes"""
-    print("Calculating structures for all enzymes...")
-    for enzyme_id, data in tqdm(selected_enzymes.items(), desc="Calculating structures"):
-        sequence = data['sequence']
-        try:
-            # Use the existing stability calculator to predict and save structure
-            stability_calculator.predict_structure(sequence, uniprot_id=enzyme_id)
-        except Exception as e:
-            print(f"Error calculating structure for enzyme {enzyme_id}: {str(e)}")
-
 def propose_mutations(sequence: str, enzyme_data: Dict) -> str:
     # Get the structure information from PDB file
-    pdb_path = f"predicted_structures/{enzyme_data['enzyme_id']}.pdb"
-    structure_info = read_pdb_structure(pdb_path)
+    ss = get_ss(enzyme_data)
     
     base_prompt = f"""You are an expert protein engineer in rational protein design. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
 
@@ -71,7 +92,7 @@ ENZYME NAME: {enzyme_data['name']}
 ENZYME SEQUENCE: {sequence}
 GENERAL INFORMATION: {enzyme_data['general_information']}
 ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in enzyme_data['active_site_residues']])}
-PDB STRUCTURE: {structure_info}
+SECONDARY STRUCTURE: {ss}
 
 Propose 3-7 mutations to optimize the stability of the enzyme given the information above. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning. 
 
@@ -166,7 +187,7 @@ def main():
         selected_enzymes = json.load(f)
     
     # Calculate and save structures for all enzymes first
-    calculate_and_save_structures(selected_enzymes)
+    get_ss(selected_enzymes)
     
     # Try to load existing results to get original stability values
     existing_results = {}
@@ -266,7 +287,7 @@ def main():
     output_dir = Path('results')
     output_dir.mkdir(exist_ok=True)
     
-    with open(output_dir / 'ds_r1_670_stability_mutations.json', 'w') as f:
+    with open(output_dir / 'ss_stability_mutations.json', 'w') as f:
         json.dump(results, f, indent=2)
     
     # Print summary statistics
@@ -291,7 +312,7 @@ def reprocess_failed_mutations():
     openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
     
     # Load results
-    results_path = Path('results/ds_r1_670_stability_mutations.json')
+    results_path = Path('results/ss_stability_mutations.json')
     with open(results_path, 'r') as f:
         results = json.load(f)
     
@@ -373,7 +394,7 @@ if __name__ == "__main__":
         # Update error state filename
         output_dir = Path('results')
         output_dir.mkdir(exist_ok=True)
-        with open(output_dir / 'ds_r1_stability_mutations_error_state.json', 'w') as f:
+        with open(output_dir / 'ss_stability_mutations_error_state.json', 'w') as f:
             if 'results' in locals():
                 json.dump(results, f, indent=2)
             else:
