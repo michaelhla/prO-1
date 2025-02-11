@@ -34,13 +34,36 @@ client = Together(api_key=os.getenv('TOGETHER_API_KEY'))
 # Initialize stability calculator
 stability_calculator = StabilityRewardCalculator()
 
+
+
 def get_stability_score(sequence: str) -> float:
     """Calculate protein stability score using ESMFold and PyRosetta"""
     return stability_calculator.calculate_stability(sequence)
 
+def read_pdb_structure(pdb_path: str) -> str:
+    """Read PDB file and return its contents as a string"""
+    try:
+        with open(pdb_path, 'r') as f:
+            return f.read()
+    except Exception as e:
+        print(f"Error reading PDB file {pdb_path}: {str(e)}")
+        return "Structure information not available"
+
+def calculate_and_save_structures(selected_enzymes: Dict) -> None:
+    """Calculate and save structures for all enzymes"""
+    print("Calculating structures for all enzymes...")
+    for enzyme_id, data in tqdm(selected_enzymes.items(), desc="Calculating structures"):
+        sequence = data['sequence']
+        try:
+            # Use the existing stability calculator to predict and save structure
+            stability_calculator.predict_structure(sequence, uniprot_id=enzyme_id)
+        except Exception as e:
+            print(f"Error calculating structure for enzyme {enzyme_id}: {str(e)}")
+
 def propose_mutations(sequence: str, enzyme_data: Dict) -> str:
-    # Format sequence into residue-number pairs
-    # formatted_sequence = ', '.join(f"{res}{i+1}" for i, res in enumerate(sequence))
+    # Get the structure information from PDB file
+    pdb_path = f"predicted_structures/{enzyme_data['enzyme_id']}.pdb"
+    structure_info = read_pdb_structure(pdb_path)
     
     base_prompt = f"""You are an expert protein engineer in rational protein design. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
 
@@ -48,7 +71,7 @@ ENZYME NAME: {enzyme_data['name']}
 ENZYME SEQUENCE: {sequence}
 GENERAL INFORMATION: {enzyme_data['general_information']}
 ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in enzyme_data['active_site_residues']])}
-STRUCTURE: {enzyme_data['structure']}
+PDB STRUCTURE: {structure_info}
 
 Propose 3-7 mutations to optimize the stability of the enzyme given the information above. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning. 
 
@@ -142,6 +165,9 @@ def main():
     with open('results/selected_enzymes.json', 'r') as f:
         selected_enzymes = json.load(f)
     
+    # Calculate and save structures for all enzymes first
+    calculate_and_save_structures(selected_enzymes)
+    
     # Try to load existing results to get original stability values
     existing_results = {}
     try:
@@ -172,6 +198,7 @@ def main():
         try:
             # Format enzyme data for the prompt
             enzyme_data = {
+                "enzyme_id": enzyme_id,  # Add enzyme_id to the data
                 "name": data.get('name', 'Unknown Enzyme'),
                 "ec_number": data.get('ec_number', 'Unknown'),
                 "general_information": data.get('description', 'No description available'),
@@ -340,7 +367,7 @@ def reprocess_failed_mutations():
 
 if __name__ == "__main__":
     try:
-        reprocess_failed_mutations()
+        main()
     except Exception as e:
         print(f"Critical error encountered: {str(e)}")
         # Update error state filename
