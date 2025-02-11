@@ -7,11 +7,11 @@
 
 # speed to find a solution  (will have access to reward signal with critic)
 
-# Results summary:
+# Updated Results summary:
 # Number of enzymes processed: 33
 # Number of successful improvements: 8
 # Success rate: 24.2%
-# Max stability improvement: -536.414
+# Max stability improvement: -1692.067
 
 import os
 import sys
@@ -408,7 +408,7 @@ def reprocess_failed_mutations():
 
 if __name__ == "__main__":
     try:
-        main()
+        reprocess_failed_mutations()
     except Exception as e:
         print(f"Critical error encountered: {str(e)}")
         # Update error state filename
