@@ -125,6 +125,8 @@ def load_esm_model():
     # Initialize ESM3 model
     login(token=os.getenv("HUGGINGFACE_API_KEY"))
     esm_model: ESM3InferenceClient = ESM3.from_pretrained("esm3_sm_open_v1").to("cuda" if torch.cuda.is_available() else "cpu")
+
+    print(esm_model)
     
     return esm_model
 
@@ -140,10 +142,10 @@ def generate_insertion(sequence: str, esm_model: ESM3InferenceClient) -> Tuple[i
     
     # Create sequence with blanks for ESM to fill
     blank_seq = sequence[:pos] + '_' * insert_length + sequence[pos:]
+    print(blank_seq)
     
     # Create protein object and generate completion
     protein = ESMProtein(sequence=blank_seq)
-    seq_prompt = esm_model.encode(protein)
     completed_protein = esm_model.generate(
         protein, 
         GenerationConfig(
@@ -175,7 +177,7 @@ def generate_initial_mutations(sequence: str, esm_model: ESM3InferenceClient, n_
     forward_mutations = []
     
     while len(forward_mutations) < n_mutations:
-        if random.random() < 0.2:
+        if random.random() < 0.99:
             if random.random() < 0.5:  # Insertion
                 pos, new_aa = generate_insertion(mutated_seq, esm_model)
                 # Store as forward mutation
