@@ -20,6 +20,12 @@ from dotenv import load_dotenv
 from typing import List, Dict  # Add typing imports
 from openai import OpenAI
 
+## Results summary:
+# Number of enzymes processed: 33
+# Number of successful improvements: 11
+# Success rate: 33.3%
+# Max stability improvement: -477.992
+
 load_dotenv()
 
 # Initialize Together client
