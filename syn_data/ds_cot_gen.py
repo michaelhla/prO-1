@@ -125,6 +125,7 @@ def load_esm_model():
     # Initialize ESM3 model
     login(token=os.getenv("HUGGINGFACE_API_KEY"))
     esm_model: ESM3InferenceClient = ESM3.from_pretrained("esm3_sm_open_v1").to("cuda" if torch.cuda.is_available() else "cpu")
+    
     return esm_model
 
 def generate_insertion(sequence: str, esm_model: ESM3InferenceClient) -> Tuple[int, str]:
@@ -386,7 +387,7 @@ if __name__ == "__main__":
         ec_to_proteins[ec].append((uniprot_id, data))
 
     sampled_ec_numbers = random.sample(list(ec_to_proteins.keys()), 
-                                     min(1000, len(ec_to_proteins)))
+                                     min(100, len(ec_to_proteins)))
     
     # Take one random protein from each sampled EC number
     filtered_data = {}
