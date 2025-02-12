@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, BitsAndBytesConfig, TrainerCallback
 from datasets import Dataset
 from peft import get_peft_model, LoraConfig, TaskType, prepare_model_for_kbit_training
 import json
@@ -7,9 +7,28 @@ from typing import Dict, List
 import wandb
 import os
 from dotenv import load_dotenv
+import pynvml
+from torch.cuda import memory_summary
 
 # Load environment variables
 load_dotenv()
+
+# GPU Memory monitoring class
+class GPUMonitor:
+    def __init__(self):
+        pynvml.nvmlInit()
+        self.handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+    
+    def get_gpu_utilization(self):
+        return pynvml.nvmlDeviceGetUtilizationRates(self.handle).gpu
+    
+    def get_gpu_memory_usage(self):
+        info = pynvml.nvmlDeviceGetMemoryInfo(self.handle)
+        return {
+            'total': info.total / 1024**2,  # MB
+            'used': info.used / 1024**2,    # MB
+            'free': info.free / 1024**2     # MB
+        }
 
 def load_sft_data(data_path: str, tokenizer) -> Dataset:
     """Load and format SFT data from JSON file"""
@@ -19,13 +38,11 @@ def load_sft_data(data_path: str, tokenizer) -> Dataset:
     # Format data for training
     formatted_data = []
     for trace in data["traces"]:
-        # Format conversation with roles
-        text = "<SYSTEM>: You are an expert protein engineer with years of experience optimizing protein stability with rational design.\n"
-        text += f"<USER>: {trace['prompt']}\n"
-        text += """****ALL REASONING MUST BE SPECIFIC TO THE ENZYME AND REACTION SPECIFIED IN THE PROMPT. CITE SCIENTIFIC LITERATURE. CONSIDER SIMILAR ENZYMES AND REACTIONS.**** 
-At the end of your response, copy the final sequence, in the format below, using $$ to enclose the sequence:
-%%FINAL_SEQUENCE%%: $$_______$$"""
-        text += f"<ASSISTANT>: {trace['reasoning']}\n"
+        enzyme_prompt = trace['prompt']
+        text = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> reasoning process here </think>
+<answer> answer here </answer>. The assistant pays close attention to the user's instructions. <|User|>: {enzyme_prompt}. <|Assistant|>:"""
+        text += trace['reasoning']
+
         
         # Tokenize the text
         tokenized = tokenizer(text, truncation=True, max_length=2048, padding="max_length")
@@ -44,6 +61,13 @@ def train_model():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
     
+    if device == "cuda":
+        # Initialize GPU monitoring
+        gpu_monitor = GPUMonitor()
+        print("Initial GPU Memory Usage:")
+        print(gpu_monitor.get_gpu_memory_usage())
+        print(f"Initial GPU Utilization: {gpu_monitor.get_gpu_utilization()}%")
+    
     if device == "cpu":
         print("Warning: Training on CPU will be very slow. GPU is recommended.")
     
@@ -51,10 +75,10 @@ def train_model():
     wandb.login(key=os.getenv('WANDB_API_KEY'))
     
     # Initialize wandb
-    wandb.init(project="protein-sft", name="deepseek-sft-lora")
+    wandb.init(project="protein-sft", name="deepseek-mega-sft-lora")
 
     # Initialize model and tokenizer
-    model_name = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
+    model_name = 'unsloth/DeepSeek-V3'
     
     # Create a BitsAndBytesConfig object for 8-bit quantization
     quantization_config = BitsAndBytesConfig(
@@ -71,11 +95,11 @@ def train_model():
     # Prepare model for k-bit training
     model = prepare_model_for_kbit_training(model)
     
-    # Configure LoRA
+    # Configure LoRA for 670B model
     lora_config = LoraConfig(
-        r=16,                     # Rank of the update matrices
-        lora_alpha=32,           # Alpha scaling
-        target_modules=["q_proj", "v_proj", "k_proj", "o_proj"], # Layers to apply LoRA to
+        r=64,                     # Increased rank for 670B model (from 16)
+        lora_alpha=128,          # Usually 2x the rank
+        target_modules=["q_proj", "v_proj", "k_proj", "o_proj"],
         lora_dropout=0.05,
         bias="none",
         task_type=TaskType.CAUSAL_LM
@@ -112,12 +136,37 @@ def train_model():
         remove_unused_columns=True,
     )
 
-    # Initialize trainer
+    # After model initialization, print memory usage
+    if device == "cuda":
+        print("\nGPU Memory Usage after model loading:")
+        print(gpu_monitor.get_gpu_memory_usage())
+        print(torch.cuda.memory_summary())
+    
+    # Modify the trainer initialization to include callbacks for monitoring
+    class GPUMetricsCallback(TrainerCallback):
+        def __init__(self, gpu_monitor):
+            self.gpu_monitor = gpu_monitor
+        
+        def on_log(self, args, state, control, logs=None, **kwargs):
+            if state.is_local_process_zero:
+                memory_usage = self.gpu_monitor.get_gpu_memory_usage()
+                gpu_util = self.gpu_monitor.get_gpu_utilization()
+                wandb.log({
+                    "gpu_memory_used_MB": memory_usage['used'],
+                    "gpu_utilization": gpu_util
+                }, commit=False)
+
+    callbacks = []
+    if device == "cuda":
+        callbacks.append(GPUMetricsCallback(gpu_monitor))
+
+    # Initialize trainer with callbacks
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
         tokenizer=tokenizer,
+        callbacks=callbacks  # Add callbacks here
     )
 
     # Start training
