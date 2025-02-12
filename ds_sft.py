@@ -80,16 +80,21 @@ def train_model():
     # Initialize model and tokenizer
     model_name = 'unsloth/DeepSeek-V3'
     
-    # Create a BitsAndBytesConfig object for 8-bit quantization
+    # Create a BitsAndBytesConfig object for 4-bit quantization
     quantization_config = BitsAndBytesConfig(
-        load_in_8bit=True,
-        device_map="auto",
-        torch_dtype=torch.float16,
+        load_in_4bit=True,
+        # load_in_8bit=False,
+        # quantization_type="bitsandbytes_4bit",  # Specify the accepted quantization type
+        # bnb_4bit_compute_dtype=torch.float16,
+        # bnb_4bit_quant_type="nf4",
+        # bnb_4bit_use_double_quant=True,
     )
     
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
-        quantization_config=quantization_config
+        load_in_4bit=True,
+        trust_remote_code=True, 
+        device_map="auto"
     )
     
     # Prepare model for k-bit training

@@ -20,3 +20,4 @@ python-dotenv
 huggingface-hub
 together
 tiktoken
+nvidia-ml-py3
