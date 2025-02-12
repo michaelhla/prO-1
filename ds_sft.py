@@ -1,5 +1,6 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, BitsAndBytesConfig, TrainerCallback
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, BitsAndBytesConfig, TrainerCallback
+from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 from datasets import Dataset
 from peft import get_peft_model, LoraConfig, TaskType, prepare_model_for_kbit_training
 import json
@@ -9,9 +10,12 @@ import os
 from dotenv import load_dotenv
 import pynvml
 from torch.cuda import memory_summary
+from unsloth import FastLanguageModel, is_bfloat16_supported
 
 # Load environment variables
 load_dotenv()
+
+MAX_LENGTH = 128000
 
 # GPU Memory monitoring class
 class GPUMonitor:
@@ -38,22 +42,15 @@ def load_sft_data(data_path: str, tokenizer) -> Dataset:
     # Format data for training
     formatted_data = []
     for trace in data["traces"]:
-        enzyme_prompt = trace['prompt']
-        text = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> reasoning process here </think>
-<answer> answer here </answer>. The assistant pays close attention to the user's instructions. <|User|>: {enzyme_prompt}. <|Assistant|>:"""
-        text += trace['reasoning']
+        text = f"""<|start_header_id|>system<|end_header_id|>
+You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively.<|eot_id|><|start_header_id|>user<|end_header_id|>
+{trace['prompt']}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+{trace['reasoning']}<|eot_id|>"""
 
+        text += tokenizer.eos_token
         
-        # Tokenize the text
-        tokenized = tokenizer(text, truncation=True, max_length=2048, padding="max_length")
-        
-        # Add labels (same as input_ids for language modeling)
-        formatted_data.append({
-            "input_ids": tokenized["input_ids"],
-            "attention_mask": tokenized["attention_mask"],
-            "labels": tokenized["input_ids"].copy()  # Add labels
-        })
-        
+        formatted_data.append({"text": text})
+    
     return Dataset.from_list(formatted_data)
 
 def train_model():
@@ -73,115 +70,87 @@ def train_model():
     
     # Login to wandb using API key from .env
     wandb.login(key=os.getenv('WANDB_API_KEY'))
-    
-    # Initialize wandb
-    wandb.init(project="protein-sft", name="deepseek-mega-sft-lora")
+    wandb.init(project="protein-sft", name="llama-70b-4bit-sft-lora")
 
-    # Initialize model and tokenizer
-    model_name = 'unsloth/DeepSeek-V3'
-    
-    # Create a BitsAndBytesConfig object for 4-bit quantization
-    quantization_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        # load_in_8bit=False,
-        # quantization_type="bitsandbytes_4bit",  # Specify the accepted quantization type
-        # bnb_4bit_compute_dtype=torch.float16,
-        # bnb_4bit_quant_type="nf4",
-        # bnb_4bit_use_double_quant=True,
+    # Initialize model with unsloth
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name="unsloth/llama-3-70b-bnb-4bit",
+        max_seq_length=MAX_LENGTH,
+        dtype=None,  # Auto-detect
+        load_in_4bit=True
     )
-    
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        load_in_4bit=True,
-        trust_remote_code=True, 
-        device_map="auto"
-    )
-    
-    # Prepare model for k-bit training
-    model = prepare_model_for_kbit_training(model)
-    
-    # Configure LoRA for 670B model
-    lora_config = LoraConfig(
-        r=64,                     # Increased rank for 670B model (from 16)
-        lora_alpha=128,          # Usually 2x the rank
-        target_modules=["q_proj", "v_proj", "k_proj", "o_proj"],
-        lora_dropout=0.05,
+
+    # Add LoRA adapters
+    model = FastLanguageModel.get_peft_model(
+        model,
+        r=32,
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
+                       "gate_proj", "up_proj", "down_proj"],
+        lora_alpha=32,
+        lora_dropout=0,
         bias="none",
-        task_type=TaskType.CAUSAL_LM
+        use_gradient_checkpointing="unsloth",
+        random_state=3407
     )
-    
-    # Create PEFT model
-    model = get_peft_model(model, lora_config)
-    model.print_trainable_parameters()  # Print trainable parameters info
 
-    # Set model to training mode
-    model.train()
+    # Define the templates for completion-only training
+    instruction_template = "<|start_header_id|>user<|end_header_id|>"
+    response_template = "<|start_header_id|>assistant<|end_header_id|>"
     
-    # Disable caching (required for gradient checkpointing)
-    model.config.use_cache = False
+    # Create the completion-only collator
+    collator = DataCollatorForCompletionOnlyLM(
+        instruction_template=instruction_template,
+        response_template=response_template,
+        tokenizer=tokenizer,
+        mlm=False
+    )
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    # Load and process dataset with tokenizer
-    train_dataset = load_sft_data("data/cot_mutation_traces.json", tokenizer)
+    # Load and process dataset
+    train_dataset = load_sft_data("data/mega_cot.json", tokenizer)
 
     # Set up training arguments
     training_args = TrainingArguments(
-        output_dir="./sft_lora_output",
+        output_dir="./sft_llama_70b_4bit_lora_output",
         num_train_epochs=3,
-        per_device_train_batch_size=4,  # Can increase this now
+        per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
-        learning_rate=2e-4,  # Slightly higher learning rate for LoRA
         warmup_steps=100,
-        logging_steps=100,
-        save_steps=500,
-        save_total_limit=3,
-        fp16=True,
-        gradient_checkpointing=True,
+        learning_rate=2e-4,
+        logging_steps=1,
+        optim="adamw_8bit",
+        weight_decay=0.01,
+        lr_scheduler_type="linear",
+        fp16=not is_bfloat16_supported(),
+        bf16=is_bfloat16_supported(),
         report_to="wandb",
-        remove_unused_columns=True,
+        seed=3407,
     )
 
-    # After model initialization, print memory usage
-    if device == "cuda":
-        print("\nGPU Memory Usage after model loading:")
-        print(gpu_monitor.get_gpu_memory_usage())
-        print(torch.cuda.memory_summary())
-    
-    # Modify the trainer initialization to include callbacks for monitoring
-    class GPUMetricsCallback(TrainerCallback):
-        def __init__(self, gpu_monitor):
-            self.gpu_monitor = gpu_monitor
-        
-        def on_log(self, args, state, control, logs=None, **kwargs):
-            if state.is_local_process_zero:
-                memory_usage = self.gpu_monitor.get_gpu_memory_usage()
-                gpu_util = self.gpu_monitor.get_gpu_utilization()
-                wandb.log({
-                    "gpu_memory_used_MB": memory_usage['used'],
-                    "gpu_utilization": gpu_util
-                }, commit=False)
-
-    callbacks = []
-    if device == "cuda":
-        callbacks.append(GPUMetricsCallback(gpu_monitor))
-
-    # Initialize trainer with callbacks
-    trainer = Trainer(
+    # Initialize trainer with the collator
+    trainer = SFTTrainer(
         model=model,
-        args=training_args,
-        train_dataset=train_dataset,
         tokenizer=tokenizer,
-        callbacks=callbacks  # Add callbacks here
+        train_dataset=train_dataset,
+        dataset_text_field="text",
+        max_seq_length=MAX_LENGTH,
+        dataset_num_proc=2,
+        packing=False,  # Must be False for completion-only training
+        data_collator=collator,
+        args=training_args
     )
+
+    gpu_stats = torch.cuda.get_device_properties(0)
+    start_gpu_memory = round(torch.cuda.max_memory_reserved() / 1024 / 1024 / 1024, 3)
+    max_memory = round(gpu_stats.total_memory / 1024 / 1024 / 1024, 3)
+    print(f"GPU = {gpu_stats.name}. Max memory = {max_memory} GB.")
+    print(f"{start_gpu_memory} GB of memory reserved.")
 
     # Start training
     trainer.train()
     
     # Save final model
-    try:
-        trainer.save_model("/workspace/sft_lora_final")
-    except:
-        trainer.save_model("./sft_lora_final")
+    model.save_pretrained("llama_70b_4bit_sft_lora_model")
+    tokenizer.save_pretrained("llama_70b_4bit_sft_lora_model")
     
     # Close wandb run
     wandb.finish()
