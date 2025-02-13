@@ -10,8 +10,8 @@ import os
 from dotenv import load_dotenv
 import pynvml
 from torch.cuda import memory_summary
-from unsloth import FastLanguageModel, is_bfloat16_supported
 from accelerate import PartialState
+from huggingface_hub import login
 
 # Load environment variables
 load_dotenv()
@@ -77,6 +77,13 @@ You are a helpful assistant that helps users with protein engineering tasks. You
 def train_model():
     # Get the device for this process
     device_string = PartialState().process_index
+
+    # Login to Hugging Face using API key from .env
+    try:
+        huggingface_token = os.getenv('HUGGINGFACE_API_KEY')
+        login(token=huggingface_token)
+    except Exception as e:
+        print(f"Error logging into Hugging Face: {e}")
     
     try: 
         gpu_monitor = GPUMonitor()
@@ -93,18 +100,18 @@ def train_model():
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16 if is_bfloat16_supported() else torch.float16,
+        bnb_4bit_compute_dtype=torch.bfloat16, 
         bnb_4bit_use_double_quant=True,
     )
 
     # Initialize model with 4-bit quantization
     model = AutoModelForCausalLM.from_pretrained(
-        "meta-llama/Llama-3.1-70b",
+        "meta-llama/Llama-3.3-70B-Instruct",
         quantization_config=bnb_config,
         device_map="auto",
         trust_remote_code=True,
     )
-    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-70b", trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.3-70B-Instruct", trust_remote_code=True)
     tokenizer.pad_token = tokenizer.eos_token
 
     # Prepare model for k-bit training
