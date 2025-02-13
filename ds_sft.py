@@ -1,6 +1,8 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, BitsAndBytesConfig, TrainerCallback
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, BitsAndBytesConfig, TrainerCallback
+from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 from datasets import Dataset
 from peft import get_peft_model, LoraConfig, TaskType, prepare_model_for_kbit_training
 import json
@@ -15,6 +17,8 @@ from accelerate import PartialState
 
 # Load environment variables
 load_dotenv()
+
+MAX_LENGTH = 128000
 
 MAX_LENGTH = 128000
 
@@ -72,6 +76,15 @@ You are a helpful assistant that helps users with protein engineering tasks. You
         
         formatted_data.append({"text": text})
     
+        text = f"""<|start_header_id|>system<|end_header_id|>
+You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively.<|eot_id|><|start_header_id|>user<|end_header_id|>
+{trace['prompt']}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+{trace['reasoning']}<|eot_id|>"""
+
+        text += tokenizer.eos_token
+        
+        formatted_data.append({"text": text})
+    
     return Dataset.from_list(formatted_data)
 
 def train_model():
@@ -87,6 +100,7 @@ def train_model():
     
     # Login to wandb using API key from .env
     wandb.login(key=os.getenv('WANDB_API_KEY'))
+    wandb.init(project="protein-sft", name="llama-70b-4bit-sft-lora")
     wandb.init(project="protein-sft", name="llama-70b-4bit-sft-lora")
 
     # Initialize model with unsloth
@@ -125,9 +139,28 @@ def train_model():
 
     # Load and process dataset
     train_dataset = load_sft_data("data/mega_cot.json", tokenizer)
+        use_gradient_checkpointing="unsloth",
+        random_state=3407
+    )
+
+    # Define the templates for completion-only training
+    instruction_template = "<|start_header_id|>user<|end_header_id|>"
+    response_template = "<|start_header_id|>assistant<|end_header_id|>"
+    
+    # Create the completion-only collator
+    collator = DataCollatorForCompletionOnlyLM(
+        instruction_template=instruction_template,
+        response_template=response_template,
+        tokenizer=tokenizer,
+        mlm=False
+    )
+
+    # Load and process dataset
+    train_dataset = load_sft_data("data/mega_cot.json", tokenizer)
 
     # Set up training arguments
     training_args = TrainingArguments(
+        output_dir="./sft_llama_70b_4bit_lora_output",
         output_dir="./sft_llama_70b_4bit_lora_output",
         num_train_epochs=3,
         per_device_train_batch_size=4,
@@ -151,6 +184,7 @@ def train_model():
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
+        tokenizer=tokenizer,
         train_dataset=train_dataset,
         dataset_text_field="text",
         max_seq_length=MAX_LENGTH,
@@ -170,6 +204,8 @@ def train_model():
     trainer.train()
     
     # Save final model
+    model.save_pretrained("llama_70b_4bit_sft_lora_model")
+    tokenizer.save_pretrained("llama_70b_4bit_sft_lora_model")
     model.save_pretrained("llama_70b_4bit_sft_lora_model")
     tokenizer.save_pretrained("llama_70b_4bit_sft_lora_model")
     
