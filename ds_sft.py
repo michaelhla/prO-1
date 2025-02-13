@@ -106,12 +106,12 @@ def train_model():
 
     # Initialize model with 4-bit quantization
     model = AutoModelForCausalLM.from_pretrained(
-        "meta-llama/Llama-3.3-70B-Instruct",
+        "meta-llama/Llama-3.1-8B",
         quantization_config=bnb_config,
         device_map="auto",
         trust_remote_code=True,
     )
-    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.3-70B-Instruct", trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B", trust_remote_code=True)
     tokenizer.pad_token = tokenizer.eos_token
 
     # Prepare model for k-bit training
@@ -153,11 +153,10 @@ def train_model():
         warmup_steps=40,
         learning_rate=2e-4,
         logging_steps=1,
-        optim="adamw_8bit",
+        optim="adamw",
         weight_decay=0.01,
         lr_scheduler_type="linear",
-        fp16=not is_bfloat16_supported(),
-        bf16=is_bfloat16_supported(),
+        bf16=True,
         report_to="wandb",
         seed=3407,
         ddp_find_unused_parameters=False,
@@ -174,10 +173,6 @@ def train_model():
         model=model,
         tokenizer=tokenizer,
         train_dataset=train_dataset,
-        dataset_text_field="text",
-        max_seq_length=MAX_LENGTH,
-        dataset_num_proc=2,
-        packing=False,  # Must be False for completion-only training
         data_collator=collator,
         args=training_args,
     )
