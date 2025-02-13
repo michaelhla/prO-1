@@ -16,7 +16,7 @@ from huggingface_hub import login
 # Load environment variables
 load_dotenv()
 
-MAX_LENGTH = 128000
+MAX_LENGTH = 16384
 
 # GPU Memory monitoring class
 class GPUMonitor:
@@ -67,8 +67,15 @@ def load_sft_data(data_path: str, tokenizer) -> Dataset:
 You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively.<|eot_id|><|start_header_id|>user<|end_header_id|>
 {trace['prompt']}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 {trace['reasoning']}<|eot_id|>"""
-
-        text += tokenizer.eos_token
+        
+        # Tokenize with explicit max length
+        encoded = tokenizer(
+            text,
+            truncation=True,
+            padding="max_length",
+            max_length=MAX_LENGTH,
+            return_tensors="pt"
+        )
         
         formatted_data.append({"text": text})
     
@@ -94,28 +101,46 @@ def train_model():
     
     # Login to wandb using API key from .env
     wandb.login(key=os.getenv('WANDB_API_KEY'))
-    wandb.init(project="protein-sft", name="llama-70b-4bit-sft-lora")
+    wandb.init(project="protein-sft", name="debugging")
 
-    # Configure 4-bit quantization
+    # Initialize tokenizer first
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.3-70B-Instruct", trust_remote_code=True, model_max_length=MAX_LENGTH)
+    
+    # Add padding token before model creation
+    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+    
+    # Ensure padding token id is properly set
+    tokenizer.pad_token_id = tokenizer.convert_tokens_to_ids('[PAD]')
+
+    # Configure quantization
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16, 
+        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_quant_storage=torch.bfloat16,
         bnb_4bit_use_double_quant=True,
     )
 
     # Initialize model with 4-bit quantization
     model = AutoModelForCausalLM.from_pretrained(
-        "meta-llama/Llama-3.1-8B",
+        "meta-llama/Llama-3.3-70B-Instruct",
         quantization_config=bnb_config,
-        device_map="auto",
         trust_remote_code=True,
+        torch_dtype=torch.bfloat16,
     )
-    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B", trust_remote_code=True)
-    tokenizer.pad_token = tokenizer.eos_token
 
-    # Prepare model for k-bit training
+    # Prepare model for training
     model = prepare_model_for_kbit_training(model)
+
+    # Convert float32 parameters to bfloat16
+    for name, param in model.named_parameters():
+        if param.dtype == torch.float32:
+            param.data = param.data.to(torch.bfloat16)
+    
+    # Debug: Verify all parameter dtypes after conversion
+    for name, param in model.named_parameters():
+        if param.dtype == torch.float32:
+            print(f"Float32 parameter still present: {name} - {param.dtype}")
 
     # Add LoRA adapters
     peft_config = LoraConfig(
@@ -130,7 +155,7 @@ def train_model():
     model = get_peft_model(model, peft_config)
 
     # Define the templates for completion-only training
-    instruction_template = "<|start_header_id|>user<|end_header_id|>"
+    instruction_template = "<|begin_of_text|><|start_header_id|>system<|end_header_id|>"
     response_template = "<|start_header_id|>assistant<|end_header_id|>"
     
     # Create the completion-only collator
@@ -144,29 +169,28 @@ def train_model():
     # Load and process dataset
     train_dataset = load_sft_data("data/mega_cot.json", tokenizer)
 
-    # Set up training arguments
+    # Set up training arguments with explicit max_length
     training_args = TrainingArguments(
         output_dir="./sft_llama_70b_4bit_lora_output",
         num_train_epochs=3,
-        per_device_train_batch_size=4,
+        per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
         warmup_steps=40,
         learning_rate=2e-4,
         logging_steps=1,
-        optim="adamw",
+        optim="adamw_torch_4bit",
         weight_decay=0.01,
         lr_scheduler_type="linear",
         bf16=True,
+        fp16=False,
         report_to="wandb",
         seed=3407,
         ddp_find_unused_parameters=False,
         gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},
+        save_strategy="no",
         # use_liger=True
     )
-
-    # Load and process dataset
-    train_dataset = load_sft_data("data/mega_cot.json", tokenizer)
 
     # Initialize trainer with the collator
     trainer = SFTTrainer(
