@@ -9,3 +9,5 @@ syn_data/brenda_seq.xlsx
 wandb/
 sft_lora_output
 grpo_output
+sft_llama_70b_4bit_lora_output
+llama_70b_4bit_sft_lora_model
