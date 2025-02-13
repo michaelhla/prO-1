@@ -89,27 +89,38 @@ def train_model():
     wandb.login(key=os.getenv('WANDB_API_KEY'))
     wandb.init(project="protein-sft", name="llama-70b-4bit-sft-lora")
 
-    # Initialize model with unsloth
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name="unsloth/llama-3-70b-bnb-4bit",
-        max_seq_length=MAX_LENGTH,
-        dtype=None,  # Auto-detect
+    # Configure 4-bit quantization
+    bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
-        device_map={'': device_string},  # Assign to specific GPU
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16 if is_bfloat16_supported() else torch.float16,
+        bnb_4bit_use_double_quant=True,
     )
 
+    # Initialize model with 4-bit quantization
+    model = AutoModelForCausalLM.from_pretrained(
+        "meta-llama/Llama-3.1-70b",
+        quantization_config=bnb_config,
+        device_map="auto",
+        trust_remote_code=True,
+    )
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-70b", trust_remote_code=True)
+    tokenizer.pad_token = tokenizer.eos_token
+
+    # Prepare model for k-bit training
+    model = prepare_model_for_kbit_training(model)
+
     # Add LoRA adapters
-    model = FastLanguageModel.get_peft_model(
-        model,
+    peft_config = LoraConfig(
         r=32,
+        lora_alpha=32,
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
                        "gate_proj", "up_proj", "down_proj"],
-        lora_alpha=32,
         lora_dropout=0,
         bias="none",
-        use_gradient_checkpointing="unsloth",
-        random_state=3407
+        task_type=TaskType.CAUSAL_LM,
     )
+    model = get_peft_model(model, peft_config)
 
     # Define the templates for completion-only training
     instruction_template = "<|start_header_id|>user<|end_header_id|>"
@@ -143,9 +154,13 @@ def train_model():
         report_to="wandb",
         seed=3407,
         ddp_find_unused_parameters=False,
+        gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},
         # use_liger=True
     )
+
+    # Load and process dataset
+    train_dataset = load_sft_data("data/mega_cot.json", tokenizer)
 
     # Initialize trainer with the collator
     trainer = SFTTrainer(
