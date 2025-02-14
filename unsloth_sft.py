@@ -152,10 +152,6 @@ def train_model():
         model=model,
         tokenizer=tokenizer,
         train_dataset=train_dataset,
-        dataset_text_field="text",
-        max_seq_length=MAX_LENGTH,
-        dataset_num_proc=2,
-        packing=False,  # Must be False for completion-only training
         data_collator=collator,
         args=training_args,
     )
