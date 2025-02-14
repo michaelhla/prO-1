@@ -1,7 +1,7 @@
 import torch
-from transformers import AutoTokenizer, BitsAndBytesConfig, TrainerCallback
+from transformers import AutoTokenizer, BitsAndBytesConfig, TrainerCallback, AutoModelForCausalLM
 from trl import GRPOConfig, GRPOTrainer
-from peft import PeftModel, prepare_model_for_kbit_training
+from peft import get_peft_model, LoraConfig, TaskType, prepare_model_for_kbit_training
 import re
 import json
 import os
@@ -10,13 +10,27 @@ import wandb
 from dotenv import load_dotenv
 from datasets import Dataset
 import time
-from unsloth import FastLanguageModel, is_bfloat16_supported
 from accelerate import PartialState
+from huggingface_hub import login
 
 from stability_reward import StabilityRewardCalculator
 
+# accelerate launch --multi_gpu --num_processes=2 fsdp_grpo.py
+load_dotenv()
+
 NUM_EPOCHS = 2
 MAX_LENGTH = 2048
+
+# Login to Hugging Face before any model loading
+try:
+    huggingface_token = os.getenv('HUGGINGFACE_API_KEY')
+    if not huggingface_token:
+        raise ValueError("HUGGINGFACE_API_KEY not found in environment variables")
+    login(token=huggingface_token)
+    print("Successfully logged into Hugging Face")
+except Exception as e:
+    print(f"Error logging into Hugging Face: {e}")
+    raise  # Add this to stop execution if login fails
 
 def construct_prompt(enzyme_data, sequence):
     """Construct prompt for a single enzyme"""
@@ -153,34 +167,97 @@ train_dataset = Dataset.from_list(valid_data_list)
 print(f"Dataset size: {len(train_dataset)}")
 print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
 
-# Initialize wandb
-wandb_start = time.time()
-wandb.login(key=os.getenv('WANDB_API_KEY'))
-wandb.init(
-    project="protein-rl",
-    name="unsloth-grpo",
-    config={
-        "model_name": "unsloth/llama-3-70b-bnb-4bit",
-        "num_epochs": NUM_EPOCHS,
-        "batch_size": 1,
-        "learning_rate": 1.41e-5,
-        "num_generations": 2,
-    }
-)
+# Initialize wandb only on main process
+state = PartialState()
+if state.is_main_process:
+    wandb_start = time.time()
+    try:
+        wandb.login(key=os.getenv('WANDB_API_KEY'))
+        wandb.init(
+            project="protein-rl",
+            name="llama-3.3-70b-grpo",
+            config={
+                "model_name": "meta-llama/Llama-3.3-70B-Instruct",
+                "num_epochs": NUM_EPOCHS,
+                "batch_size": 1,
+                "learning_rate": 2e-4,
+                "num_generations": 1,
+            }
+        )
+    except Exception as e:
+        print(f"Error initializing wandb: {e}")
 
-# Get the device for this process
+# Before training, set up the reward calculator on the dedicated GPU
+def setup_reward_calculator():
+    num_gpus = torch.cuda.device_count()
+
+    # Use the last GPU for reward calculation
+    reward_device = torch.device(f"cuda:{num_gpus - 1}")
+    
+    calculator = StabilityRewardCalculator(device=reward_device)  # Initialize your calculator here
+    
+    return calculator
+
+# Initialize the reward calculator before training
+calculator = setup_reward_calculator()
+stability_cache = {}
+
+# Modify the device mapping for the training model to exclude the reward GPU
 device_string = PartialState().process_index
+if device_string == torch.cuda.device_count() - 1:
+    # If this process would use the reward GPU, use the previous one instead
+    device_string = str(int(device_string) - 1)
 
-# Initialize model with unsloth
-print("Loading base model...")
-model_load_start = time.time()
-model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="unsloth/llama-3-70b-bnb-4bit",
-    max_seq_length=MAX_LENGTH,
-    dtype=None,  # Auto-detect
-    load_in_4bit=True,
-    device_map={'': device_string},
+# Initialize model with 8-bit quantization instead of 4-bit
+bnb_config = BitsAndBytesConfig(
+    load_in_8bit=True,
+    bnb_8bit_compute_dtype=torch.bfloat16,
+    bnb_8bit_use_double_quant=True,
+    bnb_8bit_quant_type="nf8",
 )
+
+# Load model with 8-bit config
+model = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Llama-3.3-70B-Instruct",
+    quantization_config=bnb_config,
+    trust_remote_code=True,
+    torch_dtype=torch.bfloat16,
+)
+
+# Initialize tokenizer
+tokenizer = AutoTokenizer.from_pretrained(
+    "meta-llama/Llama-3.3-70B-Instruct", 
+    trust_remote_code=True, 
+    model_max_length=MAX_LENGTH
+)
+
+# Add padding token
+tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+tokenizer.pad_token_id = tokenizer.convert_tokens_to_ids('[PAD]')
+
+# Prepare for k-bit training
+model = prepare_model_for_kbit_training(model)
+
+# Add LoRA adapters
+peft_config = LoraConfig(
+    lora_alpha=16,
+    lora_dropout=0.1,
+    r=32,
+    bias="none",
+    task_type="CAUSAL_LM",
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+    modules_to_save=[],
+)
+
+model = get_peft_model(model, peft_config)
+
+# Convert remaining parameters to bfloat16
+for param in model.parameters():
+    if param.dtype == torch.float32:
+        param.data = param.data.to(torch.bfloat16)
+
+# Disable model caching
+model.config.use_cache = False
 
 # Print model size information
 def get_model_size_info(model):
@@ -214,45 +291,27 @@ print("\nChecking initial model size and memory usage...")
 get_model_size_info(model)
 print_gpu_memory()
 
-print(f"Base model loaded in {time.time() - model_load_start:.2f} seconds")
-
-# Add LoRA adapters
-model = FastLanguageModel.get_peft_model(
-    model,
-    r=32,
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                   "gate_proj", "up_proj", "down_proj"],
-    lora_alpha=32,
-    lora_dropout=0,
-    bias="none",
-    use_gradient_checkpointing="unsloth",
-    random_state=3407
-)
-
-print("\nChecking model size and memory usage after adding LoRA...")
-get_model_size_info(model)
-print_gpu_memory()
-
-# Enable gradient computation for LoRA parameters
-for name, param in model.named_parameters():
-    if "lora" in name.lower():
-        param.requires_grad = True
-    else:
-        param.requires_grad = False
 
 
 def calculate_relative_stability(original_seq, modified_seq, calculator):
     """Calculate percentage difference between original and modified sequence stability"""
+    # Move calculations to a dedicated GPU (e.g., last available GPU)
+    reward_device = torch.device(f"cuda:{torch.cuda.device_count() - 1}")
+    
     if original_seq in stability_cache:
         original_score = stability_cache[original_seq]
     else:
         print(f"Calculating stability for {original_seq}")
         stability_calc_start = time.time()
-        original_score = calculator.calculate_stability(original_seq)
+        # Ensure calculator is on the reward device
+        with torch.cuda.device(reward_device):
+            original_score = calculator.calculate_stability(original_seq)
         stability_cache[original_seq] = original_score
         print(f"Stability calculation completed in {time.time() - stability_calc_start:.2f} seconds")
-        
-    modified_score = calculator.calculate_stability(modified_seq)
+    
+    # Calculate modified sequence stability on reward device
+    with torch.cuda.device(reward_device):
+        modified_score = calculator.calculate_stability(modified_seq)
     
     # Calculate percentage difference
     reward = -((modified_score - original_score) / abs(original_score)) * 100
@@ -288,24 +347,24 @@ def stability_reward_func(prompts, completions, sequences, **kwargs):
 
 class WandBLoggingCallback(TrainerCallback):
     def on_log(self, args, state, control, logs=None, **kwargs):
-        if logs:
+        if logs and state.is_main_process:  # Only log on main process
             # Log all metrics from the trainer
             wandb.log(logs, step=state.global_step)
             
     def on_evaluate(self, args, state, control, metrics=None, **kwargs):
-        if metrics:
+        if metrics and state.is_main_process:  # Only log on main process
             # Log evaluation metrics
             wandb.log({"eval/" + k: v for k, v in metrics.items()}, step=state.global_step) 
 
 
-# Create training arguments
+# Modify FSDP config to be less aggressive
 training_args = GRPOConfig(
-    output_dir="./unsloth_grpo_output",
-    run_name="unsloth_grpo_training_run",
+    output_dir="./llama_70b_grpo_output",
+    run_name="llama_70b_grpo_training_run",
     num_train_epochs=NUM_EPOCHS,
     per_device_train_batch_size=1,
-    gradient_accumulation_steps=8,
-    learning_rate=1.41e-5,
+    gradient_accumulation_steps=32,
+    learning_rate=2e-4,
     logging_steps=1,
     num_generations=1,
     max_prompt_length=512,
@@ -313,10 +372,16 @@ training_args = GRPOConfig(
     temperature=0.7,
     beta=0.04,
     remove_unused_columns=False,
-    gradient_checkpointing=True,
-    gradient_checkpointing_kwargs={"use_reentrant": False},
-    fp16=not is_bfloat16_supported(),
-    bf16=is_bfloat16_supported(),
+
+    fp16=False,
+    bf16=True,
+    fsdp="full_shard auto_wrap",
+    fsdp_config={
+        "fsdp_offload_params": False,  # Disable parameter offloading
+        "fsdp_transformer_layer_cls_to_wrap": "LlamaDecoderLayer",
+        "fsdp_state_dict_type": "FULL_STATE_DICT",
+        "activation_checkpointing": True,
+    },
 )
 
 # Initialize GRPO trainer
@@ -341,4 +406,8 @@ print("\nFinal memory usage:")
 print_gpu_memory()
 
 # Save the final model
-trainer.save_model("./unsloth_grpo_output/final_model")
+trainer.save_model("./llama_70b_grpo_output/final_model")
+
+# At the end of training, close wandb only on main process
+if state.is_main_process:
+    wandb.finish()

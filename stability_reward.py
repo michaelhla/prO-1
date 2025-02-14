@@ -14,14 +14,14 @@ import time
 
 class StabilityRewardCalculator:
     def __init__(self, protein_model_path="facebook/esmfold_v1", device="cuda"):
-        self.protein_model = self._load_protein_model(protein_model_path, device)
-        self.device = device
+        self.device = torch.device(device)
+        self.protein_model = self._load_protein_model(protein_model_path)
         self.cached_structures = {}
 
         # Initialize PyRosetta
         pyrosetta.init()
 
-    def _load_protein_model(self, model_path, device):
+    def _load_protein_model(self, model_path):
         """Load ESMFold model for structure prediction"""
         start_time = time.time()
         local_path = '/root/prO-1/model_cache/'
@@ -32,8 +32,8 @@ class StabilityRewardCalculator:
             os.makedirs(os.path.dirname(local_path), exist_ok=True)
             model.save_pretrained(local_path)
 
-        if device == "cuda":
-            model = model.cuda()
+        # Move model to specified device
+        model = model.to(self.device)
         print(f"ESM loading took {time.time() - start_time:.2f} seconds")
         return model
 
@@ -48,10 +48,7 @@ class StabilityRewardCalculator:
             [sequence], 
             return_tensors="pt", 
             add_special_tokens=False
-        )['input_ids']
-
-        if self.device == "cuda":
-            tokenized_input = tokenized_input.cuda()
+        )['input_ids'].to(self.device)  # Move directly to specified device
 
         with torch.no_grad():
             output = self.protein_model(tokenized_input)
