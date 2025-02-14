@@ -10,13 +10,13 @@ import os
 from dotenv import load_dotenv
 import pynvml
 from torch.cuda import memory_summary
+from unsloth import FastLanguageModel, is_bfloat16_supported
 from accelerate import PartialState
-from huggingface_hub import login
 
 # Load environment variables
 load_dotenv()
 
-MAX_LENGTH = 16384
+MAX_LENGTH = 128000
 
 # GPU Memory monitoring class
 class GPUMonitor:
@@ -67,15 +67,8 @@ def load_sft_data(data_path: str, tokenizer) -> Dataset:
 You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively.<|eot_id|><|start_header_id|>user<|end_header_id|>
 {trace['prompt']}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 {trace['reasoning']}<|eot_id|>"""
-        
-        # Tokenize with explicit max length
-        encoded = tokenizer(
-            text,
-            truncation=True,
-            padding="max_length",
-            max_length=MAX_LENGTH,
-            return_tensors="pt"
-        )
+
+        text += tokenizer.eos_token
         
         formatted_data.append({"text": text})
     
@@ -84,13 +77,6 @@ You are a helpful assistant that helps users with protein engineering tasks. You
 def train_model():
     # Get the device for this process
     device_string = PartialState().process_index
-
-    # Login to Hugging Face using API key from .env
-    try:
-        huggingface_token = os.getenv('HUGGINGFACE_API_KEY')
-        login(token=huggingface_token)
-    except Exception as e:
-        print(f"Error logging into Hugging Face: {e}")
     
     try: 
         gpu_monitor = GPUMonitor()
@@ -101,61 +87,32 @@ def train_model():
     
     # Login to wandb using API key from .env
     wandb.login(key=os.getenv('WANDB_API_KEY'))
-    wandb.init(project="protein-sft", name="debugging")
+    wandb.init(project="protein-sft", name="unsloth_model")
 
-    # Initialize tokenizer first
-    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.3-70B-Instruct", trust_remote_code=True, model_max_length=MAX_LENGTH)
-    
-    # Add padding token before model creation
-    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-    
-    # Ensure padding token id is properly set
-    tokenizer.pad_token_id = tokenizer.convert_tokens_to_ids('[PAD]')
-
-    # Configure quantization
-    bnb_config = BitsAndBytesConfig(
+    # Initialize model with unsloth
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name="unsloth/llama-3-70b-bnb-4bit",
+        max_seq_length=MAX_LENGTH,
+        dtype=None,  # Auto-detect
         load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16,
-        bnb_4bit_quant_storage=torch.bfloat16,
-        bnb_4bit_use_double_quant=True,
+        device_map={'': device_string},  # Assign to specific GPU
     )
-
-    # Initialize model with 4-bit quantization
-    model = AutoModelForCausalLM.from_pretrained(
-        "meta-llama/Llama-3.3-70B-Instruct",
-        quantization_config=bnb_config,
-        trust_remote_code=True,
-        torch_dtype=torch.bfloat16,
-    )
-
-    # Prepare model for training
-    model = prepare_model_for_kbit_training(model)
-
-    # Convert float32 parameters to bfloat16
-    for name, param in model.named_parameters():
-        if param.dtype == torch.float32:
-            param.data = param.data.to(torch.bfloat16)
-    
-    # Debug: Verify all parameter dtypes after conversion
-    for name, param in model.named_parameters():
-        if param.dtype == torch.float32:
-            print(f"Float32 parameter still present: {name} - {param.dtype}")
 
     # Add LoRA adapters
-    peft_config = LoraConfig(
+    model = FastLanguageModel.get_peft_model(
+        model,
         r=32,
-        lora_alpha=32,
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
                        "gate_proj", "up_proj", "down_proj"],
+        lora_alpha=32,
         lora_dropout=0,
         bias="none",
-        task_type=TaskType.CAUSAL_LM,
+        use_gradient_checkpointing="unsloth",
+        random_state=3407
     )
-    model = get_peft_model(model, peft_config)
 
     # Define the templates for completion-only training
-    instruction_template = "<|begin_of_text|><|start_header_id|>system<|end_header_id|>"
+    instruction_template = "<|start_header_id|>user<|end_header_id|>"
     response_template = "<|start_header_id|>assistant<|end_header_id|>"
     
     # Create the completion-only collator
@@ -169,26 +126,24 @@ def train_model():
     # Load and process dataset
     train_dataset = load_sft_data("data/mega_cot.json", tokenizer)
 
-    # Set up training arguments with explicit max_length
+    # Set up training arguments
     training_args = TrainingArguments(
-        output_dir="./sft_llama_70b_4bit_lora_output",
+        output_dir="./unsloth_model",
         num_train_epochs=3,
-        per_device_train_batch_size=2,
+        per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
         warmup_steps=40,
         learning_rate=2e-4,
         logging_steps=1,
-        optim="adamw_torch_4bit",
+        optim="adamw_8bit",
         weight_decay=0.01,
         lr_scheduler_type="linear",
-        bf16=True,
-        fp16=False,
+        fp16=not is_bfloat16_supported(),
+        bf16=is_bfloat16_supported(),
         report_to="wandb",
         seed=3407,
         ddp_find_unused_parameters=False,
-        gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},
-        save_strategy="no",
         # use_liger=True
     )
 
@@ -197,6 +152,10 @@ def train_model():
         model=model,
         tokenizer=tokenizer,
         train_dataset=train_dataset,
+        dataset_text_field="text",
+        max_seq_length=MAX_LENGTH,
+        dataset_num_proc=2,
+        packing=False,  # Must be False for completion-only training
         data_collator=collator,
         args=training_args,
     )
@@ -210,9 +169,9 @@ def train_model():
     # Start training
     trainer.train()
     
-    # Save final model
-    model.save_pretrained("llama_70b_4bit_sft_lora_model")
-    tokenizer.save_pretrained("llama_70b_4bit_sft_lora_model")
+    # # Save final model
+    # model.save_pretrained("unsloth_model")
+    # tokenizer.save_pretrained("unsloth_tokenizer")
     
     # Close wandb run
     wandb.finish()
