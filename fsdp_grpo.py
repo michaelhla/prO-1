@@ -21,16 +21,7 @@ load_dotenv()
 NUM_EPOCHS = 2
 MAX_LENGTH = 2048
 
-# Login to Hugging Face before any model loading
-try:
-    huggingface_token = os.getenv('HUGGINGFACE_API_KEY')
-    if not huggingface_token:
-        raise ValueError("HUGGINGFACE_API_KEY not found in environment variables")
-    login(token=huggingface_token)
-    print("Successfully logged into Hugging Face")
-except Exception as e:
-    print(f"Error logging into Hugging Face: {e}")
-    raise  # Add this to stop execution if login fails
+
 
 def construct_prompt(enzyme_data, sequence):
     """Construct prompt for a single enzyme"""
@@ -164,28 +155,38 @@ for item in data_list:
 
 # Create dataset from validated records
 train_dataset = Dataset.from_list(valid_data_list)
-print(f"Dataset size: {len(train_dataset)}")
-print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
+# print(f"Dataset size: {len(train_dataset)}")
+# print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
 
 # Initialize wandb only on main process
-state = PartialState()
-if state.is_main_process:
+proc_state = PartialState()
+if proc_state.is_main_process:
     wandb_start = time.time()
     try:
         wandb.login(key=os.getenv('WANDB_API_KEY'))
         wandb.init(
             project="protein-rl",
-            name="llama-3.3-70b-grpo",
+            name="debugging",
             config={
                 "model_name": "meta-llama/Llama-3.3-70B-Instruct",
                 "num_epochs": NUM_EPOCHS,
                 "batch_size": 1,
                 "learning_rate": 2e-4,
-                "num_generations": 1,
+                "num_generations": 2,
             }
         )
     except Exception as e:
         print(f"Error initializing wandb: {e}")
+        # Login to Hugging Face before any model loading
+    try:
+        huggingface_token = os.getenv('HUGGINGFACE_API_KEY')
+        if not huggingface_token:
+            raise ValueError("HUGGINGFACE_API_KEY not found in environment variables")
+        login(token=huggingface_token)
+        print("Successfully logged into Hugging Face")
+    except Exception as e:
+        print(f"Error logging into Hugging Face: {e}")
+        raise  # Add this to stop execution if login fails
 
 # Before training, set up the reward calculator on the dedicated GPU
 def setup_reward_calculator():
@@ -202,59 +203,69 @@ def setup_reward_calculator():
 calculator = setup_reward_calculator()
 stability_cache = {}
 
-# Modify the device mapping for the training model to exclude the reward GPU
+# # Modify the device mapping for the training model to exclude the reward GPU
 device_string = PartialState().process_index
-if device_string == torch.cuda.device_count() - 1:
-    # If this process would use the reward GPU, use the previous one instead
-    device_string = str(int(device_string) - 1)
+# if device_string == torch.cuda.device_count() - 1:
+#     # If this process would use the reward GPU, use the previous one instead
+#     device_string = str(int(device_string) - 1)
 
-# Initialize model with 8-bit quantization instead of 4-bit
 bnb_config = BitsAndBytesConfig(
-    load_in_8bit=True,
-    bnb_8bit_compute_dtype=torch.bfloat16,
-    bnb_8bit_use_double_quant=True,
-    bnb_8bit_quant_type="nf8",
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16,
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_quant_storage=torch.bfloat16,
 )
 
 # Load model with 8-bit config
 model = AutoModelForCausalLM.from_pretrained(
-    "meta-llama/Llama-3.3-70B-Instruct",
+    "meta-llama/Llama-3.1-8B", 
     quantization_config=bnb_config,
     trust_remote_code=True,
     torch_dtype=torch.bfloat16,
+    # device_map={"": device_string},
 )
 
 # Initialize tokenizer
 tokenizer = AutoTokenizer.from_pretrained(
-    "meta-llama/Llama-3.3-70B-Instruct", 
+    "meta-llama/Llama-3.1-8B", 
     trust_remote_code=True, 
-    model_max_length=MAX_LENGTH
+    model_max_length=MAX_LENGTH,
+    padding_side="right"
 )
 
-# Add padding token
 tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-tokenizer.pad_token_id = tokenizer.convert_tokens_to_ids('[PAD]')
+model.config.pad_token_id = tokenizer.pad_token_id
+
+# # Ensure embedding layer is properly initialized
+# model.resize_token_embeddings(len(tokenizer))
 
 # Prepare for k-bit training
-model = prepare_model_for_kbit_training(model)
+# model = prepare_model_for_kbit_training(model)
 
 # Add LoRA adapters
 peft_config = LoraConfig(
     lora_alpha=16,
     lora_dropout=0.1,
-    r=32,
+    r=64,
     bias="none",
     task_type="CAUSAL_LM",
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
-    modules_to_save=[],
+    target_modules='all-linear',
 )
 
-model = get_peft_model(model, peft_config)
+# model = get_peft_model(model, peft_config)
 
-# Convert remaining parameters to bfloat16
-for param in model.parameters():
-    if param.dtype == torch.float32:
-        param.data = param.data.to(torch.bfloat16)
+# # Convert parameters to bfloat16 more carefully
+# for name, param in model.named_parameters():
+#     if param.dtype != torch.int8:  # Skip 8-bit quantized weights
+#         param.data = param.data.to(torch.bfloat16)
+
+# # Ensure embedding layer maintains correct shape
+# if hasattr(model, 'model'):
+#     embed_tokens = model.model.embed_tokens
+#     if hasattr(embed_tokens, 'weight'):
+#         embed_shape = embed_tokens.weight.shape
+#         embed_tokens.weight.data = embed_tokens.weight.data.view(embed_shape)
 
 # Disable model caching
 model.config.use_cache = False
@@ -347,12 +358,14 @@ def stability_reward_func(prompts, completions, sequences, **kwargs):
 
 class WandBLoggingCallback(TrainerCallback):
     def on_log(self, args, state, control, logs=None, **kwargs):
-        if logs and state.is_main_process:  # Only log on main process
+        proc_state = PartialState()
+        if proc_state.is_main_process and logs:  # Only log on main process
             # Log all metrics from the trainer
             wandb.log(logs, step=state.global_step)
             
     def on_evaluate(self, args, state, control, metrics=None, **kwargs):
-        if metrics and state.is_main_process:  # Only log on main process
+        proc_state = PartialState()
+        if proc_state.is_main_process and metrics:  # Only log on main process
             # Log evaluation metrics
             wandb.log({"eval/" + k: v for k, v in metrics.items()}, step=state.global_step) 
 
@@ -363,33 +376,37 @@ training_args = GRPOConfig(
     run_name="llama_70b_grpo_training_run",
     num_train_epochs=NUM_EPOCHS,
     per_device_train_batch_size=1,
-    gradient_accumulation_steps=32,
+    gradient_accumulation_steps=1,
     learning_rate=2e-4,
     logging_steps=1,
-    num_generations=1,
+    num_generations=2,
     max_prompt_length=512,
     max_completion_length=512,
     temperature=0.7,
     beta=0.04,
     remove_unused_columns=False,
 
-    fp16=False,
-    bf16=True,
-    fsdp="full_shard auto_wrap",
-    fsdp_config={
-        "fsdp_offload_params": False,  # Disable parameter offloading
-        "fsdp_transformer_layer_cls_to_wrap": "LlamaDecoderLayer",
-        "fsdp_state_dict_type": "FULL_STATE_DICT",
-        "activation_checkpointing": True,
-    },
+    # fp16=False,
+    # bf16=True,
+    # fsdp="full_shard auto_wrap",
+    # fsdp_config={
+    #     "fsdp_offload_params": False,  # Disable parameter offloading
+    #     "fsdp_transformer_layer_cls_to_wrap": "LlamaDecoderLayer",
+    #     "fsdp_state_dict_type": "FULL_STATE_DICT",
+    #     "activation_checkpointing": True,
+    # },
 )
+
+def dummy_reward_func(prompts, completions, sequences, **kwargs):
+    return [0.0] * len(prompts)
 
 # Initialize GRPO trainer
 trainer = GRPOTrainer(
     model=model,
     args=training_args,
+    peft_config=peft_config,
     train_dataset=train_dataset,
-    reward_funcs=stability_reward_func,
+    reward_funcs=dummy_reward_func,
     processing_class=tokenizer,
     callbacks=[WandBLoggingCallback()], 
 )
@@ -409,5 +426,5 @@ print_gpu_memory()
 trainer.save_model("./llama_70b_grpo_output/final_model")
 
 # At the end of training, close wandb only on main process
-if state.is_main_process:
+if proc_state.is_main_process:
     wandb.finish()
