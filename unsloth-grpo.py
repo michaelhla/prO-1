@@ -12,16 +12,72 @@ from datasets import Dataset
 import time
 from accelerate import PartialState
 from huggingface_hub import login
+from bitsandbytes.optim import PagedAdamW32bit
+import torch.nn as nn
 
 from stability_reward import StabilityRewardCalculator
 
-# accelerate launch --multi_gpu --num_processes=4 fsdp_grpo.py
+# accelerate launch fsdp_grpo.py
 load_dotenv()
 
 NUM_EPOCHS = 2
-MAX_INPUT_LENGTH = 32768
-MAX_OUTPUT_LENGTH = 2048
+MAX_LENGTH = 2048
 
+
+
+def ternary_quantize(model):
+    """Convert model weights to ternary values (-1, 0, 1)"""
+    def quantize_tensor(tensor):
+        abs_mean = torch.mean(torch.abs(tensor))
+        threshold = 0.7 * abs_mean  # Adjustable threshold
+        
+        # Create ternary weights
+        out = torch.zeros_like(tensor)
+        out[tensor > threshold] = 1
+        out[tensor < -threshold] = -1
+        return out
+    
+    # Quantize all parameters except LoRA
+    with torch.no_grad():
+        for name, param in model.named_parameters():
+            if 'lora' not in name.lower():  # Skip LoRA parameters
+                param.data = quantize_tensor(param.data)
+    
+    return model
+
+
+# Print model size information
+def get_model_size_info(model):
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    
+    # Get actual memory usage
+    memory_params = sum(p.nelement() * p.element_size() for p in model.parameters())
+    memory_buffers = sum(b.nelement() * b.element_size() for b in model.buffers())
+    total_memory = memory_params + memory_buffers  # in bytes
+    
+    # Convert to more readable formats
+    def bytes_to_mb(bytes_val): return bytes_val / (1024 * 1024)
+    def bytes_to_gb(bytes_val): return bytes_val / (1024 * 1024 * 1024)
+    
+    print(f"\nModel Size Information:")
+    print(f"Total parameters: {total_params:,}")
+    print(f"Trainable parameters: {trainable_params:,}")
+    print(f"Actual model size in memory: {bytes_to_gb(total_memory):.2f} GB")
+    
+    # If using CUDA, also show GPU memory usage
+    if next(model.parameters()).is_cuda:
+        print("\nGPU Memory Usage:")
+        print(f"Allocated: {bytes_to_gb(torch.cuda.memory_allocated()):.2f} GB")
+        print(f"Cached: {bytes_to_gb(torch.cuda.memory_reserved()):.2f} GB")
+        
+        # Show per-tensor memory usage (top 5 largest tensors)
+        print("\nLargest Model Tensors:")
+        tensor_sizes = [(name, p.nelement() * p.element_size()) 
+                       for name, p in model.named_parameters()]
+        tensor_sizes.sort(key=lambda x: x[1], reverse=True)
+        for name, size in tensor_sizes[:5]:
+            print(f"{name}: {bytes_to_mb(size):.2f} MB")
 
 
 def construct_prompt(enzyme_data, sequence):
@@ -156,8 +212,6 @@ for item in data_list:
 
 # Create dataset from validated records
 train_dataset = Dataset.from_list(valid_data_list)
-# Find and print the longest prompt
-
 # print(f"Dataset size: {len(train_dataset)}")
 # print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
 
@@ -169,9 +223,9 @@ if proc_state.is_main_process:
         wandb.login(key=os.getenv('WANDB_API_KEY'))
         wandb.init(
             project="protein-rl",
-            name="debugging",
+            name="unsloth-grpo",
             config={
-                "model_name": "meta-llama/Llama-3.3-70B-Instruct",
+                "model_name": "unsloth/Meta-Llama-3.1-70B-bnb-4bit",
                 "num_epochs": NUM_EPOCHS,
                 "batch_size": 1,
                 "learning_rate": 2e-4,
@@ -197,15 +251,13 @@ def setup_reward_calculator():
 
     # Use the last GPU for reward calculation
     reward_device = torch.device(f"cuda:{num_gpus - 1}")
-    # for debugging
-    # reward_device = torch.device("cuda:1")
     
     calculator = StabilityRewardCalculator(device=reward_device)  # Initialize your calculator here
     
     return calculator
 
 # Initialize the reward calculator before training
-calculator = setup_reward_calculator()
+# calculator = setup_reward_calculator()
 stability_cache = {}
 
 # # Modify the device mapping for the training model to exclude the reward GPU
@@ -214,33 +266,40 @@ device_string = PartialState().process_index
 #     # If this process would use the reward GPU, use the previous one instead
 #     device_string = str(int(device_string) - 1)
 
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.bfloat16,
-    bnb_4bit_use_double_quant=True,
-    bnb_4bit_quant_storage=torch.bfloat16,
-)
+# bnb_config = BitsAndBytesConfig(
+#     load_in_4bit=True,
+#     bnb_4bit_quant_type="nf4",
+#     bnb_4bit_compute_dtype=torch.bfloat16,
+#     bnb_4bit_use_double_quant=True,
+#     bnb_4bit_quant_storage=torch.bfloat16,
+# )
 
 # Load model with 8-bit config
 model = AutoModelForCausalLM.from_pretrained(
-    "meta-llama/Llama-3.1-8B", 
-    quantization_config=bnb_config,
+    "unsloth/Meta-Llama-3.1-70B-bnb-4bit", 
+    # quantization_config=bnb_config,
     trust_remote_code=True,
     torch_dtype=torch.bfloat16,
     # device_map={"": device_string},
 )
 
+# Apply ternary quantization
+model = ternary_quantize(model)
+
 # Initialize tokenizer
 tokenizer = AutoTokenizer.from_pretrained(
-    "meta-llama/Llama-3.1-8B", 
+    "unsloth/Meta-Llama-3.1-70B-bnb-4bit", 
     trust_remote_code=True, 
     model_max_length=MAX_LENGTH,
     padding_side="right"
 )
 
-tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-model.config.pad_token_id = tokenizer.pad_token_id
+# Print model size information
+get_model_size_info(model)
+
+
+# tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+# model.config.pad_token_id = tokenizer.pad_token_id
 
 # # Ensure embedding layer is properly initialized
 # model.resize_token_embeddings(len(tokenizer))
@@ -248,14 +307,14 @@ model.config.pad_token_id = tokenizer.pad_token_id
 # Prepare for k-bit training
 # model = prepare_model_for_kbit_training(model)
 
-# Add LoRA adapters
+# Add LoRA (parameters will remain in full precision)
 peft_config = LoraConfig(
     lora_alpha=16,
     lora_dropout=0.1,
-    r=64,
+    r=8,
     bias="none",
     task_type="CAUSAL_LM",
-    target_modules='all-linear',
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
 )
 
 # model = get_peft_model(model, peft_config)
@@ -275,50 +334,24 @@ peft_config = LoraConfig(
 # Disable model caching
 model.config.use_cache = False
 
-def get_model_size_info(model):
-    total_params = sum(p.numel() for p in model.parameters())
-    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    # Print parameter dtypes
-    dtype_counts = {}
-    for name, param in model.named_parameters():
-        dtype = param.dtype
-        dtype_counts[dtype] = dtype_counts.get(dtype, 0) + 1
-    
-    print("\nParameter dtype distribution:")
-    for dtype, count in dtype_counts.items():
-        print(f"{dtype}: {count} parameters")
-    
-    # Get actual memory usage
-    memory_params = sum(p.nelement() * p.element_size() for p in model.parameters())
-    memory_buffers = sum(b.nelement() * b.element_size() for b in model.buffers())
-    total_memory = memory_params + memory_buffers  # in bytes
-    
-    # Convert to more readable formats
-    def bytes_to_mb(bytes_val): return bytes_val / (1024 * 1024)
-    def bytes_to_gb(bytes_val): return bytes_val / (1024 * 1024 * 1024)
-    
-    print(f"\nModel Size Information:")
-    print(f"Total parameters: {total_params:,}")
-    print(f"Trainable parameters: {trainable_params:,}")
-    print(f"Actual model size in memory: {bytes_to_gb(total_memory):.2f} GB")
-    
-    # If using CUDA, also show GPU memory usage
-    if next(model.parameters()).is_cuda:
-        print("\nGPU Memory Usage:")
-        print(f"Allocated: {bytes_to_gb(torch.cuda.memory_allocated()):.2f} GB")
-        print(f"Cached: {bytes_to_gb(torch.cuda.memory_reserved()):.2f} GB")
-        
-        # Show per-tensor memory usage (top 5 largest tensors)
-        print("\nLargest Model Tensors:")
-        tensor_sizes = [(name, p.nelement() * p.element_size()) 
-                       for name, p in model.named_parameters()]
-        tensor_sizes.sort(key=lambda x: x[1], reverse=True)
-        for name, size in tensor_sizes[:5]:
-            print(f"{name}: {bytes_to_mb(size):.2f} MB")
 
-print("\nChecking initial model size and memory usage...")
-get_model_size_info(model)
+# Print GPU memory usage
+def print_gpu_memory():
+    if torch.cuda.is_available():
+        for i in range(torch.cuda.device_count()):
+            total_memory = torch.cuda.get_device_properties(i).total_memory / (1024**3)
+            allocated_memory = torch.cuda.memory_allocated(i) / (1024**3)
+            cached_memory = torch.cuda.memory_reserved(i) / (1024**3)
+            print(f"\nGPU {i} Memory Usage:")
+            print(f"Total: {total_memory:.2f} GB")
+            print(f"Allocated: {allocated_memory:.2f} GB")
+            print(f"Cached: {cached_memory:.2f} GB")
+            print(f"Free: {total_memory - allocated_memory:.2f} GB")
+
+# print("\nChecking initial model size and memory usage...")
+# get_model_size_info(model)
+# print_gpu_memory()
 
 
 
@@ -330,7 +363,7 @@ def calculate_relative_stability(original_seq, modified_seq, calculator):
     if original_seq in stability_cache:
         original_score = stability_cache[original_seq]
     else:
-        print(f"ORIG_SEQ: Calculating stability for {original_seq}")
+        print(f"Calculating stability for {original_seq}")
         stability_calc_start = time.time()
         # Ensure calculator is on the reward device
         with torch.cuda.device(reward_device):
@@ -356,7 +389,6 @@ def stability_reward_func(prompts, completions, sequences, **kwargs):
             sequence_match = re.search(r'\\boxed{(.*?)}', completion)
             if not sequence_match:
                 rewards.append(-100.0)
-                print(f"No sequence match found for {sequence}")
                 continue
                 
             modified_sequence = sequence_match.group(1).strip()
@@ -395,12 +427,12 @@ training_args = GRPOConfig(
     run_name="llama_70b_grpo_training_run",
     num_train_epochs=NUM_EPOCHS,
     per_device_train_batch_size=1,
-    gradient_accumulation_steps=1,
+    gradient_accumulation_steps=32,
     learning_rate=2e-4,
     logging_steps=1,
     num_generations=2,
-    max_prompt_length=MAX_INPUT_LENGTH,
-    max_completion_length=MAX_OUTPUT_LENGTH,
+    max_prompt_length=512,
+    max_completion_length=512,
     temperature=0.7,
     beta=0.04,
     remove_unused_columns=False,
@@ -409,13 +441,15 @@ training_args = GRPOConfig(
     # bf16=True,
     # fsdp="full_shard auto_wrap",
     # fsdp_config={
-    #     # "fsdp_offload_params": False,  # Disable parameter offloading
-    #     "fsdp_transformer_layer_cls_to_wrap": "LlamaDecoderLayer",
-    #     # "fsdp_state_dict_type": "FULL_STATE_DICT",
-    #     "activation_checkpointing": True,
+    # #     "fsdp_offload_params": False,  # Disable parameter offloading
+    # #     "fsdp_transformer_layer_cls_to_wrap": "LlamaDecoderLayer",
+    #     "fsdp_state_dict_type": "FULL_STATE_DICT",
+    # #     "activation_checkpointing": True,
     # },
 )
 
+def dummy_reward_func(prompts, completions, sequences, **kwargs):
+    return [0.0] * len(prompts)
 
 # Initialize GRPO trainer
 trainer = GRPOTrainer(
@@ -423,13 +457,21 @@ trainer = GRPOTrainer(
     args=training_args,
     peft_config=peft_config,
     train_dataset=train_dataset,
-    reward_funcs=stability_reward_func,
+    reward_funcs=dummy_reward_func,
     processing_class=tokenizer,
     callbacks=[WandBLoggingCallback()], 
 )
 
+# # Add memory monitoring before training
+# print("\nMemory usage before training:")
+# print_gpu_memory()
+
 # Train the model
 trainer.train()
+
+# # Print final memory usage
+# print("\nFinal memory usage:")
+# print_gpu_memory()
 
 # Save the final model
 trainer.save_model("./llama_70b_grpo_output/final_model")
