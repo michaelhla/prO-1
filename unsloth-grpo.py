@@ -20,8 +20,8 @@ from stability_reward import StabilityRewardCalculator
 # accelerate launch fsdp_grpo.py
 load_dotenv()
 
-NUM_EPOCHS = 2
-MAX_INPUT_LENGTH = 2048
+NUM_EPOCHS = 5
+MAX_INPUT_LENGTH = 32768
 MAX_OUTPUT_LENGTH = 2048
 
 # Print model size information
@@ -157,7 +157,8 @@ def validate_and_construct_prompt(x):
         # Create the dataset record
         result = {
             "prompt": construct_prompt(safe_data, safe_data['sequence']), 
-            "sequences": safe_data['sequence']
+            "sequences": safe_data['sequence'],
+            "ids": key
         }
         
         # Verify the output is valid
@@ -192,7 +193,6 @@ valid_data_list = []
 for key, item in data_list_with_ids:
     processed = validate_and_construct_prompt(item)
     if processed is not None:
-        processed['ids'] = str(key)  # Add the key as a string to the processed data
         valid_data_list.append(processed)
 
 # Create dataset from validated records
@@ -208,7 +208,7 @@ if proc_state.is_main_process:
         wandb.login(key=os.getenv('WANDB_API_KEY'))
         wandb.init(
             project="protein-rl",
-            name="unsloth-grpo",
+            name="unsloth-grpo-testrun",
             config={
                 "model_name": "unsloth/Meta-Llama-3.1-70B-bnb-4bit",
                 "num_epochs": NUM_EPOCHS,
@@ -261,10 +261,12 @@ def stability_reward_func(prompts, completions, sequences, ids, **kwargs):
     
     for prompt, completion, sequence, id in zip(prompts, completions, sequences, ids):
         try:
+            print(completion)
+            print('-'*100)
             # Extract modified sequence from completion
             sequence_match = re.search(r'\\boxed{(.*?)}', completion)
             if not sequence_match:
-                rewards.append(-100.0)
+                rewards.append(-1000.0)
                 continue
                 
             modified_sequence = sequence_match.group(1).strip()
@@ -280,7 +282,7 @@ def stability_reward_func(prompts, completions, sequences, ids, **kwargs):
             
         except Exception as e:
             print(f"Error calculating stability score: {e}")
-            rewards.append(-100.0)
+            rewards.append(-1000.0)
             
     return rewards
 
@@ -297,6 +299,7 @@ class WandBLoggingCallback(TrainerCallback):
             # Log evaluation metrics
             wandb.log({"eval/" + k: v for k, v in metrics.items()}, step=state.global_step) 
 
+calculator = setup_reward_calculator()
 
 # Initialize Unsloth's FastLanguageModel with GRPO patch
 from unsloth import FastLanguageModel, PatchFastRL
@@ -309,7 +312,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     load_in_4bit=True,
     fast_inference=True,
     max_lora_rank=32,  # Adjust based on your needs
-    gpu_memory_utilization=0.6,
+    gpu_memory_utilization=0.75,
 )
 
 # Configure LoRA
@@ -328,7 +331,7 @@ model = FastLanguageModel.get_peft_model(
 
 # Modify training arguments for Unsloth compatibility
 training_args = GRPOConfig(
-    use_vllm=True,
+    use_vllm=False,
     learning_rate=2e-4,
     adam_beta1=0.9,
     adam_beta2=0.99,
@@ -338,8 +341,8 @@ training_args = GRPOConfig(
     optim="paged_adamw_8bit",
     logging_steps=1,
     bf16=True,
-    per_device_train_batch_size=1,
-    gradient_accumulation_steps=32,
+    per_device_train_batch_size=2,
+    gradient_accumulation_steps=2,
     num_generations=2,
     max_prompt_length=MAX_INPUT_LENGTH,
     max_completion_length=MAX_OUTPUT_LENGTH,

@@ -123,7 +123,8 @@ def validate_and_construct_prompt(x):
         # Create the dataset record
         result = {
             "prompt": construct_prompt(safe_data, safe_data['sequence']), 
-            "sequences": safe_data['sequence']
+            "sequences": safe_data['sequence'],
+            "ids": key
         }
         
         # Verify the output is valid
@@ -140,26 +141,29 @@ def validate_and_construct_prompt(x):
 
 # Data loading section
 data_load_start = time.time()
+# Get list of available structures
+structure_files = set(os.listdir("predicted_structures"))
 
 # Create dataset from BRENDA data
 with open("data/transformed_brenda.json", 'r') as f:
     data_dict = json.load(f)
-    # Convert dictionary values to list of records
-    data_list = list(data_dict.values())
+    # Filter to only include enzymes with existing structures and keep track of keys
+    data_list_with_ids = [
+        (key, value) for key, value in data_dict.items()
+        if f"{key}.pdb" in structure_files
+    ]
 
 # Create the dataset with strict validation
 valid_data_list = []
-for item in data_list:
+for key, item in data_list_with_ids:
     processed = validate_and_construct_prompt(item)
     if processed is not None:
         valid_data_list.append(processed)
 
 # Create dataset from validated records
 train_dataset = Dataset.from_list(valid_data_list)
-# Find and print the longest prompt
-
-# print(f"Dataset size: {len(train_dataset)}")
-# print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
+print(f"Dataset size (enzymes with structures): {len(train_dataset)}")
+print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
 
 # Initialize wandb only on main process
 proc_state = PartialState()
@@ -322,41 +326,30 @@ get_model_size_info(model)
 
 
 
-def calculate_relative_stability(original_seq, modified_seq, calculator):
+def calculate_relative_stability(original_seq, modified_seq, calculator, id):
     """Calculate percentage difference between original and modified sequence stability"""
     # Move calculations to a dedicated GPU (e.g., last available GPU)
     reward_device = torch.device(f"cuda:{torch.cuda.device_count() - 1}")
-    
-    if original_seq in stability_cache:
-        original_score = stability_cache[original_seq]
-    else:
-        print(f"ORIG_SEQ: Calculating stability for {original_seq}")
-        stability_calc_start = time.time()
-        # Ensure calculator is on the reward device
-        with torch.cuda.device(reward_device):
-            original_score = calculator.calculate_stability(original_seq)
-        stability_cache[original_seq] = original_score
-        print(f"Stability calculation completed in {time.time() - stability_calc_start:.2f} seconds")
-    
-    # Calculate modified sequence stability on reward device
     with torch.cuda.device(reward_device):
+        original_score = calculator.calculate_stability(original_seq, pdb_file_path=f"predicted_structures/{id}.pdb")
         modified_score = calculator.calculate_stability(modified_seq)
     
     # Calculate percentage difference
     reward = -((modified_score - original_score) / abs(original_score)) * 100
     return reward
 
-def stability_reward_func(prompts, completions, sequences, **kwargs):
+def stability_reward_func(prompts, completions, sequences, ids, **kwargs):
     """Custom reward function for stability optimization"""
     rewards = []
     
-    for prompt, completion, sequence in zip(prompts, completions, sequences):
+    for prompt, completion, sequence, id in zip(prompts, completions, sequences, ids):
         try:
+            print(completion)
+            print('-'*100)
             # Extract modified sequence from completion
             sequence_match = re.search(r'\\boxed{(.*?)}', completion)
             if not sequence_match:
-                rewards.append(-100.0)
-                print(f"No sequence match found for {sequence}")
+                rewards.append(-1000.0)
                 continue
                 
             modified_sequence = sequence_match.group(1).strip()
@@ -365,13 +358,14 @@ def stability_reward_func(prompts, completions, sequences, **kwargs):
             reward = calculate_relative_stability(
                 original_seq=sequence,
                 modified_seq=modified_sequence,
-                calculator=calculator
+                calculator=calculator,
+                id=id
             )
             rewards.append(reward)
             
         except Exception as e:
             print(f"Error calculating stability score: {e}")
-            rewards.append(-100.0)
+            rewards.append(-1000.0)
             
     return rewards
 
@@ -395,7 +389,7 @@ training_args = GRPOConfig(
     run_name="llama_70b_grpo_training_run",
     num_train_epochs=NUM_EPOCHS,
     per_device_train_batch_size=2,
-    gradient_accumulation_steps=1,
+    gradient_accumulation_steps=4,
     learning_rate=2e-4,
     logging_steps=1,
     num_generations=2,
