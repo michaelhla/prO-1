@@ -19,8 +19,8 @@ from stability_reward import StabilityRewardCalculator
 load_dotenv()
 
 NUM_EPOCHS = 2
-MAX_INPUT_LENGTH = 512
-MAX_OUTPUT_LENGTH = 512
+MAX_INPUT_LENGTH = 32768
+MAX_OUTPUT_LENGTH = 2048
 
 
 
@@ -141,30 +141,25 @@ def validate_and_construct_prompt(x):
 # Data loading section
 data_load_start = time.time()
 
-# Get list of available structures
-structure_files = set(os.listdir("predicted_structures"))
-
 # Create dataset from BRENDA data
 with open("data/transformed_brenda.json", 'r') as f:
     data_dict = json.load(f)
-    # Filter to only include enzymes with existing structures and keep track of keys
-    data_list_with_ids = [
-        (key, value) for key, value in data_dict.items()
-        if f"{key}.pdb" in structure_files
-    ]
+    # Convert dictionary values to list of records
+    data_list = list(data_dict.values())
 
 # Create the dataset with strict validation
 valid_data_list = []
-for key, item in data_list_with_ids:
+for item in data_list:
     processed = validate_and_construct_prompt(item)
     if processed is not None:
-        processed['ids'] = str(key)  # Add the key as a string to the processed data
         valid_data_list.append(processed)
 
 # Create dataset from validated records
 train_dataset = Dataset.from_list(valid_data_list)
-print(f"Dataset size (enzymes with structures): {len(train_dataset)}")
-print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
+# Find and print the longest prompt
+
+# print(f"Dataset size: {len(train_dataset)}")
+# print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
 
 # Initialize wandb only on main process
 proc_state = PartialState()
@@ -327,7 +322,7 @@ get_model_size_info(model)
 
 
 
-def calculate_relative_stability(original_seq, modified_seq, calculator, id):
+def calculate_relative_stability(original_seq, modified_seq, calculator):
     """Calculate percentage difference between original and modified sequence stability"""
     # Move calculations to a dedicated GPU (e.g., last available GPU)
     reward_device = torch.device(f"cuda:{torch.cuda.device_count() - 1}")
@@ -339,7 +334,7 @@ def calculate_relative_stability(original_seq, modified_seq, calculator, id):
         stability_calc_start = time.time()
         # Ensure calculator is on the reward device
         with torch.cuda.device(reward_device):
-            original_score = calculator.calculate_stability(original_seq, pdb_file_path=f"predicted_structures/{id}.pdb")
+            original_score = calculator.calculate_stability(original_seq)
         stability_cache[original_seq] = original_score
         print(f"Stability calculation completed in {time.time() - stability_calc_start:.2f} seconds")
     
@@ -351,11 +346,11 @@ def calculate_relative_stability(original_seq, modified_seq, calculator, id):
     reward = -((modified_score - original_score) / abs(original_score)) * 100
     return reward
 
-def stability_reward_func(prompts, completions, sequences, ids, **kwargs):
+def stability_reward_func(prompts, completions, sequences, **kwargs):
     """Custom reward function for stability optimization"""
     rewards = []
     
-    for prompt, completion, sequence, id in zip(prompts, completions, sequences, ids):
+    for prompt, completion, sequence in zip(prompts, completions, sequences):
         try:
             # Extract modified sequence from completion
             sequence_match = re.search(r'\\boxed{(.*?)}', completion)
@@ -370,8 +365,7 @@ def stability_reward_func(prompts, completions, sequences, ids, **kwargs):
             reward = calculate_relative_stability(
                 original_seq=sequence,
                 modified_seq=modified_sequence,
-                calculator=calculator,
-                id=id
+                calculator=calculator
             )
             rewards.append(reward)
             
@@ -401,7 +395,7 @@ training_args = GRPOConfig(
     run_name="llama_70b_grpo_training_run",
     num_train_epochs=NUM_EPOCHS,
     per_device_train_batch_size=2,
-    gradient_accumulation_steps=3,
+    gradient_accumulation_steps=1,
     learning_rate=2e-4,
     logging_steps=1,
     num_generations=2,
@@ -422,9 +416,6 @@ training_args = GRPOConfig(
     # },
 )
 
-def dummy_reward_func(prompts, completions, sequences, ids, **kwargs):
-    return [0.0] * len(prompts)
-
 
 # Initialize GRPO trainer
 trainer = GRPOTrainer(
@@ -432,7 +423,7 @@ trainer = GRPOTrainer(
     args=training_args,
     peft_config=peft_config,
     train_dataset=train_dataset,
-    reward_funcs=[stability_reward_func],
+    reward_funcs=stability_reward_func,
     processing_class=tokenizer,
     callbacks=[WandBLoggingCallback()], 
 )
