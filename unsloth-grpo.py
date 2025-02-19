@@ -20,9 +20,9 @@ from stability_reward import StabilityRewardCalculator
 # accelerate launch fsdp_grpo.py
 load_dotenv()
 
-NUM_EPOCHS = 5
-MAX_INPUT_LENGTH = 32768
-MAX_OUTPUT_LENGTH = 2048
+NUM_EPOCHS = 3
+MAX_INPUT_LENGTH = 5120
+MAX_OUTPUT_LENGTH = 4096
 
 # Print model size information
 def get_model_size_info(model):
@@ -104,7 +104,7 @@ Propose mutations to optimize the stability of the enzyme given the information 
 COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE:"""
 
     whole_prompt = f"""<|start_header_id|>system<|end_header_id|>
-You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively.<|eot_id|><|start_header_id|>user<|end_header_id|>
+You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively. Think for at least 3000 tokens. |eot_id|><|start_header_id|>user<|end_header_id|>
 {enzyme_prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
 
     return whole_prompt
@@ -187,18 +187,25 @@ with open("data/transformed_brenda.json", 'r') as f:
         (key, value) for key, value in data_dict.items()
         if f"{key}.pdb" in structure_files
     ]
-
 # Create the dataset with strict validation
 valid_data_list = []
 for key, item in data_list_with_ids:
     processed = validate_and_construct_prompt(item)
-    if processed is not None:
+    if processed is not None and len(processed['prompt']) <= 4096:
         valid_data_list.append(processed)
 
 # Create dataset from validated records
 train_dataset = Dataset.from_list(valid_data_list)
 print(f"Dataset size (enzymes with structures): {len(train_dataset)}")
 print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
+# Calculate and print dataset statistics for prompt lengths
+prompt_lengths = [len(example['prompt']) for example in valid_data_list]
+print("\nPrompt Length Statistics:")
+print(f"Mean length: {sum(prompt_lengths) / len(prompt_lengths):.2f}")
+print(f"Median length: {sorted(prompt_lengths)[len(prompt_lengths)//2]}")
+print(f"Max length: {max(prompt_lengths)}")
+print(f"Min length: {min(prompt_lengths)}")
+
 
 # Initialize wandb only on main process
 proc_state = PartialState()
@@ -208,7 +215,7 @@ if proc_state.is_main_process:
         wandb.login(key=os.getenv('WANDB_API_KEY'))
         wandb.init(
             project="protein-rl",
-            name="unsloth-grpo-testrun",
+            name="unsloth-grpo-testrun-simple",
             config={
                 "model_name": "unsloth/Meta-Llama-3.1-70B-bnb-4bit",
                 "num_epochs": NUM_EPOCHS,
@@ -261,28 +268,32 @@ def stability_reward_func(prompts, completions, sequences, ids, **kwargs):
     
     for prompt, completion, sequence, id in zip(prompts, completions, sequences, ids):
         try:
+            reward = 0.0
             print(completion)
             print('-'*100)
             # Extract modified sequence from completion
             sequence_match = re.search(r'\\boxed{(.*?)}', completion)
             if not sequence_match:
-                rewards.append(-1000.0)
                 continue
-                
+            reward += 1.0
             modified_sequence = sequence_match.group(1).strip()
             
             # Calculate reward using the original sequence passed in via dataset
-            reward = calculate_relative_stability(
+            stab_calc = calculate_relative_stability(
                 original_seq=sequence,
                 modified_seq=modified_sequence,
                 calculator=calculator,
                 id=id
             )
-            rewards.append(reward)
+
+            if stab_calc > 0.0:
+                reward += 1.0
             
+            rewards.append(reward)
+                        
         except Exception as e:
             print(f"Error calculating stability score: {e}")
-            rewards.append(-1000.0)
+            rewards.append(reward)
             
     return rewards
 
@@ -312,7 +323,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     load_in_4bit=True,
     fast_inference=True,
     max_lora_rank=32,  # Adjust based on your needs
-    gpu_memory_utilization=0.75,
+    gpu_memory_utilization=0.7,
 )
 
 # Configure LoRA
@@ -332,7 +343,7 @@ model = FastLanguageModel.get_peft_model(
 # Modify training arguments for Unsloth compatibility
 training_args = GRPOConfig(
     use_vllm=False,
-    learning_rate=2e-4,
+    learning_rate=1e-3,
     adam_beta1=0.9,
     adam_beta2=0.99,
     weight_decay=0.1,
@@ -342,7 +353,7 @@ training_args = GRPOConfig(
     logging_steps=1,
     bf16=True,
     per_device_train_batch_size=2,
-    gradient_accumulation_steps=2,
+    gradient_accumulation_steps=4,
     num_generations=2,
     max_prompt_length=MAX_INPUT_LENGTH,
     max_completion_length=MAX_OUTPUT_LENGTH,
