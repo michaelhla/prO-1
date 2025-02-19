@@ -96,12 +96,15 @@ class StabilityRewardCalculator:
             pdb_files.append(pdb_path)
         return pdb_files
 
-    def calculate_stability(self, sequence):
+    def calculate_stability(self, sequence, pdb_file_path=None):
         start_time = time.time()
         
         """Calculate stability score using Rosetta with optimization"""
-        # Get structure prediction
-        pdb_file = self.predict_structure(sequence)
+        # Get structure prediction'
+        if pdb_file_path is None:
+            pdb_file = self.predict_structure(sequence)
+        else:
+            pdb_file = pdb_file_path
 
         # Load structure into PyRosetta
         pose = pyrosetta.pose_from_pdb(pdb_file)

@@ -21,30 +21,8 @@ from stability_reward import StabilityRewardCalculator
 load_dotenv()
 
 NUM_EPOCHS = 2
-MAX_LENGTH = 2048
-
-
-
-def ternary_quantize(model):
-    """Convert model weights to ternary values (-1, 0, 1)"""
-    def quantize_tensor(tensor):
-        abs_mean = torch.mean(torch.abs(tensor))
-        threshold = 0.7 * abs_mean  # Adjustable threshold
-        
-        # Create ternary weights
-        out = torch.zeros_like(tensor)
-        out[tensor > threshold] = 1
-        out[tensor < -threshold] = -1
-        return out
-    
-    # Quantize all parameters except LoRA
-    with torch.no_grad():
-        for name, param in model.named_parameters():
-            if 'lora' not in name.lower():  # Skip LoRA parameters
-                param.data = quantize_tensor(param.data)
-    
-    return model
-
+MAX_INPUT_LENGTH = 2048
+MAX_OUTPUT_LENGTH = 2048
 
 # Print model size information
 def get_model_size_info(model):
@@ -197,23 +175,30 @@ def validate_and_construct_prompt(x):
 # Data loading section
 data_load_start = time.time()
 
+# Get list of available structures
+structure_files = set(os.listdir("predicted_structures"))
+
 # Create dataset from BRENDA data
 with open("data/transformed_brenda.json", 'r') as f:
     data_dict = json.load(f)
-    # Convert dictionary values to list of records
-    data_list = list(data_dict.values())
+    # Filter to only include enzymes with existing structures and keep track of keys
+    data_list_with_ids = [
+        (key, value) for key, value in data_dict.items()
+        if f"{key}.pdb" in structure_files
+    ]
 
 # Create the dataset with strict validation
 valid_data_list = []
-for item in data_list:
+for key, item in data_list_with_ids:
     processed = validate_and_construct_prompt(item)
     if processed is not None:
+        processed['ids'] = str(key)  # Add the key as a string to the processed data
         valid_data_list.append(processed)
 
 # Create dataset from validated records
 train_dataset = Dataset.from_list(valid_data_list)
-# print(f"Dataset size: {len(train_dataset)}")
-# print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
+print(f"Dataset size (enzymes with structures): {len(train_dataset)}")
+print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
 
 # Initialize wandb only on main process
 proc_state = PartialState()
@@ -256,134 +241,25 @@ def setup_reward_calculator():
     
     return calculator
 
-# Initialize the reward calculator before training
-# calculator = setup_reward_calculator()
-stability_cache = {}
-
-# # Modify the device mapping for the training model to exclude the reward GPU
-device_string = PartialState().process_index
-# if device_string == torch.cuda.device_count() - 1:
-#     # If this process would use the reward GPU, use the previous one instead
-#     device_string = str(int(device_string) - 1)
-
-# bnb_config = BitsAndBytesConfig(
-#     load_in_4bit=True,
-#     bnb_4bit_quant_type="nf4",
-#     bnb_4bit_compute_dtype=torch.bfloat16,
-#     bnb_4bit_use_double_quant=True,
-#     bnb_4bit_quant_storage=torch.bfloat16,
-# )
-
-# Load model with 8-bit config
-model = AutoModelForCausalLM.from_pretrained(
-    "unsloth/Meta-Llama-3.1-70B-bnb-4bit", 
-    # quantization_config=bnb_config,
-    trust_remote_code=True,
-    torch_dtype=torch.bfloat16,
-    # device_map={"": device_string},
-)
-
-# Apply ternary quantization
-model = ternary_quantize(model)
-
-# Initialize tokenizer
-tokenizer = AutoTokenizer.from_pretrained(
-    "unsloth/Meta-Llama-3.1-70B-bnb-4bit", 
-    trust_remote_code=True, 
-    model_max_length=MAX_LENGTH,
-    padding_side="right"
-)
-
-# Print model size information
-get_model_size_info(model)
 
 
-# tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-# model.config.pad_token_id = tokenizer.pad_token_id
-
-# # Ensure embedding layer is properly initialized
-# model.resize_token_embeddings(len(tokenizer))
-
-# Prepare for k-bit training
-# model = prepare_model_for_kbit_training(model)
-
-# Add LoRA (parameters will remain in full precision)
-peft_config = LoraConfig(
-    lora_alpha=16,
-    lora_dropout=0.1,
-    r=8,
-    bias="none",
-    task_type="CAUSAL_LM",
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
-)
-
-# model = get_peft_model(model, peft_config)
-
-# # Convert parameters to bfloat16 more carefully
-# for name, param in model.named_parameters():
-#     if param.dtype != torch.int8:  # Skip 8-bit quantized weights
-#         param.data = param.data.to(torch.bfloat16)
-
-# # Ensure embedding layer maintains correct shape
-# if hasattr(model, 'model'):
-#     embed_tokens = model.model.embed_tokens
-#     if hasattr(embed_tokens, 'weight'):
-#         embed_shape = embed_tokens.weight.shape
-#         embed_tokens.weight.data = embed_tokens.weight.data.view(embed_shape)
-
-# Disable model caching
-model.config.use_cache = False
-
-
-
-# Print GPU memory usage
-def print_gpu_memory():
-    if torch.cuda.is_available():
-        for i in range(torch.cuda.device_count()):
-            total_memory = torch.cuda.get_device_properties(i).total_memory / (1024**3)
-            allocated_memory = torch.cuda.memory_allocated(i) / (1024**3)
-            cached_memory = torch.cuda.memory_reserved(i) / (1024**3)
-            print(f"\nGPU {i} Memory Usage:")
-            print(f"Total: {total_memory:.2f} GB")
-            print(f"Allocated: {allocated_memory:.2f} GB")
-            print(f"Cached: {cached_memory:.2f} GB")
-            print(f"Free: {total_memory - allocated_memory:.2f} GB")
-
-# print("\nChecking initial model size and memory usage...")
-# get_model_size_info(model)
-# print_gpu_memory()
-
-
-
-def calculate_relative_stability(original_seq, modified_seq, calculator):
+def calculate_relative_stability(original_seq, modified_seq, calculator, id):
     """Calculate percentage difference between original and modified sequence stability"""
     # Move calculations to a dedicated GPU (e.g., last available GPU)
     reward_device = torch.device(f"cuda:{torch.cuda.device_count() - 1}")
-    
-    if original_seq in stability_cache:
-        original_score = stability_cache[original_seq]
-    else:
-        print(f"Calculating stability for {original_seq}")
-        stability_calc_start = time.time()
-        # Ensure calculator is on the reward device
-        with torch.cuda.device(reward_device):
-            original_score = calculator.calculate_stability(original_seq)
-        stability_cache[original_seq] = original_score
-        print(f"Stability calculation completed in {time.time() - stability_calc_start:.2f} seconds")
-    
-    # Calculate modified sequence stability on reward device
     with torch.cuda.device(reward_device):
+        original_score = calculator.calculate_stability(original_seq, pdb_file_path=f"predicted_structures/{id}.pdb")
         modified_score = calculator.calculate_stability(modified_seq)
     
     # Calculate percentage difference
     reward = -((modified_score - original_score) / abs(original_score)) * 100
     return reward
 
-def stability_reward_func(prompts, completions, sequences, **kwargs):
+def stability_reward_func(prompts, completions, sequences, ids, **kwargs):
     """Custom reward function for stability optimization"""
     rewards = []
     
-    for prompt, completion, sequence in zip(prompts, completions, sequences):
+    for prompt, completion, sequence, id in zip(prompts, completions, sequences, ids):
         try:
             # Extract modified sequence from completion
             sequence_match = re.search(r'\\boxed{(.*?)}', completion)
@@ -397,7 +273,8 @@ def stability_reward_func(prompts, completions, sequences, **kwargs):
             reward = calculate_relative_stability(
                 original_seq=sequence,
                 modified_seq=modified_sequence,
-                calculator=calculator
+                calculator=calculator,
+                id=id
             )
             rewards.append(reward)
             
@@ -421,61 +298,71 @@ class WandBLoggingCallback(TrainerCallback):
             wandb.log({"eval/" + k: v for k, v in metrics.items()}, step=state.global_step) 
 
 
-# Modify FSDP config to be less aggressive
+# Initialize Unsloth's FastLanguageModel with GRPO patch
+from unsloth import FastLanguageModel, PatchFastRL
+PatchFastRL("GRPO", FastLanguageModel)
+
+# Model initialization
+model, tokenizer = FastLanguageModel.from_pretrained(
+    model_name="unsloth/meta-Llama-3.1-8B-Instruct",
+    max_seq_length=MAX_INPUT_LENGTH,
+    load_in_4bit=True,
+    fast_inference=True,
+    max_lora_rank=32,  # Adjust based on your needs
+    gpu_memory_utilization=0.6,
+)
+
+# Configure LoRA
+model = FastLanguageModel.get_peft_model(
+    model,
+    r=32,  # LoRA rank
+    target_modules=[
+        "q_proj", "k_proj", "v_proj", "o_proj",
+        "gate_proj", "up_proj", "down_proj",
+    ],
+    lora_alpha=32,
+    use_gradient_checkpointing="unsloth",
+    random_state=3407,
+
+)
+
+# Modify training arguments for Unsloth compatibility
 training_args = GRPOConfig(
-    output_dir="./llama_70b_grpo_output",
-    run_name="llama_70b_grpo_training_run",
-    num_train_epochs=NUM_EPOCHS,
+    use_vllm=True,
+    learning_rate=2e-4,
+    adam_beta1=0.9,
+    adam_beta2=0.99,
+    weight_decay=0.1,
+    warmup_ratio=0.1,
+    lr_scheduler_type="cosine",
+    optim="paged_adamw_8bit",
+    logging_steps=1,
+    bf16=True,
     per_device_train_batch_size=1,
     gradient_accumulation_steps=32,
-    learning_rate=2e-4,
-    logging_steps=1,
     num_generations=2,
-    max_prompt_length=512,
-    max_completion_length=512,
-    temperature=0.7,
-    beta=0.04,
-    remove_unused_columns=False,
-
-    # fp16=False,
-    # bf16=True,
-    # fsdp="full_shard auto_wrap",
-    # fsdp_config={
-    # #     "fsdp_offload_params": False,  # Disable parameter offloading
-    # #     "fsdp_transformer_layer_cls_to_wrap": "LlamaDecoderLayer",
-    #     "fsdp_state_dict_type": "FULL_STATE_DICT",
-    # #     "activation_checkpointing": True,
-    # },
+    max_prompt_length=MAX_INPUT_LENGTH,
+    max_completion_length=MAX_OUTPUT_LENGTH,
+    num_train_epochs=NUM_EPOCHS,
+    max_grad_norm=0.1,
+    output_dir="./llama_70b_grpo_output",
 )
 
-def dummy_reward_func(prompts, completions, sequences, **kwargs):
-    return [0.0] * len(prompts)
-
-# Initialize GRPO trainer
+# Initialize GRPO trainer with Unsloth configuration
 trainer = GRPOTrainer(
     model=model,
-    args=training_args,
-    peft_config=peft_config,
-    train_dataset=train_dataset,
-    reward_funcs=dummy_reward_func,
     processing_class=tokenizer,
-    callbacks=[WandBLoggingCallback()], 
+    reward_funcs=[stability_reward_func],  # Keep your existing reward function
+    args=training_args,
+    train_dataset=train_dataset,
+    callbacks=[WandBLoggingCallback()],
 )
-
-# # Add memory monitoring before training
-# print("\nMemory usage before training:")
-# print_gpu_memory()
 
 # Train the model
 trainer.train()
 
-# # Print final memory usage
-# print("\nFinal memory usage:")
-# print_gpu_memory()
+# Save the model - Unsloth style
+model.save_lora("llama_70b_grpo_output/final_model")
 
-# Save the final model
-trainer.save_model("./llama_70b_grpo_output/final_model")
-
-# At the end of training, close wandb only on main process
 if proc_state.is_main_process:
     wandb.finish()
