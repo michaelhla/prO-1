@@ -101,7 +101,7 @@ Propose mutations to optimize the stability of the enzyme given the information 
 
 ****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions****
 
-COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE:"""
+COPY THE FINAL SEQUENCE AND ONLY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. DO NOT INCLUDE ANY OTHER TEXT OR FORMATTING WITHIN THE BRACKETS."""
 
     whole_prompt = f"""<|start_header_id|>system<|end_header_id|>
 You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively. Think for at least 3000 tokens. |eot_id|><|start_header_id|>user<|end_header_id|>
@@ -113,8 +113,8 @@ def validate_and_construct_prompt(x):
     """Wrapper function to validate data before constructing prompt"""
     try:
         # Ensure required fields exist and are of correct type
-        if 'sequence' not in x:
-            print(f"Warning: Missing required field 'sequence'")
+        if 'sequence' not in x or 'orig_stab' not in x:
+            print(f"Warning: Missing required field 'sequence' or 'orig_stab'")
             return None
             
         # Convert all fields to strings where appropriate
@@ -125,7 +125,8 @@ def validate_and_construct_prompt(x):
             'general_information': str(x.get('general_information', 'No additional information available')),
             'reaction': [],
             'metal_ions': [],
-            'engineering': []
+            'engineering': [],
+            'orig_stab': x['orig_stab']  # Keep as number, don't convert to string
         }
         
         # Handle reaction data
@@ -158,7 +159,7 @@ def validate_and_construct_prompt(x):
         result = {
             "prompt": construct_prompt(safe_data, safe_data['sequence']), 
             "sequences": safe_data['sequence'],
-            "ids": key
+            "orig_stabs": safe_data['orig_stab']  # Changed from orig_stab to orig_stabs to match usage
         }
         
         # Verify the output is valid
@@ -185,7 +186,7 @@ with open("data/transformed_brenda.json", 'r') as f:
     # Filter to only include enzymes with existing structures and keep track of keys
     data_list_with_ids = [
         (key, value) for key, value in data_dict.items()
-        if f"{key}.pdb" in structure_files
+        if f"{key}.pdb" in structure_files and value.get('orig_stab') is not None
     ]
 # Create the dataset with strict validation
 valid_data_list = []
@@ -215,7 +216,7 @@ if proc_state.is_main_process:
         wandb.login(key=os.getenv('WANDB_API_KEY'))
         wandb.init(
             project="protein-rl",
-            name="unsloth-grpo-testrun-simple",
+            name="unsloth-grpo-testrun-edit-dist",
             config={
                 "model_name": "unsloth/Meta-Llama-3.1-70B-bnb-4bit",
                 "num_epochs": NUM_EPOCHS,
@@ -250,23 +251,22 @@ def setup_reward_calculator():
 
 
 
-def calculate_relative_stability(original_seq, modified_seq, calculator, id):
+def calculate_relative_stability(original_seq, modified_seq, calculator, orig_stab):
     """Calculate percentage difference between original and modified sequence stability"""
     # Move calculations to a dedicated GPU (e.g., last available GPU)
     reward_device = torch.device(f"cuda:{torch.cuda.device_count() - 1}")
     with torch.cuda.device(reward_device):
-        original_score = calculator.calculate_stability(original_seq, pdb_file_path=f"predicted_structures/{id}.pdb")
         modified_score = calculator.calculate_stability(modified_seq)
     
     # Calculate percentage difference
-    reward = -((modified_score - original_score) / abs(original_score)) * 100
+    reward = -((modified_score - orig_stab) / abs(orig_stab)) * 100
     return reward
 
-def stability_reward_func(prompts, completions, sequences, ids, **kwargs):
+def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs):
     """Custom reward function for stability optimization"""
     rewards = []
     
-    for prompt, completion, sequence, id in zip(prompts, completions, sequences, ids):
+    for prompt, completion, sequence, orig_stab in zip(prompts, completions, sequences, orig_stabs):
         try:
             reward = 0.0
             print(completion)
@@ -274,17 +274,44 @@ def stability_reward_func(prompts, completions, sequences, ids, **kwargs):
             # Extract modified sequence from completion
             sequence_match = re.search(r'\\boxed{(.*?)}', completion)
             if not sequence_match:
+                rewards.append(reward)
                 continue
-            reward += 1.0
             modified_sequence = sequence_match.group(1).strip()
+
+            # Calculate Levenshtein edit distance between sequences
+            def levenshtein_distance(s1, s2):
+                if len(s1) < len(s2):
+                    return levenshtein_distance(s2, s1)
+                if len(s2) == 0:
+                    return len(s1)
+                
+                previous_row = range(len(s2) + 1)
+                for i, c1 in enumerate(s1):
+                    current_row = [i + 1]
+                    for j, c2 in enumerate(s2):
+                        insertions = previous_row[j + 1] + 1
+                        deletions = current_row[j] + 1
+                        substitutions = previous_row[j] + (c1 != c2)
+                        current_row.append(min(insertions, deletions, substitutions))
+                    previous_row = current_row
+                
+                return previous_row[-1]
+
+            # Calculate edit distance and give reward if within 10 modifications
+            edit_dist = levenshtein_distance(sequence, modified_sequence)
+            if edit_dist <= 10:
+                reward += 1.0
             
             # Calculate reward using the original sequence passed in via dataset
             stab_calc = calculate_relative_stability(
                 original_seq=sequence,
                 modified_seq=modified_sequence,
                 calculator=calculator,
-                id=id
+                orig_stab=orig_stab
             )
+
+            if stab_calc: 
+                reward+=1.0
 
             if stab_calc > 0.0:
                 reward += 1.0
