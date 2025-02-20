@@ -101,10 +101,10 @@ Propose mutations to optimize the stability of the enzyme given the information 
 
 ****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions****
 
-COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE:"""
+COPY THE FINAL SEQUENCE AND ONLY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. DO NOT INCLUDE ANY OTHER TEXT OR FORMATTING WITHIN THE BRACKETS."""
 
     whole_prompt = f"""<|start_header_id|>system<|end_header_id|>
-You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively. Think for at least 3000 tokens. |eot_id|><|start_header_id|>user<|end_header_id|>
+You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively. Your thinking should be at least 3000 tokens. |eot_id|><|start_header_id|>user<|end_header_id|>
 {enzyme_prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
 
     return whole_prompt
@@ -274,8 +274,8 @@ def stability_reward_func(prompts, completions, sequences, ids, **kwargs):
             # Extract modified sequence from completion
             sequence_match = re.search(r'\\boxed{(.*?)}', completion)
             if not sequence_match:
+                rewards.append(reward)
                 continue
-            reward += 1.0
             modified_sequence = sequence_match.group(1).strip()
             
             # Calculate reward using the original sequence passed in via dataset
@@ -285,6 +285,9 @@ def stability_reward_func(prompts, completions, sequences, ids, **kwargs):
                 calculator=calculator,
                 id=id
             )
+
+            if stab_calc: 
+                reward += 1.0
 
             if stab_calc > 0.0:
                 reward += 1.0
@@ -354,7 +357,7 @@ training_args = GRPOConfig(
     bf16=True,
     per_device_train_batch_size=2,
     gradient_accumulation_steps=4,
-    num_generations=2,
+    num_generations=4,
     max_prompt_length=MAX_INPUT_LENGTH,
     max_completion_length=MAX_OUTPUT_LENGTH,
     num_train_epochs=NUM_EPOCHS,
