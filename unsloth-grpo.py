@@ -271,6 +271,17 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
             reward = 0.0
             print(completion)
             print('-'*100)
+
+            # Calculate reward for length of thinking section
+            think_match = re.search(r'<think>(.*?)</think>', completion, re.DOTALL)
+            if think_match:
+                think_text = think_match.group(1)
+                # Count tokens in thinking section
+                think_tokens = len(think_text.split())
+                # Gaussian reward centered at 3000 tokens with std dev of 1000
+                token_reward = torch.exp(-((think_tokens - 3000)**2)/(2*1000**2)).item()
+                reward += token_reward
+
             # Extract modified sequence from completion
             sequence_match = re.search(r'\\boxed{(.*?)}', completion)
             if not sequence_match:
@@ -300,7 +311,7 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
             # Calculate edit distance and give reward if within 10 modifications
             edit_dist = levenshtein_distance(sequence, modified_sequence)
             if edit_dist <= 10:
-                reward += 1.0
+                reward += 0.3
             
             # Calculate reward using the original sequence passed in via dataset
             stab_calc = calculate_relative_stability(
@@ -311,7 +322,7 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
             )
 
             if stab_calc: 
-                reward+=1.0
+                reward+=0.5
 
             if stab_calc > 0.0:
                 reward += 1.0
