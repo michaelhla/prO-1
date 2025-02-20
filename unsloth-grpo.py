@@ -21,7 +21,7 @@ from stability_reward import StabilityRewardCalculator
 load_dotenv()
 
 NUM_EPOCHS = 3
-MAX_INPUT_LENGTH = 5120
+MAX_INPUT_LENGTH = 6000
 MAX_OUTPUT_LENGTH = 4096
 
 # Print model size information
@@ -101,7 +101,6 @@ Propose mutations to optimize the stability of the enzyme given the information 
 
 ****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions****
 
-COPY THE FINAL SEQUENCE AND ONLY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. DO NOT INCLUDE ANY OTHER TEXT OR FORMATTING WITHIN THE BRACKETS."""
 COPY THE FINAL SEQUENCE AND ONLY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. DO NOT INCLUDE ANY OTHER TEXT OR FORMATTING WITHIN THE BRACKETS."""
 
     whole_prompt = f"""<|start_header_id|>system<|end_header_id|>
