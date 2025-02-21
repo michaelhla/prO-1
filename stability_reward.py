@@ -24,7 +24,7 @@ class StabilityRewardCalculator:
     def _load_protein_model(self, model_path):
         """Load ESMFold model for structure prediction"""
         start_time = time.time()
-        local_path = '/root/prO-1/model_cache/'
+        local_path = 'model_cache/'
         if os.path.exists(local_path):
             model = EsmForProteinFolding.from_pretrained(local_path)
         else:
