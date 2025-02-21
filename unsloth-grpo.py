@@ -14,15 +14,22 @@ from accelerate import PartialState
 from huggingface_hub import login
 from bitsandbytes.optim import PagedAdamW32bit
 import torch.nn as nn
+from pathlib import Path
+import shutil
+from datetime import datetime
+import math
 
 from stability_reward import StabilityRewardCalculator
 
 # accelerate launch fsdp_grpo.py
 load_dotenv()
 
-NUM_EPOCHS = 3
+NUM_EPOCHS = 5
 MAX_INPUT_LENGTH = 6000
 MAX_OUTPUT_LENGTH = 4096
+THINK_LENGTH = 3000
+DEVICE = "cuda"
+RUN_NAME = "unsloth-grpo-mega-run"
 
 # Print model size information
 def get_model_size_info(model):
@@ -177,28 +184,15 @@ def validate_and_construct_prompt(x):
 # Data loading section
 data_load_start = time.time()
 
-# Get list of available structures
-structure_files = set(os.listdir("predicted_structures"))
+# Load dataset directly from train_dataset.json
+with open("data/train_dataset.json", 'r') as f:
+    valid_data_list = json.load(f)
 
-# Create dataset from BRENDA data
-with open("data/transformed_brenda.json", 'r') as f:
-    data_dict = json.load(f)
-    # Filter to only include enzymes with existing structures and keep track of keys
-    data_list_with_ids = [
-        (key, value) for key, value in data_dict.items()
-        if f"{key}.pdb" in structure_files and value.get('orig_stab') is not None
-    ]
-# Create the dataset with strict validation
-valid_data_list = []
-for key, item in data_list_with_ids:
-    processed = validate_and_construct_prompt(item)
-    if processed is not None and len(processed['prompt']) <= 4096:
-        valid_data_list.append(processed)
-
-# Create dataset from validated records
+# Create dataset from records
 train_dataset = Dataset.from_list(valid_data_list)
-print(f"Dataset size (enzymes with structures): {len(train_dataset)}")
-print(f"Data loading and processing completed in {time.time() - data_load_start:.2f} seconds")
+print(f"Dataset size: {len(train_dataset)}")
+print(f"Data loading completed in {time.time() - data_load_start:.2f} seconds")
+
 # Calculate and print dataset statistics for prompt lengths
 prompt_lengths = [len(example['prompt']) for example in valid_data_list]
 print("\nPrompt Length Statistics:")
@@ -216,13 +210,13 @@ if proc_state.is_main_process:
         wandb.login(key=os.getenv('WANDB_API_KEY'))
         wandb.init(
             project="protein-rl",
-            name="unsloth-grpo-testrun-edit-dist",
+            name=RUN_NAME,
             config={
-                "model_name": "unsloth/Meta-Llama-3.1-70B-bnb-4bit",
+                "model_name": "unsloth/Meta-Llama-3.1-8B-Instruct",
                 "num_epochs": NUM_EPOCHS,
-                "batch_size": 1,
-                "learning_rate": 2e-4,
-                "num_generations": 2,
+                "batch_size": 2,
+                "learning_rate": 1e-3,
+                "num_generations": 4,
             }
         )
     except Exception as e:
@@ -240,12 +234,11 @@ if proc_state.is_main_process:
 
 # Before training, set up the reward calculator on the dedicated GPU
 def setup_reward_calculator():
-    num_gpus = torch.cuda.device_count()
 
     # Use the last GPU for reward calculation
-    reward_device = torch.device(f"cuda:{num_gpus - 1}")
+    reward_device = torch.device(DEVICE)
     
-    calculator = StabilityRewardCalculator(device=reward_device)  # Initialize your calculator here
+    calculator = StabilityRewardCalculator(device=DEVICE)  # Initialize your calculator here
     
     return calculator
 
@@ -254,8 +247,7 @@ def setup_reward_calculator():
 def calculate_relative_stability(original_seq, modified_seq, calculator, orig_stab):
     """Calculate percentage difference between original and modified sequence stability"""
     # Move calculations to a dedicated GPU (e.g., last available GPU)
-    reward_device = torch.device(f"cuda:{torch.cuda.device_count() - 1}")
-    with torch.cuda.device(reward_device):
+    with torch.cuda.device(DEVICE):
         modified_score = calculator.calculate_stability(modified_seq)
     
     # Calculate percentage difference
@@ -266,9 +258,10 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
     """Custom reward function for stability optimization"""
     rewards = []
     
-    for prompt, completion, sequence, orig_stab in zip(prompts, completions, sequences, orig_stabs):
+    for i, (prompt, completion, sequence, orig_stab) in enumerate(zip(prompts, completions, sequences, orig_stabs)):
         try:
             reward = 0.0
+            print(f"COMPLETION {i}")
             print(completion)
             print('-'*100)
 
@@ -278,9 +271,9 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
                 think_text = think_match.group(1)
                 # Count tokens in thinking section
                 think_tokens = len(think_text.split())
-                # Gaussian reward centered at 3000 tokens with std dev of 1000
-                token_reward = torch.exp(-((think_tokens - 3000)**2)/(2*1000**2)).item()
-                reward += token_reward
+                # Gaussian reward centered at THINK_LENGTH tokens with std dev of 1000
+                token_reward = math.exp(-((think_tokens - THINK_LENGTH)**2)/(2*1000**2))
+                reward += 0.2*token_reward
 
             # Extract modified sequence from completion
             sequence_match = re.search(r'\\boxed{(.*?)}', completion)
@@ -322,7 +315,7 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
             )
 
             if stab_calc: 
-                reward+=0.5
+                reward+=0.3
 
             if stab_calc > 0.0:
                 reward += 1.0
@@ -348,6 +341,77 @@ class WandBLoggingCallback(TrainerCallback):
             # Log evaluation metrics
             wandb.log({"eval/" + k: v for k, v in metrics.items()}, step=state.global_step) 
 
+class CheckpointCallback(TrainerCallback):
+    def __init__(self, checkpoint_dir="checkpoints", checkpoint_freq=100, max_checkpoints=5):
+        self.checkpoint_dir = Path(checkpoint_dir)
+        self.checkpoint_freq = checkpoint_freq
+        self.max_checkpoints = max_checkpoints
+        self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        
+    def on_step_end(self, args, state, control, **kwargs):
+        """Save checkpoint every checkpoint_freq steps"""
+        if state.global_step % self.checkpoint_freq == 0:
+            self._save_checkpoint(args, state)
+            
+    def _save_checkpoint(self, args, state):
+        """Save LoRA checkpoint and maintain max number of checkpoints"""
+        proc_state = PartialState()
+        if not proc_state.is_main_process:
+            return
+            
+        # Create checkpoint name with timestamp and step
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        checkpoint_name = f"checkpoint-{timestamp}-step{state.global_step}"
+        checkpoint_path = self.checkpoint_dir / checkpoint_name
+        
+        try:
+            # Save LoRA weights and config
+            state.model.save_pretrained(checkpoint_path)  # This saves LoRA weights
+            
+            # Save additional training state
+            training_state = {
+                "global_step": state.global_step,
+                "epoch": state.epoch,
+                "best_metric": state.best_metric,
+                "training_args": args.to_dict(),
+            }
+            torch.save(training_state, checkpoint_path / "trainer_state.pt")
+            
+            # Save tokenizer
+            tokenizer.save_pretrained(checkpoint_path)
+            
+            # Maintain only max_checkpoints number of checkpoints
+            checkpoints = sorted(self.checkpoint_dir.glob("checkpoint-*"))
+            if len(checkpoints) > self.max_checkpoints:
+                for checkpoint in checkpoints[:-self.max_checkpoints]:
+                    shutil.rmtree(checkpoint)
+                    
+            print(f"Saved LoRA checkpoint: {checkpoint_path}")
+            
+        except Exception as e:
+            print(f"Error saving checkpoint: {e}")
+
+def load_from_checkpoint(checkpoint_path, model, trainer):
+    """Load LoRA weights and training state from checkpoint"""
+    try:
+        checkpoint_path = Path(checkpoint_path)
+        
+        # Load LoRA weights
+        model.load_adapter(checkpoint_path, "default")  # Load LoRA weights
+        
+        # Load training state
+        training_state = torch.load(checkpoint_path / "trainer_state.pt")
+        trainer.state.global_step = training_state["global_step"]
+        trainer.state.epoch = training_state["epoch"]
+        trainer.state.best_metric = training_state["best_metric"]
+        
+        print(f"Loaded LoRA checkpoint from {checkpoint_path}")
+        return True
+        
+    except Exception as e:
+        print(f"Error loading checkpoint: {e}")
+        return False
+
 calculator = setup_reward_calculator()
 
 # Initialize Unsloth's FastLanguageModel with GRPO patch
@@ -361,7 +425,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     load_in_4bit=True,
     fast_inference=True,
     max_lora_rank=32,  # Adjust based on your needs
-    gpu_memory_utilization=0.7,
+    gpu_memory_utilization=0.6,
 )
 
 # Configure LoRA
@@ -392,12 +456,12 @@ training_args = GRPOConfig(
     bf16=True,
     per_device_train_batch_size=2,
     gradient_accumulation_steps=4,
-    num_generations=4,
+    num_generations=2,
     max_prompt_length=MAX_INPUT_LENGTH,
     max_completion_length=MAX_OUTPUT_LENGTH,
     num_train_epochs=NUM_EPOCHS,
     max_grad_norm=0.1,
-    output_dir="./llama_70b_grpo_output",
+    output_dir=f"./{RUN_NAME}",
 )
 
 # Initialize GRPO trainer with Unsloth configuration
@@ -407,14 +471,18 @@ trainer = GRPOTrainer(
     reward_funcs=[stability_reward_func],  # Keep your existing reward function
     args=training_args,
     train_dataset=train_dataset,
-    callbacks=[WandBLoggingCallback()],
+    callbacks=[WandBLoggingCallback(),CheckpointCallback(
+        checkpoint_dir=f"./{RUN_NAME}/checkpoints",
+        checkpoint_freq=8, 
+        max_checkpoints=5     # Keep last 5 checkpoints
+    )]
 )
 
 # Train the model
 trainer.train()
 
 # Save the model - Unsloth style
-model.save_lora("llama_70b_grpo_output/final_model")
+model.save_pretrained(f"./{RUN_NAME}/final_model")
 
 if proc_state.is_main_process:
     wandb.finish()
