@@ -15,6 +15,7 @@ import time
 class StabilityRewardCalculator:
     def __init__(self, protein_model_path="facebook/esmfold_v1", device="cuda"):
         self.device = torch.device(device)
+        print(f"Using reward device: {self.device}")
         self.protein_model = self._load_protein_model(protein_model_path)
         self.cached_structures = {}
 
@@ -25,12 +26,22 @@ class StabilityRewardCalculator:
         """Load ESMFold model for structure prediction"""
         start_time = time.time()
         local_path = 'model_cache/'
-        if os.path.exists(local_path):
-            model = EsmForProteinFolding.from_pretrained(local_path)
-        else:
-            model = EsmForProteinFolding.from_pretrained(model_path)
-            os.makedirs(os.path.dirname(local_path), exist_ok=True)
-            model.save_pretrained(local_path)
+        
+        # Temporarily disable DeepSpeed's parameter partitioning
+        import deepspeed
+        orig_zero_init = deepspeed.zero.Init
+        deepspeed.zero.Init = lambda: None
+        
+        try:
+            if os.path.exists(local_path):
+                model = EsmForProteinFolding.from_pretrained(local_path)
+            else:
+                model = EsmForProteinFolding.from_pretrained(model_path)
+                os.makedirs(os.path.dirname(local_path), exist_ok=True)
+                model.save_pretrained(local_path)
+        finally:
+            # Restore DeepSpeed's parameter partitioning
+            deepspeed.zero.Init = orig_zero_init
 
         # Move model to specified device
         model = model.to(self.device)

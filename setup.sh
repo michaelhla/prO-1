@@ -4,15 +4,15 @@
 python3 -m venv venv
 source venv/bin/activate
 
-# Install SWIG with automatic yes
-apt-get update -y
-apt-get install -y swig
+# Install system packages with automatic yes
+sudo yum update -y
+sudo yum install -y swig
 
 # Install Boost development libraries with automatic yes
-apt-get install -y libboost-all-dev
+sudo yum install -y boost-devel
 
 # Install Open Babel with automatic yes
-apt install -y openbabel
+sudo yum install -y openbabel
 
 pip install -U numpy vina
 pip install pyrosetta-installer
