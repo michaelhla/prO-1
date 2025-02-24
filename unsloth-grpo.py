@@ -21,7 +21,6 @@ import math
 
 from stability_reward import StabilityRewardCalculator
 
-# accelerate launch fsdp_grpo.py
 load_dotenv()
 
 NUM_EPOCHS = 5
@@ -29,7 +28,19 @@ MAX_INPUT_LENGTH = 6000
 MAX_OUTPUT_LENGTH = 4096
 THINK_LENGTH = 3000
 DEVICE = "cuda"
-RUN_NAME = "unsloth-grpo-mega-run"
+RUN_NAME = "compliance-grpo-mega-run"
+
+FORMATTING_REWARD = 0.1
+STABILITY_REWARD = 1.5 
+
+lm_reward_coeffs = {
+    'compliance': 0.5,
+    'creativity': 0.25,
+    'specificity': 0.25
+}
+
+
+judge_prompts = json.load(open("data/judge_prompts.json", 'r'))
 
 # Print model size information
 def get_model_size_info(model):
@@ -254,8 +265,64 @@ def calculate_relative_stability(original_seq, modified_seq, calculator, orig_st
     reward = -((modified_score - orig_stab) / abs(orig_stab)) * 100
     return reward
 
+def index_sequence(sequence):
+    """Create an indexed version of the sequence where each amino acid is numbered"""
+    return '\n'.join(f"{i+1}: {aa}" for i, aa in enumerate(sequence))
+
+def get_llm_judgment(completion, original_seq, modified_seq, prompt, goal):
+    """Get LLM judgment on the modifications made"""
+    from openai import OpenAI
+    client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+    
+    indexed_original = index_sequence(original_seq)
+    indexed_modified = index_sequence(modified_seq)
+
+    if goal == 'compliance':
+        prefix = f"""
+
+        ORIGINAL SEQUENCE:
+        {indexed_original}
+
+        MODIFIED SEQUENCE:
+        {indexed_modified}
+
+        MODEL OUTPUT:
+        {completion}
+        
+        """
+
+    else: 
+        prefix = f"""
+
+        MODEL OUTPUT:
+        {completion}
+        
+        """
+
+    judge_prompt = prefix + judge_prompts[goal]
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": judge_prompt}],
+            temperature=0.3
+        )
+        
+        # Extract scores from response
+        response_text = response.choices[0].message.content
+        
+        # Simple score extraction - you might want to make this more robust
+        score_match = re.search(r"\\score{(\d+)}", response_text)
+        score = float(score_match.group(1)) if score_match else 0
+        
+        return score
+                
+    except Exception as e:
+        print(f"Error in LLM judgment: {e}")
+        return None
+
 def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs):
-    """Custom reward function for stability optimization"""
+    """Custom reward function for stability optimization with LLM-based soft rewards"""
     rewards = []
     
     for i, (prompt, completion, sequence, orig_stab) in enumerate(zip(prompts, completions, sequences, orig_stabs)):
@@ -265,48 +332,14 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
             print(completion)
             print('-'*100)
 
-            # Calculate reward for length of thinking section
-            think_match = re.search(r'<think>(.*?)</think>', completion, re.DOTALL)
-            if think_match:
-                think_text = think_match.group(1)
-                # Count tokens in thinking section
-                think_tokens = len(think_text.split())
-                # Gaussian reward centered at THINK_LENGTH tokens with std dev of 1000
-                token_reward = math.exp(-((think_tokens - THINK_LENGTH)**2)/(2*1000**2))
-                reward += 0.2*token_reward
-
             # Extract modified sequence from completion
             sequence_match = re.search(r'\\boxed{(.*?)}', completion)
             if not sequence_match:
                 rewards.append(reward)
                 continue
             modified_sequence = sequence_match.group(1).strip()
-
-            # Calculate Levenshtein edit distance between sequences
-            def levenshtein_distance(s1, s2):
-                if len(s1) < len(s2):
-                    return levenshtein_distance(s2, s1)
-                if len(s2) == 0:
-                    return len(s1)
-                
-                previous_row = range(len(s2) + 1)
-                for i, c1 in enumerate(s1):
-                    current_row = [i + 1]
-                    for j, c2 in enumerate(s2):
-                        insertions = previous_row[j + 1] + 1
-                        deletions = current_row[j] + 1
-                        substitutions = previous_row[j] + (c1 != c2)
-                        current_row.append(min(insertions, deletions, substitutions))
-                    previous_row = current_row
-                
-                return previous_row[-1]
-
-            # Calculate edit distance and give reward if within 10 modifications
-            edit_dist = levenshtein_distance(sequence, modified_sequence)
-            if edit_dist <= 10:
-                reward += 0.3
             
-            # Calculate reward using the original sequence passed in via dataset
+            # Calculate stability reward using the original sequence
             stab_calc = calculate_relative_stability(
                 original_seq=sequence,
                 modified_seq=modified_sequence,
@@ -314,16 +347,29 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
                 orig_stab=orig_stab
             )
 
+            # Base stability rewards
             if stab_calc: 
-                reward+=0.3
+                reward += FORMATTING_REWARD
 
             if stab_calc > 0.0:
-                reward += 1.0
+                reward += STABILITY_REWARD
+            
+            # Get LLM judgment
+            llm_judgments = []
+            for goal in ['compliance']: # ['compliance', 'creativity', 'specificity']:    
+                try: 
+                    start_time = time.time()
+                    llm_judgment = get_llm_judgment(completion, sequence, modified_sequence, prompt, goal)
+                    end_time = time.time()
+                    reward += lm_reward_coeffs[goal] * llm_judgment
+                    print(f"{goal} reward: {llm_judgment} in {end_time - start_time:.2f} seconds")
+                except Exception as e:
+                    print(f"Error getting LLM judgment: {e}")
             
             rewards.append(reward)
                         
         except Exception as e:
-            print(f"Error calculating stability score: {e}")
+            print(f"Error calculating rewards: {e}")
             rewards.append(reward)
             
     return rewards
@@ -425,7 +471,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     load_in_4bit=True,
     fast_inference=True,
     max_lora_rank=32,  # Adjust based on your needs
-    gpu_memory_utilization=0.6,
+    gpu_memory_utilization=0.55,
 )
 
 # Configure LoRA
@@ -445,7 +491,7 @@ model = FastLanguageModel.get_peft_model(
 # Modify training arguments for Unsloth compatibility
 training_args = GRPOConfig(
     use_vllm=False,
-    learning_rate=1e-3,
+    learning_rate=2e-4,
     adam_beta1=0.9,
     adam_beta2=0.99,
     weight_decay=0.1,
@@ -454,9 +500,9 @@ training_args = GRPOConfig(
     optim="paged_adamw_8bit",
     logging_steps=1,
     bf16=True,
-    per_device_train_batch_size=2,
-    gradient_accumulation_steps=4,
-    num_generations=2,
+    per_device_train_batch_size=4,
+    gradient_accumulation_steps=8,
+    num_generations=4,
     max_prompt_length=MAX_INPUT_LENGTH,
     max_completion_length=MAX_OUTPUT_LENGTH,
     num_train_epochs=NUM_EPOCHS,
