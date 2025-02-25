@@ -28,7 +28,7 @@ MAX_INPUT_LENGTH = 6000
 MAX_OUTPUT_LENGTH = 4096
 THINK_LENGTH = 3000
 DEVICE = "cuda"
-RUN_NAME = "compliance-grpo-mega-run"
+RUN_NAME = "all-lm-grpo-mega-run"
 
 FORMATTING_REWARD = 0.1
 STABILITY_REWARD = 1.5 
@@ -199,6 +199,16 @@ data_load_start = time.time()
 with open("data/train_dataset.json", 'r') as f:
     valid_data_list = json.load(f)
 
+for record in valid_data_list:
+    if 'prompt' in record and isinstance(record['prompt'], str):
+        record['prompt'] = record['prompt'].replace(
+            "Propose mutations to optimize the stability of the enzyme given the information above.",
+            "Propose mutations to optimize the stability of the enzyme given the information above. If applicable, be creative with your modifications, including insertions or deletions of sequences that may help improve stability (make sure to have good reasoning for these types of modifications)."
+        ).replace(
+            "<|eot_id|><|start_header_id|>assistant<|end_header_id|>",
+            " MAKE SURE YOU COPY THE ORIGINAL SEQUENCE CORRECTLY WITH THE MUTATIONS APPLIED!!!<|eot_id|><|start_header_id|>assistant<|end_header_id|>"
+        )
+
 # Create dataset from records
 train_dataset = Dataset.from_list(valid_data_list)
 print(f"Dataset size: {len(train_dataset)}")
@@ -356,7 +366,7 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
             
             # Get LLM judgment
             llm_judgments = []
-            for goal in ['compliance']: # ['compliance', 'creativity', 'specificity']:    
+            for goal in ['compliance', 'creativity', 'specificity']:    
                 try: 
                     start_time = time.time()
                     llm_judgment = get_llm_judgment(completion, sequence, modified_sequence, prompt, goal)
@@ -365,6 +375,15 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
                     print(f"{goal} reward: {llm_judgment} in {end_time - start_time:.2f} seconds")
                 except Exception as e:
                     print(f"Error getting LLM judgment: {e}")
+
+            wandb.log({
+                f"reward/completion_{i}/base_stability_reward": reward,
+                f"reward/completion_{i}/formatting_reward": FORMATTING_REWARD if stab_calc else 0.0,
+                f"reward/completion_{i}/stability_reward": STABILITY_REWARD if stab_calc > 0.0 else 0.0,
+                f"reward/completion_{i}/compliance_reward": lm_reward_coeffs['compliance'] * llm_judgment if llm_judgment else 0.0,
+                f"reward/completion_{i}/creativity_reward": lm_reward_coeffs['creativity'] * llm_judgment if llm_judgment else 0.0,
+                f"reward/completion_{i}/specificity_reward": lm_reward_coeffs['specificity'] * llm_judgment if llm_judgment else 0.0,
+            })
             
             rewards.append(reward)
                         
@@ -471,7 +490,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     load_in_4bit=True,
     fast_inference=True,
     max_lora_rank=32,  # Adjust based on your needs
-    gpu_memory_utilization=0.55,
+    gpu_memory_utilization=0.4,
 )
 
 # Configure LoRA
