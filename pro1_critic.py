@@ -16,11 +16,11 @@ import biotite.structure.io.pdb as pdb
 
 load_dotenv()
 
-MAX_LENGTH=72464
-critic_model = "pro1" # "gemini" or "pro1"
+MAX_LENGTH=32768
+critic_model = "gemini" # "gemini" or "pro1"
 
 ## gemini has enough context length to pass everything in naively, there is a better way to do this
-def gemini_critic(model, tokenizer, stability_score, base_output, modified_sequence, original_task):
+def gemini_critic(model, tokenizer, ddg, base_output, modified_sequence, original_task, pdb_file=None):
     """Get feedback from the Gemini model based on structural and stability analysis"""
     # Get API key from environment variable for security
     api_key = os.getenv("GEMINI_API_KEY")
@@ -28,8 +28,6 @@ def gemini_critic(model, tokenizer, stability_score, base_output, modified_seque
     # Initialize Gemini client
     client = genai.Client(api_key=api_key)
 
-
-    
     # Create the same prompt as before
     critic_prompt = f"""You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively.
 
@@ -40,8 +38,8 @@ Original Task: {original_task}
 Scientist A's Suggestions: {base_output}
 
 Modified Sequence: {modified_sequence}
-PDB Structure: {pdb_file}
-Delta Energy: {stability_score}
+{f"PDB Structure: {pdb_file}" if pdb_file is not None else ""}
+Delta Energy: {ddg}
 
 
 Provide specific feedback for the scientist's proposed modifications using the information above. Identify possible sources of instability and if confident, suggest specific mutations that may improve stability while preserving function."""
@@ -65,7 +63,7 @@ Provide specific feedback for the scientist's proposed modifications using the i
         # Fallback to original model if Gemini fails
 
 # # Keep the original function as a fallback
-def pro1_critic(model, tokenizer, stability_score, current_response, modified_sequence, original_task):
+def pro1_critic(model, tokenizer, ddg, base_output, modified_sequence, original_task, pdb_file=None):
     """Original implementation using the local model"""
     critic_prompt = f"""<|start_header_id|>system<|end_header_id|>
 You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively.|eot_id|><|start_header_id|>user<|end_header_id|>
@@ -74,9 +72,9 @@ Another scientist has proposed some modifications to an enzyme sequence that has
 
 Original Task: {original_task}
 
-Scientist A's Suggestions: {current_response}
+Scientist A's Suggestions: {base_output}
 Modified Sequence: {modified_sequence}
-Delta Energy: {stability_score}
+Delta Energy: {ddg}
 
 Provide specific feedback for the scientist's proposed modifications using the PDB structure above. Identify structural sources of potential instability and if confident, suggest specific mutations that may improve stability while preserving function.<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
     
@@ -95,7 +93,19 @@ Provide specific feedback for the scientist's proposed modifications using the P
             do_sample=True
         )
     
-    generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    # Get the full generated text
+    full_generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    
+    # Extract only the model's response by removing the prompt
+    # Find where the assistant's response starts
+    assistant_start = full_generated_text.find("<|start_header_id|>assistant<|end_header_id|>")
+    if assistant_start != -1:
+        # Extract only the assistant's response
+        generated_text = full_generated_text[assistant_start + len("<|start_header_id|>assistant<|end_header_id|>"):]
+    else:
+        # If we can't find the marker, return the full text
+        generated_text = full_generated_text
+    
     print(generated_text)
     
     return generated_text
@@ -132,7 +142,7 @@ def extract_sequence_from_response(response):
         print(response[-200:])  # Print the last 200 characters
         return None
 
-def run_inference(sequence, enzyme_data, model, tokenizer, stability_calculator, device="cuda", max_iterations=3, pdb_file=None, stability_score=None):
+def run_inference(sequence, enzyme_data, model, tokenizer, stability_calculator, device="cuda", max_iterations=3, use_pdb=False, original_stability_score=None):
     """Run inference with the trained model and critic feedback loop"""
     
     # Store the original sequence for reference throughout all iterations
@@ -182,60 +192,30 @@ COPY THE FINAL SEQUENCE AND ONLY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{
             if iteration == 0:
                 # First iteration uses the original prompt
                 prompt = f"""<|start_header_id|>system<|end_header_id|>
-You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively. Your thinking should be at least 3000 tokens. |eot_id|><|start_header_id|>user<|end_header_id|>
+You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively. Think deeply and logically. |eot_id|><|start_header_id|>user<|end_header_id|>
 {base_prompt} MAKE SURE YOU COPY THE ORIGINAL SEQUENCE CORRECTLY WITH THE MUTATIONS APPLIED!!!<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
             else:
-                # Subsequent iterations include the full conversation history
+                # Only include the most recent critic feedback
+                last_iteration = conversation_history[-1]
+                
                 prompt = f"""<|start_header_id|>system<|end_header_id|>
 You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively. Think deeply and logically. |eot_id|><|start_header_id|>user<|end_header_id|>
 
 ORIGINAL TASK:
 {base_prompt}
 
-CONVERSATION HISTORY:"""
-
-                # Add each previous iteration to the prompt
-                for prev_iter in conversation_history:
-                    prompt += f"""
-
-ATTEMPT {prev_iter['iteration']}:
-{prev_iter['response']}
+MOST RECENT ATTEMPT:
+{last_iteration['response']}
 
 CRITIC'S FEEDBACK:
-{prev_iter['critic_feedback']}"""
+{last_iteration['critic_feedback']}
 
-                prompt += f"""
-
-Based on the original task and all previous attempts and feedback above, provide a new optimized sequence. Remember to enclose ONLY the final sequence in \\boxed{{}}.<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
+Based on the original task and the critic's feedback above, provide a new optimized sequence. Remember to enclose ONLY the final sequence in \\boxed{{}}.<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
 
             # Check token count and truncate if necessary
             token_count = len(tokenizer.encode(prompt))
             if token_count > MAX_LENGTH - 4096:
-                print(f"Warning: Prompt too long ({token_count} tokens). Truncating conversation history...")
-                # Keep only the most recent iterations that fit within the token limit
-                while token_count > MAX_LENGTH - 4096 and len(conversation_history) > 1:
-                    conversation_history.pop(0)  # Remove oldest iteration
-                    # Rebuild prompt with truncated history
-                    prompt = f"""<|start_header_id|>system<|end_header_id|>
-You are a helpful assistant that helps users with protein engineering tasks. Think deeply and logically. |eot_id|><|start_header_id|>user<|end_header_id|>
-
-ORIGINAL TASK (truncated):
-{base_prompt}
-
-RECENT CONVERSATION HISTORY:"""
-                    for prev_iter in conversation_history:
-                        prompt += f"""
-
-ATTEMPT {prev_iter['iteration']}:
-{prev_iter['response']}
-
-CRITIC'S FEEDBACK:
-{prev_iter['critic_feedback']}"""
-
-                    prompt += f"""
-
-Based on the original task and previous attempts above, provide a new optimized sequence. Remember to enclose ONLY the final sequence in \\boxed{{}}.<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
-                    token_count = len(tokenizer.encode(prompt))
+                print(f"Warning: Prompt too long ({token_count} tokens)...")
 
             # Generate response with the model using streaming
             inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
@@ -311,6 +291,7 @@ Based on the original task and previous attempts above, provide a new optimized 
                 print("Predicting structure and calculating stability...")
                 path_to_pdb = stability_calculator.predict_structure(modified_sequence)
                 stability_score = stability_calculator.calculate_stability(modified_sequence)
+                ddg = original_stability_score - stability_score
             except Exception as e:
                 print(f"Error in stability calculation: {e}")
                 print(f"Error occurred on line {e.__traceback__.tb_lineno}")
@@ -324,9 +305,12 @@ Based on the original task and previous attempts above, provide a new optimized 
             if pdb_file and stability_score is not None:
                 print("Getting critic feedback...")
                 if critic_model == "gemini":
-                    critic_feedback = gemini_critic(model, tokenizer, pdb_file, stability_score, current_response, modified_sequence, base_prompt)
+                    if use_pdb:
+                        critic_feedback = gemini_critic(model, tokenizer, ddg, current_response, modified_sequence, base_prompt, pdb_file=pdb_file)
+                    else:
+                        critic_feedback = gemini_critic(model, tokenizer, ddg, current_response, modified_sequence, base_prompt)
                 else:
-                    critic_feedback = pro1_critic(model, tokenizer, stability_score, current_response, modified_sequence, base_prompt)
+                    critic_feedback = pro1_critic(model, tokenizer, ddg, current_response, modified_sequence, base_prompt)
                 
                 # Simple scoring based on stability
                 current_score = stability_score
@@ -433,7 +417,8 @@ if __name__ == "__main__":
         model=model,
         tokenizer=tokenizer,
         stability_calculator=stability_calculator, 
-        max_iterations=10
+        max_iterations=10, 
+        original_stability_score=original_stability_score
     )
 
     # Print final results
