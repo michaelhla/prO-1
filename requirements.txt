@@ -21,3 +21,4 @@ huggingface-hub
 together
 tiktoken
 nvidia-ml-py3
+vllm
