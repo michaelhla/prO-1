@@ -72,6 +72,7 @@ Given the natural language reasoning above, infer the mutations and modification
         attempt = 0
         
         while attempt < max_attempts:
+            attempt += 1
             response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
@@ -88,14 +89,12 @@ Given the natural language reasoning above, infer the mutations and modification
             
             if modified_sequence is None:
                 print(f"Failed to extract sequence on attempt {attempt + 1}")
-                attempt += 1
                 continue
             
             # Validate the sequence contains only valid amino acids
             valid_amino_acids = set('ACDEFGHIKLMNPQRSTVWY')
             if not all(aa in valid_amino_acids for aa in modified_sequence):
                 print(f"Invalid amino acids found on attempt {attempt + 1}, trying again...")
-                attempt += 1
                 continue
                 
             return modified_sequence
@@ -153,6 +152,7 @@ Provide detailed reasoning for each mutation, including the position number and 
     iteration = 0
     while iteration < max_iterations:
         try:
+            iteration += 1
             print(f"\n=== ITERATION {iteration + 1} ===")
             
             prompt = f"""<|start_header_id|>system<|end_header_id|>
@@ -262,8 +262,6 @@ You are a helpful assistant that helps users with protein engineering tasks. You
                 "stability_score": stability_score,
                 "response": current_response,
             })
-
-            iteration += 1
                 
         except Exception as e:
             print(f"Error in iteration {iteration}: {e}")
