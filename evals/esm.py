@@ -28,8 +28,8 @@ from stability_reward import StabilityRewardCalculator
 import torch
 
 # Initialize models
-esm2_model = EsmForMaskedLM.from_pretrained("facebook/esm2_t30_150M_UR50D")
-tokenizer = AutoTokenizer.from_pretrained("facebook/esm2_t30_150M_UR50D")
+esm2_model = EsmForMaskedLM.from_pretrained("facebook/esm2_t48_15B_UR50D")
+tokenizer = AutoTokenizer.from_pretrained("facebook/esm2_t48_15B_UR50D")
 stability_calculator = StabilityRewardCalculator()
 
 def optimize_sequence(sequence):
