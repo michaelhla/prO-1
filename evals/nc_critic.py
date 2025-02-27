@@ -15,43 +15,14 @@ from stability_reward import StabilityRewardCalculator
 import threading
 from peft import PeftModel, get_peft_model, LoraConfig
 from unsloth import FastLanguageModel
+from pro1_inference import run_inference
 
 # Results summary:
-# Number of enzymes processed: 38
-# Number of successful improvements: 18
-# Success rate: 47.4%
-# Max stability improvement: 6177.916
+
 
 load_dotenv()
 
-MAX_INPUT_LENGTH = 8192
-
-# Model initialization
-model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="unsloth/meta-Llama-3.1-8B-Instruct",
-    max_seq_length=MAX_INPUT_LENGTH,
-    load_in_4bit=True,
-    fast_inference=True,
-    max_lora_rank=32,  # Adjust based on your needs
-    gpu_memory_utilization=0.6,
-)
-
-# # Load the LoRA configuration
-# lora_config = LoraConfig(
-#     r=32,  # LoRA rank
-#     lora_alpha=32,
-#     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
-#     task_type="CAUSAL_LM"
-# )
-
-# # Apply the LoRA adapter
-# model = get_peft_model(model, lora_config)
-
-# Load the adapter weights
-adapter_path = "/root/prO-1/all-lm-grpo-mega-run/checkpoints/checkpoint-20250225-025056-step40"  # Update with your adapter path
-model.load_adapter(adapter_path)
-
-FastLanguageModel.for_inference(model)
+MAX_INPUT_LENGTH = 32768
 
 # Initialize stability calculator
 stability_calculator = StabilityRewardCalculator()
@@ -60,7 +31,7 @@ def get_stability_score(sequence: str) -> float:
     """Calculate protein stability score using ESMFold and PyRosetta"""
     return stability_calculator.calculate_stability(sequence)
 
-def propose_mutations(sequence: str, enzyme_data: Dict) -> str:
+def propose_mutations(sequence: str, enzyme_data: Dict, original_stability: float, model: FastLanguageModel, tokenizer: AutoTokenizer) -> str:
     """Get mutation proposals from DeepSeek"""
     base_prompt = f"""You are an expert protein engineer in rational protein design. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
 
@@ -69,27 +40,22 @@ ENZYME SEQUENCE: {sequence}
 GENERAL INFORMATION: {enzyme_data['general_information']}
 ACTIVE SITE RESIDUES: {', '.join([f'{res}{idx}' for res, idx in enzyme_data['active_site_residues']])}
 
-Propose 3-7 mutations to optimize the stability of the enzyme given the information above. YOUR MUTATIONS MUST BE POSITION SPECIFIC TO THE SEQUENCE. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning. 
+Propose mutations to optimize the stability of the enzyme given the information above. YOUR MUTATIONS MUST BE POSITION SPECIFIC TO THE SEQUENCE. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning. 
 
 ****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions.****
 
 COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. YOU MUST FOLLOW THIS INSTRUCTION/FORMAT. EX; \\boxed{{MALWMTLLLLPVPDGPK...}}"""
 
-    prompt = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> REASONING PROCESS HERE </think>
-<answer> ANSWER HERE </answer>. Follow the formatting instructions exactly as specified. [USER]: {base_prompt}. [ASSISTANT]:"""
-
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=4096,
-            temperature=0.7,
-            top_p=0.95,
-            do_sample=True
+    response = run_inference(
+        sequence=sequence, 
+        enzyme_data=enzyme_data, 
+        model=model, 
+        tokenizer=tokenizer, 
+        stability_calculator=stability_calculator, 
+        max_iterations=3, 
+        original_stability_score=original_stability, 
+        use_pdb=True
         )
-    
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return response
 
 def extract_sequence(response: str) -> str:
@@ -140,6 +106,26 @@ def main():
     
     results = []
     
+    checkpoint_path = "all-lm-grpo-mega-run/checkpoints/checkpoint-20250225-025056-step40"
+    
+    # Initialize model using unsloth's FastLanguageModel
+    print("Loading model and tokenizer...")
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name="unsloth/meta-Llama-3.1-8B-Instruct",
+        max_seq_length=MAX_INPUT_LENGTH,
+        load_in_4bit=True,
+        fast_inference=True,
+        max_lora_rank=32,
+        gpu_memory_utilization=0.6,
+    )
+    
+    # Load the adapter weights
+    print(f"Loading adapter from {checkpoint_path}...")
+    model.load_adapter(checkpoint_path)
+    
+    # Set model to inference mode
+    FastLanguageModel.for_inference(model)
+
     for enzyme_id, data in tqdm(selected_enzymes, desc="Processing enzymes"):
         sequence = data['sequence']
         try:
@@ -163,15 +149,10 @@ def main():
             }
             
             # Get model response
-            response = propose_mutations(sequence, enzyme_data)
-            # Extract the relevant part of the response
-            if '[ASSISTANT]' in response and '[USER]' in response:
-                start = response.find('[ASSISTANT]') + len('[ASSISTANT]')
-                end = response.find('[USER]:', start)
-                response = response[start:end].strip()
-            print(f"Generated response for enzyme {enzyme_id}: {response}")  # Print the generation for each turn
+            response = propose_mutations(sequence, enzyme_data, original_stability, model, tokenizer)
+            print(f"Generated response for enzyme {enzyme_id}: {response[2]}")  # Print the generation for each turn
             # Extract mutated sequence
-            mutated_sequence = extract_sequence(response)
+            mutated_sequence = response[1]
             
             
             if mutated_sequence is None:
@@ -180,13 +161,14 @@ def main():
                 
             # Calculate new stability
             print('MUTATED SEQUENCE: ', mutated_sequence)
-            new_stability = get_stability_score(mutated_sequence)
+            new_stability = response[0]
+            print('ddg: ', new_stability-original_stability)
             
             results.append({
                 'enzyme_id': enzyme_id,
                 'original_sequence': sequence,
                 'original_stability': original_stability,
-                'model_response': response,
+                'model_response': response[2],
                 'mutated_sequence': mutated_sequence,
                 'new_stability': new_stability,
                 'stability_change': new_stability - original_stability,
@@ -200,7 +182,7 @@ def main():
                 'enzyme_id': enzyme_id,
                 'original_sequence': sequence,
                 'original_stability': original_stability,
-                'model_response': response,
+                'model_response': 'ERROR',
                 'mutated_sequence': None,
                 'new_stability': None,
                 'stability_change': None,
@@ -213,7 +195,7 @@ def main():
     output_dir = Path('results')
     output_dir.mkdir(exist_ok=True)
     
-    with open(output_dir / 'pro1_lmreward_stability_mutations.json', 'w') as f:
+    with open(output_dir / 'pro1_7b_stability_mutations.json', 'w') as f:
         json.dump(results, f, indent=2)
     
     # Print summary statistics
@@ -236,7 +218,7 @@ if __name__ == "__main__":
         # Save current results before exit
         output_dir = Path('results')
         output_dir.mkdir(exist_ok=True)
-        with open(output_dir / 'pro1_lmreward_stability_mutations_error_state.json', 'w') as f:
+        with open(output_dir / 'pro1_7b_stability_mutations_error_state.json', 'w') as f:
             if 'results' in locals():
                 json.dump(results, f, indent=2)
             else:
