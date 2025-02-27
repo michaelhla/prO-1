@@ -17,7 +17,7 @@ apt install -y openbabel
 pip install -U numpy vina
 pip install pyrosetta-installer
 
-pip install unsloth
+pip install unsloth vllm 
 pip install --force-reinstall --no-cache-dir --no-deps git+https://github.com/unslothai/unsloth.git
 
 # Install requirements, still need to add versions

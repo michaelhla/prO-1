@@ -1,4 +1,4 @@
-python hf_util.py compliance-grpo-mega-run -d 
-mv compliance-grpo-mega-run trash
-mv trash/compliance-grpo-mega-run .
+python hf_util.py all-lm-grpo-mega-run -d 
+mv all-lm-grpo-mega-run trash
+mv trash/all-lm-grpo-mega-run .
 rm -rf trash

@@ -42,7 +42,7 @@ Modified Sequence: {modified_sequence}
 Delta Energy: {ddg}
 
 
-Provide specific feedback for the scientist's proposed modifications using the information above. Identify possible sources of instability and if confident, suggest specific mutations that may improve stability while preserving function."""
+Provide specific feedback for the scientist's proposed modifications using the information above. Identify possible sources of instability and if confident, suggest specific mutations that may improve stability while preserving function. Keep your feedback to 2-3 sentences and place it inside <feedback> </feedback> tags."""
     
     try:
         # Call Gemini API
@@ -142,8 +142,11 @@ def extract_sequence_from_response(response):
         print(response[-200:])  # Print the last 200 characters
         return None
 
-def run_inference(sequence, enzyme_data, model, tokenizer, stability_calculator, device="cuda", max_iterations=3, use_pdb=False, original_stability_score=None):
+def run_inference(sequence, enzyme_data, model, tokenizer, stability_calculator=None, device="cuda", max_iterations=3, use_pdb=False, original_stability_score=None):
     """Run inference with the trained model and critic feedback loop"""
+
+    if stability_calculator is None:
+        stability_calculator = StabilityRewardCalculator()
     
     # Store the original sequence for reference throughout all iterations
     original_sequence = sequence
@@ -311,6 +314,13 @@ Based on the original task and the critic's feedback above, provide a new optimi
                         critic_feedback = gemini_critic(model, tokenizer, ddg, current_response, modified_sequence, base_prompt)
                 else:
                     critic_feedback = pro1_critic(model, tokenizer, ddg, current_response, modified_sequence, base_prompt)
+
+                # Extract feedback text from between feedback tags
+                feedback_match = re.search(r'<feedback>(.*?)</feedback>', critic_feedback, re.DOTALL)
+                if feedback_match:
+                    critic_feedback = feedback_match.group(1).strip()
+                else:
+                    print("Warning: No feedback tags found in critic response")
                 
                 # Simple scoring based on stability
                 current_score = stability_score
