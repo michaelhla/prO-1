@@ -294,7 +294,7 @@ Based on the original task and the critic's feedback above, provide a new optimi
                 print("Predicting structure and calculating stability...")
                 path_to_pdb = stability_calculator.predict_structure(modified_sequence)
                 stability_score = stability_calculator.calculate_stability(modified_sequence)
-                ddg = original_stability_score - stability_score
+                ddg = stability_score - original_stability_score
             except Exception as e:
                 print(f"Error in stability calculation: {e}")
                 print(f"Error occurred on line {e.__traceback__.tb_lineno}")

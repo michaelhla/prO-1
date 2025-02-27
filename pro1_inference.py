@@ -43,7 +43,7 @@ def extract_sequence_from_response(response):
         print(response[-500:])  # Print the last 500 characters
         
         # If no sequence found in expected format
-        print("Warning: No sequence found in expected format, will use OpenAI to extract")
+        print("Warning: No sequence found in expected format, retry applier model or sequence gen")
         return None
         
     except Exception as e:
@@ -211,14 +211,10 @@ You are a helpful assistant that helps users with protein engineering tasks. You
                 modified_sequence = lm_sequence_applier(original_sequence, current_response)
                 
             # Check if sequence only contains valid amino acids
-            valid_amino_acids = set('ACDEFGHIKLMNPQRSTVWY')
             if modified_sequence is None:
                 print("No sequence could be generated, trying again...")
                 continue
-                
-            if not all(aa in valid_amino_acids for aa in modified_sequence):
-                print("Invalid amino acids found in sequence, trying again...")
-                continue
+            
                 
             # Update sequence tracking variables
             previous_sequence = last_successful_sequence if last_successful_sequence else original_sequence
@@ -244,7 +240,7 @@ You are a helpful assistant that helps users with protein engineering tasks. You
                 print("Predicting structure and calculating stability...")
                 path_to_pdb = stability_calculator.predict_structure(modified_sequence)
                 stability_score = stability_calculator.calculate_stability(modified_sequence)
-                ddg = original_stability_score - stability_score
+                ddg = stability_score - original_stability_score
             except Exception as e:
                 print(f"Error in stability calculation: {e}")
                 print(f"Error occurred on line {e.__traceback__.tb_lineno}")
