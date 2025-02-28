@@ -22,6 +22,12 @@ from unsloth import FastLanguageModel
 # Success rate: 47.4%
 # Max stability improvement: 6177.916
 
+# Results summary (run 2):
+# Number of enzymes processed: 36
+# Number of successful improvements: 17
+# Success rate: 47.2%
+# Max stability improvement: 8100.933
+
 load_dotenv()
 
 MAX_INPUT_LENGTH = 8192

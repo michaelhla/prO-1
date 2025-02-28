@@ -17,7 +17,7 @@ from peft import PeftModel, get_peft_model, LoraConfig
 from unsloth import FastLanguageModel
 from pro1_inference import run_inference
 
-# Results summary:
+# Results summary (pass@3):
 # Number of enzymes processed: 38
 # Number of successful improvements: 25
 # Success rate: 65.8%
@@ -54,9 +54,8 @@ COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. 
         model=model, 
         tokenizer=tokenizer, 
         stability_calculator=stability_calculator, 
-        max_iterations=3, 
+        max_iterations=1, 
         original_stability_score=original_stability, 
-        use_pdb=True
         )
     return response
 
@@ -93,9 +92,15 @@ def main():
     # Load enzyme sequences
     with open('data/transformed_brenda.json', 'r') as f:
         enzymes = json.load(f)
+    # Load training dataset to exclude those enzymes
+    with open('data/train_dataset.json', 'r') as f:
+        train_dataset = json.load(f)
     
-    selected_enzymes = random.sample(list(enzymes.items()), 40)
-    # Save selected enzymes to a new dataset
+    # Filter out enzymes that are in the training set
+    eligible_enzymes = {k:v for k,v in enzymes.items() if k not in train_dataset}
+    
+    selected_enzymes = random.sample(list(eligible_enzymes.items()), 40)
+    # Save selected enzymes to a new dataset 
     selected_dataset = {enzyme_id: data for enzyme_id, data in selected_enzymes}
     
     # Create results directory if it doesn't exist
@@ -220,7 +225,7 @@ if __name__ == "__main__":
         # Save current results before exit
         output_dir = Path('results')
         output_dir.mkdir(exist_ok=True)
-        with open(output_dir / 'pro1_7b_stability_mutations_error_state.json', 'w') as f:
+        with open(output_dir / 'pro1_7b_ reroll_stability_mutations_error_state.json', 'w') as f:
             if 'results' in locals():
                 json.dump(results, f, indent=2)
             else:
