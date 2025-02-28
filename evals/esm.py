@@ -5,6 +5,12 @@
 # Success rate: 34.3%
 # Max stability improvement: -517.253
 
+# Results (ESM2 3B): 10 steps, 7 mutations
+# Number of enzymes processed: 38
+# Number of successful improvements: 14
+# Success rate: 36.8%
+# Max stability improvement: -1528.157
+
 # Results summary (100 steps, 7 mutations):
 # Number of enzymes processed: 35
 # Number of successful improvements: 13
@@ -28,8 +34,8 @@ from stability_reward import StabilityRewardCalculator
 import torch
 
 # Initialize models
-esm2_model = EsmForMaskedLM.from_pretrained("facebook/esm2_t48_15B_UR50D")
-tokenizer = AutoTokenizer.from_pretrained("facebook/esm2_t48_15B_UR50D")
+esm2_model = EsmForMaskedLM.from_pretrained("facebook/esm2_t36_3B_UR50D")
+tokenizer = AutoTokenizer.from_pretrained("facebook/esm2_t36_3B_UR50D")
 stability_calculator = StabilityRewardCalculator()
 
 def optimize_sequence(sequence):
