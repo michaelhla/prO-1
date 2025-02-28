@@ -125,9 +125,15 @@ def main():
     # Load enzyme sequences
     with open('data/transformed_brenda.json', 'r') as f:
         enzymes = json.load(f)
+    # Load training dataset to exclude those proteins
+    with open('data/train_dataset.json', 'r') as f:
+        train_dataset = json.load(f)
+        
+    # Filter out enzymes that are in training dataset
+    eligible_enzymes = {k:v for k,v in enzymes.items() if k not in train_dataset}
     
-    selected_enzymes = random.sample(list(enzymes.items()), 40)
-    # Save selected enzymes to a new dataset
+    selected_enzymes = random.sample(list(eligible_enzymes.items()), 40)
+    # Save selected enzymes to a new dataset 
     selected_dataset = {enzyme_id: data for enzyme_id, data in selected_enzymes}
     
     # Create results directory if it doesn't exist
