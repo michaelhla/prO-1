@@ -13,6 +13,11 @@ from stability_reward import StabilityRewardCalculator
 # Number of successful improvements: 6
 # Success rate: 20.7%
 
+# Results summary (only most stable amino acids):
+# Number of enzymes processed: 40
+# Number of successful improvements: 15
+# Success rate: 37.5%
+
 # Initialize stability calculator
 stability_calculator = StabilityRewardCalculator()
 
@@ -22,7 +27,7 @@ def get_stability_score(sequence: str) -> float:
 
 def random_mutations(sequence: str, num_mutations: int) -> str:
     """Make random mutations in the sequence"""
-    amino_acids = 'ACDEFGHIKLMNPQRSTVWY'
+    amino_acids = 'AGILPV'  # Testing only the most stable amino acids
     sequence = list(sequence)
     positions = random.sample(range(len(sequence)), num_mutations)
     
