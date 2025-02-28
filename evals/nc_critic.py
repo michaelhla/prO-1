@@ -18,7 +18,9 @@ from unsloth import FastLanguageModel
 from pro1_inference import run_inference
 
 # Results summary:
-
+# Number of enzymes processed: 38
+# Number of successful improvements: 25
+# Success rate: 65.8%
 
 load_dotenv()
 
