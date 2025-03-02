@@ -11,7 +11,7 @@ from stability_reward import StabilityRewardCalculator
 # Results summary:
 # Number of enzymes processed: 29
 # Number of successful improvements: 6
-# Success rate: 20.7%
+# Success rate: 20.7%, 24.1%, 27.3%, 27.3%
 
 # Results summary (only most stable amino acids):
 # Number of enzymes processed: 40
@@ -38,28 +38,28 @@ def random_mutations(sequence: str, num_mutations: int) -> str:
     return ''.join(sequence)
 
 def main():
-    # Load selected enzyme sequences
-    with open('results/selected_enzymes.json', 'r') as f:
-        selected_enzymes = json.load(f)
+    # Load enzyme sequences from dataset
+    with open('data/selected_enzymes.json', 'r') as f:
+        test_enzymes = json.load(f)
     
-    # Try to load existing results to get original stability values
-    existing_results = {}
-    try:
-        with open('results/ds_r1_stability_mutations.json', 'r') as f:
-            for result in json.load(f):
-                if result.get('original_stability') is not None:
-                    existing_results[result['enzyme_id']] = result['original_stability']
-    except Exception as e:
-        print(f"Could not load existing results: {str(e)}")
+    # # Try to load existing results to get original stability values
+    # existing_results = {}
+    # try:
+    #     with open('results/random_mut_stability.json', 'r') as f:
+    #         for result in json.load(f):
+    #             if result.get('original_stability') is not None:
+    #                 existing_results[result['enzyme_id']] = result['original_stability']
+    # except Exception as e:
+    #     print(f"Could not load existing results: {str(e)}")
     
     results = []
     
-    for enzyme_id, data in tqdm(selected_enzymes.items(), desc="Processing enzymes"):
+    for enzyme_id, data in tqdm(test_enzymes.items(), desc="Processing enzymes"):
         sequence = data['sequence']
         
         # Try to get stability from existing results first
-        original_stability = existing_results.get(enzyme_id)
-        
+        # original_stability = existing_results.get(enzyme_id)
+        original_stability = None
         # If not found in existing results, calculate it
         if original_stability is None:
             try:

@@ -17,11 +17,15 @@ from transformers import AutoTokenizer, AutoModelForMaskedLM
 # Success rate: 46.3%
 # Max stability improvement: -1548.566
 
-
-# Results summaryn (run 2, top esm scores):
+# Results summary (run 2, top esm scores):
 # Number of enzymes evaluated: 37
 # Number of successful improvements: 20
 # Success rate: 54.1%
+
+# Results summary:
+# Number of enzymes evaluated: 37
+# Number of successful improvements: 19
+# Success rate: 51.4%
 
 class ESMAttentionMutator:
     """
@@ -29,7 +33,7 @@ class ESMAttentionMutator:
     and generate mutations based on those scores.
     """
     
-    def __init__(self, model_name: str = "facebook/esm2_t33_650M_UR50D"):
+    def __init__(self, model_name: str = "facebook/esm2_t36_3B_UR50D"):
         """
         Initialize the ESM model.
         
@@ -94,7 +98,7 @@ class ESMAttentionMutator:
         top_k_indices = torch.argsort(position_importance, descending=True)[:k].cpu().numpy()
         
         # Add 1 to account for the CLS token offset and convert to 0-indexed positions in the sequence
-        return [int(idx) + 1 for idx in bottom_k_indices]
+        return [int(idx) + 1 for idx in top_k_indices]
     
     def generate_mutations(self, sequence: str, mutation_sites: List[int]) -> str:
         """

@@ -16,6 +16,8 @@ import torch
 from stability_reward import StabilityRewardCalculator
 import threading
 from peft import PeftModel, get_peft_model, LoraConfig
+import re
+from openai import OpenAI
 
 # Results summary:
 # Number of enzymes processed: 38
@@ -65,6 +67,86 @@ def get_stability_score(sequence: str) -> float:
     """Calculate protein stability score using ESMFold and PyRosetta"""
     return stability_calculator.calculate_stability(sequence)
 
+def extract_sequence(response: str) -> str:
+    """Extract sequence from model response using regex pattern matching"""
+    try:
+        # Look for sequence in \boxed{...}
+        sequence_match = re.search(r'\\boxed{([A-Z]+)}', response)
+        if sequence_match:
+            return sequence_match.group(1).strip()
+        
+        # Try alternative pattern without escaping the backslash
+        sequence_match = re.search(r'boxed{([A-Z]+)}', response)
+        if sequence_match:
+            return sequence_match.group(1).strip()
+            
+        # Try to find any sequence-like content (continuous uppercase letters)
+        sequence_match = re.search(r'<answer>.*?([A-Z]{10,})', response, re.DOTALL)
+        if sequence_match:
+            return sequence_match.group(1).strip()
+        
+        # If no sequence found in expected format
+        print("Warning: No sequence found in expected format, falling back to regex")
+        return None
+        
+    except Exception as e:
+        print(f"Error extracting sequence: {e}")
+        return None
+
+def lm_sequence_applier(original_sequence, reasoning, max_attempts=3):
+    """Use OpenAI to extract the modified sequence based on reasoning"""
+    try:
+        client = OpenAI()
+        
+        prompt = f"""
+You are a helpful assistant that applies the mutations and modifications described in the reasoning to the original sequence.
+
+Original sequence:
+{original_sequence}
+
+Proposed modifications:
+{reasoning}
+
+Given the natural language reasoning above, infer the mutations and modifications that the user wants to apply to the original sequence, and apply them. Return ONLY the modified sequence with all changes applied correctly in the \\boxed{{}} tag. ex. \\boxed{{MGYARRVMDGIGEVAV...}}. IT IS CRUCIAL YOU APPLY THE MUTATIONS CORRECTLY AND RETURN THE MODIFIED SEQUENCE.
+"""
+        
+        attempt = 0
+        
+        while attempt < max_attempts:
+            attempt += 1
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that can analyze natural language reasoning and apply the proposed mutations to the original sequence."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=3000
+            )
+            
+            print(f"OpenAI response (attempt {attempt}): {response.choices[0].message.content.strip()}")
+            
+            modified_sequence = extract_sequence(response.choices[0].message.content.strip())
+            
+            if modified_sequence is None:
+                print(f"Failed to extract sequence on attempt {attempt}")
+                continue
+            
+            # Validate the sequence contains only valid amino acids
+            valid_amino_acids = set('ACDEFGHIKLMNPQRSTVWY')
+            if not all(aa in valid_amino_acids for aa in modified_sequence):
+                print(f"Invalid amino acids found on attempt {attempt}, trying again...")
+                continue
+                
+            return modified_sequence
+            
+        print("Max attempts reached without getting a valid sequence")
+        return None
+        
+    except Exception as e:
+        print(f"Error getting modified sequence from OpenAI: {e}")
+        return None
+
 def propose_mutations(sequence: str, enzyme_data: Dict) -> str:
     """Get mutation proposals from DeepSeek"""
     base_prompt = f"""You are an expert protein engineer in rational protein design. You are working with an enzyme sequence given below, as well as other useful information regarding the enzyme/reaction: 
@@ -97,17 +179,20 @@ COPY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. 
     response = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return response
 
-def extract_sequence(response: str) -> str:
-    """Extract sequence from model response"""
+def extract_and_apply_mutations(sequence: str, response: str) -> str:
+    """Extract sequence from model response and apply mutations if needed"""
+    # First try using the LM sequence applier
     try:
-        # Look for sequence in \boxed{} format
-        if '\\boxed{' in response and '}' in response:
-            start = response.find('\\boxed{') + 7
-            end = response.find('}', start)
-            return response[start:end].strip()
-        return None
-    except Exception:
-        return None
+        mutated_sequence = lm_sequence_applier(sequence, response)
+        if mutated_sequence:
+            print("Successfully extracted sequence using LM sequence applier")
+            return mutated_sequence
+    except Exception as e:
+        print(f"Error using LM sequence applier: {e}")
+    
+    # Fall back to regex extraction
+    print("Falling back to regex extraction")
+    return extract_sequence(response)
 
 def apply_mutations(sequence: str, mutations: List[str]) -> str:
     """Apply a list of mutations to a sequence"""
@@ -175,9 +260,9 @@ def main():
                 end = response.find('[USER]:', start)
                 response = response[start:end].strip()
             print(f"Generated response for enzyme {enzyme_id}: {response}")  # Print the generation for each turn
-            # Extract mutated sequence
-            mutated_sequence = extract_sequence(response)
             
+            # Extract mutated sequence using the enhanced method
+            mutated_sequence = extract_and_apply_mutations(sequence, response)
             
             if mutated_sequence is None:
                 print(f"Failed to extract sequence for enzyme {enzyme_id}")

@@ -18,13 +18,19 @@ import random
 # Number of successful improvements: 29
 # Success rate: 72.5%
 # Max stability improvement: -2151.464
-# Average percentage of mutations between original and mutated sequences: 54.1% (when free flowing mpnn)
+# Average percentage of amino acids changed: 54.1% (when free flowing mpnn)
 
 # Results for restricted mpnn:
 # Number of enzymes processed: 40
 # Number of successful improvements: 20
 # Success rate: 50.0%
 # Max stability improvement: -666.664
+
+# Results summary:
+# Number of enzymes processed: 40
+# Number of successful improvements: 19
+# Success rate: 47.5%
+# Max stability improvement: -413.890
 
 # Initialize models
 mpnn_model = mk_mpnn_model()
