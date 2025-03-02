@@ -22,14 +22,20 @@ from openai import OpenAI
 # Results summary:
 # Number of enzymes processed: 38
 # Number of successful improvements: 13
-# Success rate: 34.2%
+# Success rate: 34.2%, 33.3%
 # Max stability improvement: 38.238
+
+# Results summary:
+# Number of enzymes processed: 39
+# Number of successful improvements: 11
+# Success rate: 28.2%
+# Max stability improvement: -468.437
 
 load_dotenv()
 
 MAX_INPUT_LENGTH = 8192
 
-adapter_path = "/root/prO-1/llama_70b_4bit_sft_lora_model/llama_70b_4bit_sft_lora_model"
+adapter_path = "/root/prO-1/llama_70b_4bit_sft_lora_model"
 
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
