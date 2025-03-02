@@ -20,6 +20,7 @@ from datetime import datetime
 import math
 
 from stability_reward import StabilityRewardCalculator
+from openai import OpenAI
 
 load_dotenv()
 
@@ -28,14 +29,15 @@ MAX_INPUT_LENGTH = 6000
 MAX_OUTPUT_LENGTH = 4096
 THINK_LENGTH = 3000
 DEVICE = "cuda"
-RUN_NAME = "all-lm-grpo-mega-run"
+RUN_NAME = "creativity-lm-grpo-mega-run-continued"
+CHECKPOINT_PATH = "all-lm-grpo-mega-run/checkpoints/checkpoint-20250225-025056-step40"
 
 FORMATTING_REWARD = 0.1
 STABILITY_REWARD = 1.5 
 
 lm_reward_coeffs = {
     'compliance': 0.5,
-    'creativity': 0.25,
+    'creativity': 1,
     'specificity': 0.25
 }
 
@@ -112,14 +114,13 @@ PRODUCTS: {', '.join(products)}
 METALS/IONS: {', '.join(metal_ions)}
 {known_mutations_text}
 
-Propose mutations to optimize the stability of the enzyme given the information above. Ensure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning and consider:
-1. How the mutation affects (or does not affect) protein structure
-2. How the mutation affects (or does not affect) protein function
+Propose creative and nontraditional modifications to optimize the stability of the enzyme given the information above. \n\nSome examples of creative modifications include but are not limited to: \n- Adding a spacer in the middle of the sequence \n- Deleting a large portion of the sequence WHILE PRESERVING FUNCTIONALITY\n- Removing a protease binding site\n- Replacing helix-terminal residues with stabilizing alternatives to enhance helix stability (helix capping) \n- Adding or Removing a peptide tag commonly found in literature. \n\nEnsure that you preserve the activity or function of the enzyme as much as possible. For each proposed mutation, explain your reasoning and consider:
+1. How the modification affects (or does not affect) protein structure
+2. How the modification affects (or does not affect) protein function
 3. The chemical properties of the amino acids and substrates/products
 
 ****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions****
-
-COPY THE FINAL SEQUENCE AND ONLY THE FINAL SEQUENCE IN THE BRACKETS OF \\boxed{{}} TO ENCLOSE THE SEQUENCE. DO NOT INCLUDE ANY OTHER TEXT OR FORMATTING WITHIN THE BRACKETS."""
+"""
 
     whole_prompt = f"""<|start_header_id|>system<|end_header_id|>
 You are a helpful assistant that helps users with protein engineering tasks. You first think about the reasoning process and then provide the answer. The reasoning process and answer should be enclosed within <think> </think> and <answer> </answer> tags respectively. Your thinking should be at least 3000 tokens. |eot_id|><|start_header_id|>user<|end_header_id|>
@@ -238,6 +239,7 @@ if proc_state.is_main_process:
                 "batch_size": 2,
                 "learning_rate": 1e-3,
                 "num_generations": 4,
+                "continued_from_checkpoint": CHECKPOINT_PATH,
             }
         )
     except Exception as e:
@@ -281,7 +283,6 @@ def index_sequence(sequence):
 
 def get_llm_judgment(completion, original_seq, modified_seq, prompt, goal):
     """Get LLM judgment on the modifications made"""
-    from openai import OpenAI
     client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
     
     indexed_original = index_sequence(original_seq)
@@ -331,9 +332,104 @@ def get_llm_judgment(completion, original_seq, modified_seq, prompt, goal):
         print(f"Error in LLM judgment: {e}")
         return None
 
+# Add the extract_sequence_from_response function
+def extract_sequence_from_response(response):
+    """Extract sequence from model response using regex pattern matching"""
+    try:
+        # Look for sequence in \boxed{...}
+        sequence_match = re.search(r'\\boxed{([A-Z]+)}', response)
+        if sequence_match:
+            return sequence_match.group(1).strip()
+        
+        # Try alternative pattern without escaping the backslash
+        sequence_match = re.search(r'boxed{([A-Z]+)}', response)
+        if sequence_match:
+            return sequence_match.group(1).strip()
+            
+        # Try to find any sequence-like content (continuous uppercase letters)
+        sequence_match = re.search(r'<answer>.*?([A-Z]{10,})', response, re.DOTALL)
+        if sequence_match:
+            return sequence_match.group(1).strip()
+        
+        # If no sequence found in expected format
+        print("Warning: No sequence found in expected format")
+        return None
+        
+    except Exception as e:
+        print(f"Error extracting sequence: {e}")
+        print("Response excerpt:")
+        print(response[-200:])  # Print the last 200 characters
+        return None
+
+def is_valid_amino_acid_sequence(sequence):
+    """Validate if a sequence contains only valid amino acid characters"""
+    if not sequence:
+        return False
+        
+    valid_amino_acids = set('ACDEFGHIKLMNPQRSTVWY')
+    return all(aa in valid_amino_acids for aa in sequence)
+
+def lm_sequence_applier(original_sequence, reasoning, max_attempts=3):
+    """Use OpenAI to extract the modified sequence based on reasoning"""
+    try:
+        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        
+        prompt = f"""
+You are a helpful assistant that applies the mutations and modifications described in the reasoning to the original sequence.
+
+Original sequence:
+{original_sequence}
+
+Proposed modifications:
+{reasoning}
+
+Given the natural language reasoning above, infer the mutations and modifications that the user wants to apply to the original sequence, and apply them. Return ONLY the modified sequence with all changes applied correctly in the \\boxed{{}} tag. ex. \\boxed{{MGYARRVMDGIGEVAV...}}. IT IS CRUCIAL YOU APPLY THE MUTATIONS CORRECTLY AND RETURN THE MODIFIED SEQUENCE.
+"""
+        
+        attempt = 0
+        
+        while attempt < max_attempts:
+            attempt += 1
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that can analyze natural language reasoning and apply the proposed mutations to the original sequence."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=3000
+            )
+            
+            print(f"OpenAI response (attempt {attempt}): {response.choices[0].message.content.strip()}")
+            
+            modified_sequence = extract_sequence_from_response(response.choices[0].message.content.strip())
+            
+            if modified_sequence is None:
+                print(f"Failed to extract sequence on attempt {attempt}")
+                continue
+            
+            # Validate the sequence contains only valid amino acids
+            if not is_valid_amino_acid_sequence(modified_sequence):
+                print(f"Invalid amino acids found on attempt {attempt}, trying again...")
+                continue
+                
+            return modified_sequence
+            
+        print("Max attempts reached without getting a valid sequence")
+        return None
+        
+    except Exception as e:
+        print(f"Error getting modified sequence from OpenAI: {e}")
+        return None
+
 def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs):
     """Custom reward function for stability optimization with LLM-based soft rewards"""
     rewards = []
+    
+    # Add counters for logging extraction methods
+    direct_extraction_success = 0
+    lm_applier_success = 0
+    extraction_failures = 0
     
     for i, (prompt, completion, sequence, orig_stab) in enumerate(zip(prompts, completions, sequences, orig_stabs)):
         try:
@@ -342,12 +438,37 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
             print(completion)
             print('-'*100)
 
-            # Extract modified sequence from completion
-            sequence_match = re.search(r'\\boxed{(.*?)}', completion)
-            if not sequence_match:
-                rewards.append(reward)
-                continue
-            modified_sequence = sequence_match.group(1).strip()
+            # First try using the LM sequence applier
+            think_match = re.search(r'<think>(.*?)</think>', completion, re.DOTALL)
+            reasoning = think_match.group(1).strip() if think_match else completion
+            
+            modified_sequence = lm_sequence_applier(sequence, reasoning)
+            extraction_method = "lm_applier"
+            
+            if modified_sequence:
+                lm_applier_success += 1
+            else:
+                # If LM applier fails, try direct extraction as fallback
+                print(f"LM sequence applier failed for completion {i}, trying direct extraction...")
+                modified_sequence = extract_sequence_from_response(completion)
+                extraction_method = "direct"
+                
+                # Validate the sequence if it was extracted
+                if modified_sequence and not is_valid_amino_acid_sequence(modified_sequence):
+                    print(f"Extracted sequence contains invalid amino acids")
+                    modified_sequence = None
+                
+                if modified_sequence:
+                    direct_extraction_success += 1
+                else:
+                    print(f"Direct extraction also failed for completion {i}")
+                    extraction_failures += 1
+                    rewards.append(reward)
+                    continue
+            
+            # Log sequence lengths for debugging
+            print(f"Original sequence length: {len(sequence)}")
+            print(f"Modified sequence length: {len(modified_sequence)}")
             
             # Calculate stability reward using the original sequence
             stab_calc = calculate_relative_stability(
@@ -357,16 +478,12 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
                 orig_stab=orig_stab
             )
 
-            # Base stability rewards
-            if stab_calc: 
-                reward += FORMATTING_REWARD
-
             if stab_calc > 0.0:
                 reward += STABILITY_REWARD
             
             # Get LLM judgment
             llm_judgments = []
-            for goal in ['compliance', 'creativity', 'specificity']:    
+            for goal in ['creativity']: # ['compliance', 'creativity', 'specificity']
                 try: 
                     start_time = time.time()
                     llm_judgment = get_llm_judgment(completion, sequence, modified_sequence, prompt, goal)
@@ -378,25 +495,36 @@ def stability_reward_func(prompts, completions, sequences, orig_stabs, **kwargs)
 
             wandb.log({
                 f"reward/completion_{i}/base_stability_reward": reward,
-                f"reward/completion_{i}/formatting_reward": FORMATTING_REWARD if stab_calc else 0.0,
                 f"reward/completion_{i}/stability_reward": STABILITY_REWARD if stab_calc > 0.0 else 0.0,
-                f"reward/completion_{i}/compliance_reward": lm_reward_coeffs['compliance'] * llm_judgment if llm_judgment else 0.0,
                 f"reward/completion_{i}/creativity_reward": lm_reward_coeffs['creativity'] * llm_judgment if llm_judgment else 0.0,
-                f"reward/completion_{i}/specificity_reward": lm_reward_coeffs['specificity'] * llm_judgment if llm_judgment else 0.0,
+                f"reward/completion_{i}/extraction_method": extraction_method,
             })
             
             rewards.append(reward)
                         
         except Exception as e:
             print(f"Error calculating rewards: {e}")
+            extraction_failures += 1
             rewards.append(reward)
+    
+    # Log extraction statistics
+    total_completions = len(completions)
+    if total_completions > 0:
+        wandb.log({
+            "extraction/direct_success_rate": direct_extraction_success / total_completions,
+            "extraction/lm_applier_success_rate": lm_applier_success / total_completions,
+            "extraction/failure_rate": extraction_failures / total_completions,
+        })
+        print(f"Extraction stats: Direct: {direct_extraction_success}/{total_completions}, "
+              f"LM Applier: {lm_applier_success}/{total_completions}, "
+              f"Failures: {extraction_failures}/{total_completions}")
             
     return rewards
 
 class WandBLoggingCallback(TrainerCallback):
     def on_log(self, args, state, control, logs=None, **kwargs):
         proc_state = PartialState()
-        if proc_state.is_main_process and logs:  # Only log on main process
+        if proc_state.is_main_process and logs:  #Only log on main process
             # Log all metrics from the trainer
             wandb.log(logs, step=state.global_step)
             
@@ -504,8 +632,20 @@ model = FastLanguageModel.get_peft_model(
     lora_alpha=32,
     use_gradient_checkpointing="unsloth",
     random_state=3407,
-
 )
+
+# Load LoRA weights from checkpoint
+checkpoint_path = Path(CHECKPOINT_PATH)
+if not checkpoint_path.exists():
+    raise ValueError(f"Checkpoint directory does not exist: {CHECKPOINT_PATH}")
+
+print(f"Loading LoRA weights from checkpoint: {CHECKPOINT_PATH}")
+try:
+    model.load_adapter(CHECKPOINT_PATH, "default")
+    print("Successfully loaded LoRA weights from checkpoint")
+except Exception as e:
+    print(f"Error loading LoRA weights: {e}")
+    raise  # Stop execution if loading fails
 
 # Modify training arguments for Unsloth compatibility
 training_args = GRPOConfig(
@@ -520,7 +660,7 @@ training_args = GRPOConfig(
     logging_steps=1,
     bf16=True,
     per_device_train_batch_size=4,
-    gradient_accumulation_steps=8,
+    gradient_accumulation_steps=4,
     num_generations=4,
     max_prompt_length=MAX_INPUT_LENGTH,
     max_completion_length=MAX_OUTPUT_LENGTH,
@@ -542,6 +682,20 @@ trainer = GRPOTrainer(
         max_checkpoints=5     # Keep last 5 checkpoints
     )]
 )
+
+# Check if trainer state exists in checkpoint and load it
+trainer_state_path = Path(CHECKPOINT_PATH) / "trainer_state.pt"
+if trainer_state_path.exists():
+    try:
+        print(f"Loading trainer state from: {trainer_state_path}")
+        training_state = torch.load(trainer_state_path)
+        trainer.state.global_step = training_state.get("global_step", 0)
+        trainer.state.epoch = training_state.get("epoch", 0)
+        trainer.state.best_metric = training_state.get("best_metric", None)
+        print(f"Resuming training from step {trainer.state.global_step}, epoch {trainer.state.epoch}")
+    except Exception as e:
+        print(f"Error loading trainer state: {e}")
+        print("Starting training from scratch with loaded weights")
 
 # Train the model
 trainer.train()
