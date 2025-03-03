@@ -22,13 +22,13 @@ from openai import OpenAI
 # Results summary:
 # Number of enzymes processed: 38
 # Number of successful improvements: 13
-# Success rate: 34.2%, 33.3%
+# Success rate: 34.2%, 42.1%
 # Max stability improvement: 38.238
 
 # Results summary:
 # Number of enzymes processed: 39
 # Number of successful improvements: 11
-# Success rate: 28.2%
+# Success rate: 28.2%, 33.3%
 # Max stability improvement: -468.437
 
 load_dotenv()
