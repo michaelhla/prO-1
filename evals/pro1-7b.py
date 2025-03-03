@@ -5,6 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import json
 import random
 import numpy as np
+import re
 from pathlib import Path
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -15,12 +16,19 @@ from stability_reward import StabilityRewardCalculator
 import threading
 from peft import PeftModel, get_peft_model, LoraConfig
 from unsloth import FastLanguageModel
+from openai import OpenAI
 
 # Results summary:
 # Number of enzymes processed: 38
 # Number of successful improvements: 16
 # Success rate: 42.1%
 # Max stability improvement: 474.070
+
+# Results summary:
+# Number of enzymes processed: 32
+# Number of successful improvements: 10
+# Success rate: 31.2%
+# Max stability improvement: 386.234
 
 load_dotenv()
 
@@ -104,6 +112,67 @@ def extract_sequence(response: str) -> str:
     except Exception:
         return None
 
+def is_valid_amino_acid_sequence(sequence):
+    """Validate if a sequence contains only valid amino acid characters"""
+    if not sequence:
+        return False
+        
+    valid_amino_acids = set('ACDEFGHIKLMNPQRSTVWY')
+    return all(aa in valid_amino_acids for aa in sequence)
+
+def lm_sequence_applier(original_sequence, reasoning, max_attempts=3):
+    """Use OpenAI to extract the modified sequence based on reasoning"""
+    try:
+        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        
+        prompt = f"""
+You are a helpful assistant that applies the mutations and modifications described in the reasoning to the original sequence.
+
+Original sequence:
+{original_sequence}
+
+Proposed modifications:
+{reasoning}
+
+Given the natural language reasoning above, infer the mutations and modifications that the user wants to apply to the original sequence, and apply them. Return ONLY the modified sequence with all changes applied correctly in the \\boxed{{}} tag. ex. \\boxed{{MGYARRVMDGIGEVAV...}}. IT IS CRUCIAL YOU APPLY THE MUTATIONS CORRECTLY AND RETURN THE MODIFIED SEQUENCE.
+"""
+        
+        attempt = 0
+        
+        while attempt < max_attempts:
+            attempt += 1
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that can analyze natural language reasoning and apply the proposed mutations to the original sequence."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=3000
+            )
+            
+            print(f"OpenAI response (attempt {attempt}): {response.choices[0].message.content.strip()}")
+            
+            modified_sequence = extract_sequence(response.choices[0].message.content.strip())
+            
+            if modified_sequence is None:
+                print(f"Failed to extract sequence on attempt {attempt}")
+                continue
+            
+            # Validate the sequence contains only valid amino acids
+            if not is_valid_amino_acid_sequence(modified_sequence):
+                print(f"Invalid amino acids found on attempt {attempt}, trying again...")
+                continue
+                
+            return modified_sequence
+            
+        print("Max attempts reached without getting a valid sequence")
+        return None
+        
+    except Exception as e:
+        print(f"Error getting modified sequence from OpenAI: {e}")
+        return None
+
 def apply_mutations(sequence: str, mutations: List[str]) -> str:
     """Apply a list of mutations to a sequence"""
     seq_list = list(sequence)
@@ -168,14 +237,31 @@ def main():
                 end = response.find('[USER]:', start)
                 response = response[start:end].strip()
             print(f"Generated response for enzyme {enzyme_id}: {response}")  # Print the generation for each turn
-            # Extract mutated sequence
-            mutated_sequence = extract_sequence(response)
             
+            # First try using the LM applier
+            think_match = re.search(r'<think>(.*?)</think>', response, re.DOTALL)
+            reasoning = think_match.group(1).strip() if think_match else response
             
+            # Use LM applier to get the mutated sequence
+            mutated_sequence = lm_sequence_applier(sequence, reasoning)
+            extraction_method = "lm_applier"
+            
+            # If LM applier fails, try direct extraction
             if mutated_sequence is None:
-                print(f"Failed to extract sequence for enzyme {enzyme_id}")
-                continue
+                print(f"LM applier failed for enzyme {enzyme_id}, trying direct extraction...")
                 
+                # Try direct extraction as fallback
+                mutated_sequence = extract_sequence(response)
+                extraction_method = "direct"
+                
+                if mutated_sequence is None or not is_valid_amino_acid_sequence(mutated_sequence):
+                    print(f"Direct extraction also failed for enzyme {enzyme_id}")
+                    continue
+            
+            print(f"Extraction method: {extraction_method}")
+            print(f"Original sequence length: {len(sequence)}")
+            print(f"Mutated sequence length: {len(mutated_sequence)}")
+            
             # Calculate new stability
             print('MUTATED SEQUENCE: ', mutated_sequence)
             new_stability = get_stability_score(mutated_sequence)
@@ -189,6 +275,7 @@ def main():
                 'new_stability': new_stability,
                 'stability_change': new_stability - original_stability,
                 'is_improvement': new_stability < original_stability,
+                'extraction_method': extraction_method,
                 'correct_format': True
             })
             
@@ -198,11 +285,12 @@ def main():
                 'enzyme_id': enzyme_id,
                 'original_sequence': sequence,
                 'original_stability': original_stability,
-                'model_response': response,
+                'model_response': response if 'response' in locals() else None,
                 'mutated_sequence': None,
                 'new_stability': None,
                 'stability_change': None,
                 'is_improvement': False,
+                'extraction_method': None,
                 'correct_format': False
             })
             continue
@@ -219,11 +307,16 @@ def main():
     successful_attempts = sum(1 for r in results if r['is_improvement'])
     success_rate = (successful_attempts / total_attempts * 100) if total_attempts > 0 else 0
     
+    # Count extraction methods
+    direct_extractions = sum(1 for r in results if r.get('extraction_method') == 'direct')
+    lm_applier_extractions = sum(1 for r in results if r.get('extraction_method') == 'lm_applier')
+    
     print(f"\nResults summary:")
     print(f"Number of enzymes processed: {total_attempts}")
     print(f"Number of successful improvements: {successful_attempts}")
     print(f"Success rate: {success_rate:.1f}%")
-    print(f"Max stability improvement: {max(r['stability_change'] for r in results):.3f}")
+    print(f"Max stability improvement: {max(r['stability_change'] for r in results if r['stability_change'] is not None):.3f}")
+    print(f"Extraction methods: Direct: {direct_extractions}, LM Applier: {lm_applier_extractions}")
 
 if __name__ == "__main__":
     try:

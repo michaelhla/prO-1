@@ -218,21 +218,11 @@ def apply_mutations(sequence: str, mutations: List[str]) -> str:
     return ''.join(seq_list)
 
 def main():
-    # Load enzyme sequences
-    with open('data/transformed_brenda.json', 'r') as f:
-        enzymes = json.load(f)
-    
-    selected_enzymes = random.sample(list(enzymes.items()), 40)
-    # Save selected enzymes to a new dataset
-    selected_dataset = {enzyme_id: data for enzyme_id, data in selected_enzymes}
-    
-    # Create results directory if it doesn't exist
-    output_dir = Path('results')
-    output_dir.mkdir(exist_ok=True)
-    
-    # Save selected enzymes dataset
-    with open(output_dir / 'selected_enzymes.json', 'w') as f:
-        json.dump(selected_dataset, f, indent=2)
+    # Load selected enzymes
+    with open('results/selected_enzymes.json', 'r') as f:
+        selected_enzymes = json.load(f)
+        
+    selected_enzymes = list(selected_enzymes.items())
     
     results = []
     
@@ -309,7 +299,7 @@ def main():
     output_dir = Path('results')
     output_dir.mkdir(exist_ok=True)
     
-    with open(output_dir / 'pro1_7b_stability_mutations.json', 'w') as f:
+    with open(output_dir / 'pro1_70b_stability_mutations.json', 'w') as f:
         json.dump(results, f, indent=2)
     
     # Print summary statistics
