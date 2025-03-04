@@ -134,7 +134,7 @@ METALS/IONS: {', '.join(enzyme_data.get('metal_ions', ['None']))}
 ACTIVE SITE RESIDUES (DO NOT MODIFY): {', '.join(enzyme_data.get('active_site_residues', ['None']))}
 KNOWN MUTATIONS: {', '.join([f"{mutation['mutation']} ({mutation['effect']})" for mutation in enzyme_data.get('known_mutations', [{'mutation': 'None', 'effect': ''}])])}
 
-Propose mutations to optimize the stability of the enzyme given the information above. If applicable, be creative with your modifications, including insertions or deletions of sequences that may help improve stability (make sure to have good reasoning for these types of modifications). Ensure that you preserve the activity or function of the enzyme as much as possible.
+First summarize the GENERAL INFORMATION and KNOWN MUTATIONS sections provided above (be specific in your summary). Then, propose mutations to optimize the stability of the enzyme given the information above. If applicable, be creative with your modifications, including insertions or deletions of sequences that may help improve stability (make sure to have good reasoning for these types of modifications). Ensure that you preserve the activity or function of the enzyme as much as possible.
 
 ****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions****
 
@@ -182,7 +182,7 @@ You are a helpful assistant that helps users with protein engineering tasks. You
                 **inputs,
                 streamer=streamer,
                 max_new_tokens=8192,
-                temperature=0.8,
+                temperature=0.95,
                 top_p=0.95,
                 do_sample=True
             )
