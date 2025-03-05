@@ -51,4 +51,22 @@ def read_top_performers_json(json_file):
         return None
 
 
-print_top_performers(read_top_performers_json('top_performers.json'))
+from stability_reward import StabilityRewardCalculator
+
+def calculate_stability_for_pdb():
+    """Calculate stability score for 1hea.pdb structure"""
+    try:
+        calculator = StabilityRewardCalculator()
+        stability_score = calculator.calculate_stability(sequence=None, pdb_file_path="1hea.pdb")
+        print(f"\nStability score for 1hea.pdb: {stability_score:.2f}")
+        return stability_score
+    except Exception as e:
+        print(f"Error calculating stability score: {e}")
+        return None
+
+calculate_stability_for_pdb()
+
+# Stability score for 1hea.pdb: 194.98 (Is this right?)
+
+
+# print_top_performers(read_top_performers_json('top_performers.json'))
