@@ -155,7 +155,7 @@ METALS/IONS: {', '.join(enzyme_data.get('metal_ions', ['None']))}
 ACTIVE SITE RESIDUES (DO NOT MODIFY): {', '.join(enzyme_data.get('active_site_residues', ['None']))}
 KNOWN MUTATIONS: {', '.join([f"{mutation['mutation']} ({mutation['effect']})" for mutation in enzyme_data.get('known_mutations', [{'mutation': 'None', 'effect': ''}])])}
 
-First synthesize interesting insights you have from the GENERAL INFORMATION and KNOWN MUTATIONS sections provided above (be specific in your notes). Then, propose NOVEL mutations to optimize the stability of the enzyme given the information above. If applicable, be creative with your modifications, including insertions or deletions of sequences that may help improve stability (make sure to have good reasoning for these types of modifications). Ensure that you preserve the activity or function of the enzyme as much as possible.
+Propose NOVEL mutations to optimize the stability of the enzyme given the information above. If applicable, be creative with your modifications, including insertions or deletions of sequences that may help improve stability (make sure to have good reasoning for these types of modifications). Ensure that you preserve the activity or function of the enzyme as much as possible.
 
 ****all reasoning must be specific to the enzyme and reaction specified in the prompt. cite scientific literature. consider similar enzymes and reactions****
 
@@ -409,26 +409,22 @@ if __name__ == "__main__":
         "name": "Human Carbonic Anhydrase II",
         "ec_number": "4.2.1.1",
         "general_information": "Carbonic anhydrase II is an enzyme that catalyzes the hydration of carbon dioxide to form " +
-            "bicarbonate and water. The side chain of Leu-198 is located at the mouth of " +
-            "the active site hydrophobic pocket, and this pocket is required for substrate association. " +
-            "Hydrophobic-->hydrophilic amino acid substitutions at the mouth of the pocket decrease kcat/KM for CO2 " +
-            "hydration: the CO2 hydrase activities of Leu-198-->Glu, Leu-198-->His, and Leu-198-->Arg CAIIs are " +
-            "diminished 19-fold, 10-fold, and 17-fold, respectively, relative to the wild-type enzyme; however, the " +
-            "substitution of a compact aliphatic side chain for Leu-198 has a smaller effect on catalysis, in that " +
-            "Leu-198-->Ala CAII exhibits only a 3-fold decrease in CO2 hydrase activity [Krebs, J. F., Rana, F., " +
-            "Dluhy, R. A., & Fierke, C. A.(1993) Biochemistry (preceding paper in this issue)]. It is intriguing " +
-            "that CO2 hydrase activity is not severely diminished in Leu-198-->Arg CAII, even though the side chain " +
-            "of Arg-198 blocks the hydrophobic pocket. Therefore, the bulky side chain of Arg-198 must be reasonably " +
-            "mobile in order to accommodate substrate association. Significantly, a residue larger than the wild-type " +
-            "Leu-198 side chain does not necessarily block the substrate association pocket; e.g., the side chain of " +
-            "Glu-198 packs against a hydrophobic patch, the net result of which is a wider mouth for the pocket." + 
-            "\n\nPositions 1 to 10 are disordered in the wild-type enzyme."+ 
-            "\nPositions 16 to 39 are disordered in the wild-type enzyme."+ 
-            "\nPositions 250 to 260 are disordered in the wild-type enzyme."+ 
-            f"\n{sequence[93]}94, {sequence[95]}96, {sequence[118]}119 are involved with coordiunation of the zinc ion"+ 
-            """\n\na recent study from McKenna's group reported hCA II variants addressing both enzyme thermal stability and catalytic efficiency [21]. In particular, starting from a previous study which identified 10 possible mutations to produce thermostable hCA II variants [99], the substitution of three surface leucine residues (Leu100His, Leu224Ser and Leu240Pro) was used to obtain a triple hCA II mutant (named TS1) with enhanced thermal stability with respect to the wild-type enzyme of about 7 °C. This mutant was then used as starting point to obtain new derivatives with improved catalytic activity. Among these, the variant obtained introducing the contemporary substitutions Tyr7Phe and Asn67Gln retained the same thermal stability as TS1 but showed an improvement in rate constants of proton transfer by about six-fold with respect to the native enzyme [21]. These substitutions were chosen, considering that the double mutant Tyr7Phe/Asn67Gln was previously shown to have a nine-fold increase in the rate of proton transfer compared to the wild-type enzyme [100,101].
-            
-            It has also been noted that deletion of ~10 amino acid loops in CAII has led to greater thermal stability without harming catalytic activity""", 
+            "bicarbonate and water." +
+            """\n\A study that worked well introduced a covalent cyclization and polymerization strategy for hmCA protein engineering to solve this problem. This method uses covalent peptide bonds between proteins. SpyCatcher and SpyTag are used as mediators of cyclization, and these components have been studied in many papers [12], [13]. The protein partner SpyCatcher and the peptide SpyTag are formed by the cleavage and manipulation of the CnaB2 domain of the FbaB protein of Streptococcus pyogenes. CnaB2 forms a spontaneous single isopeptide bond between Lys and Asp through the interaction of the preceding proteins and provides pH, thermal, and structural stability [14], [15]. In addition, DNA sequences encoding SpyCatcher and SpyTag can be recombinantly introduced into a DNA sequence encoding a protein of interest to form a fusion protein, which can be covalently linked through the SpyCatcher-SpyTag system [18]. Thus, the use of Catcher/Tag pairs can achieve bioconjugation between two recombinant proteins, which is limited or impossible with direct genetic fusion because of problems with protein folding, sub-optimal expression hosts, and specialized post-translational modifications [19].
+In this paper, SpyCatcher and SpyTag were attached to both ends of hmCA to form a ring through a covalent bond, thereby developing a biocatalyst that can remain active at temperatures where normal proteins are inactivated. It is intended for the manufacturing of heat-resistant and robust enzymes.y"""+ 
+"""Another study that worked well: first_pagesettingsOrder Article Reprints
+Open AccessArticle
+Improved Solubility and Stability of a Thermostable Carbonic Anhydrase via Fusion with Marine-Derived Intrinsically Disordered Solubility Enhancers
+by Byung Hoon JoORCID
+Division of Life Science, Research Institute of Life Science, and Anti-Aging Bio Cell Factory Regional Leading Research Center (ABC-RLRC), Gyeongsang National University, Jinju 52828, Republic of Korea
+Int. J. Mol. Sci. 2024, 25(2), 1139; https://doi.org/10.3390/ijms25021139
+Submission received: 13 December 2023 / Revised: 12 January 2024 / Accepted: 16 January 2024 / Published: 17 January 2024
+(This article belongs to the Special Issue Protein Stability Research)
+Downloadkeyboard_arrow_down Browse Figures Versions Notes
+
+Abstract
+Carbonic anhydrase (CA), an enzyme catalyzing the reversible hydration reaction of carbon dioxide (CO2), is considered a promising biocatalyst for CO2 reduction. The α-CA of Thermovibrio ammonificans (taCA) has emerged as a compelling candidate due to its high thermostability, a critical factor for industrial applications. However, the low-level expression and poor in vitro solubility have hampered further utilization of taCA. Recently, these limitations have been addressed through the fusion of the NEXT tag, a marine-derived, intrinsically disordered small peptide that enhances protein expression and solubility. In this study, the solubility and stability of NEXT-taCA were further investigated. When the linker length between the NEXT tag and the taCA was shortened, the expression level decreased without compromising solubility-enhancing performance. A comparison between the NEXT tag and the NT11 tag demonstrated the NEXT tag’s superiority in improving both the expression and solubility of taCA. While the thermostability of taCA was lower than that of the extensively engineered DvCA10, the NEXT-tagged taCA exhibited a 30% improvement in long-term thermostability compared to the untagged taCA, suggesting that enhanced solubility can contribute to enzyme thermostability. Furthermore, the bioprospecting of two intrinsically disordered peptides (Hcr and Hku tags) as novel solubility-enhancing fusion tags was explored, demonstrating their performance in improving the expression and solubility of taCA. These efforts will advance the practical application of taCA and provide tools and insights for enzyme biochemistry and bioengineering.""", 
+
         "reaction": [{
             "substrates": ["Carbon dioxide", "Water"],
             "products": ["Bicarbonate", "H+"]
@@ -438,7 +434,7 @@ if __name__ == "__main__":
     }
 
     # Add known mutations from P40881 data
-    enzyme_data["known_mutations"] = parse_mutagenesis_data("data/ca2_mutagenesis.json")
+    # enzyme_data["known_mutations"] = parse_mutagenesis_data("data/ca2_mutagenesis.json")
     
     # enzyme_data["known_mutations"].extend([
     #     {
