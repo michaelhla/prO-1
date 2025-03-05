@@ -54,10 +54,10 @@ def extract_sequence_from_response(response):
         return None
 
 def lm_sequence_applier(original_sequence, reasoning, max_attempts=3):
-    """Use DeepSeek-V3 to extract the modified sequence based on reasoning"""
+    """Use GPT-4o to extract the modified sequence based on reasoning"""
     try:
-        # Initialize Together client
-        client = Together(api_key=os.getenv('TOGETHER_API_KEY'))
+        # Initialize OpenAI client
+        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         
         prompt = f"""
 You are a helpful assistant that applies the mutations and modifications described in the reasoning to the original sequence.
@@ -68,7 +68,7 @@ Original sequence:
 Proposed modifications:
 {reasoning}
 
-Given the natural language reasoning above, infer the mutations and modifications that the user wants to apply to the original sequence, and apply them. Return ONLY the modified sequence with all changes applied correctly in the \\boxed{{}} tag. ex. \\boxed{{MGYARRVMDGIGEVAV...}}. IT IS CRUCIAL YOU APPLY THE MUTATIONS CORRECTLY AND RETURN THE MODIFIED SEQUENCE.
+Given the natural language reasoning above, infer the mutations and modifications that the user wants to apply to the original sequence, and apply them. Return ONLY the modified sequence with all changes applied correctly in the \\boxed{{}} tag. ex. \\boxed{{MGYARRVMDGIGEVAV...}}. Go step by step listing all of the mutations and then applying them. IT IS CRUCIAL YOU APPLY THE MUTATIONS CORRECTLY AND RETURN THE MODIFIED SEQUENCE.
 """
         
         attempt = 0
@@ -76,9 +76,9 @@ Given the natural language reasoning above, infer the mutations and modification
         while attempt < max_attempts:
             attempt += 1
             
-            print(f"Sending request to DeepSeek-V3 (attempt {attempt})...")
+            print(f"Sending request to GPT-4o (attempt {attempt})...")
             response = client.chat.completions.create(
-                model="deepseek-ai/DeepSeek-V3",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant that can analyze natural language reasoning and apply the proposed mutations to the original sequence."},
                     {"role": "user", "content": prompt}
@@ -89,7 +89,7 @@ Given the natural language reasoning above, infer the mutations and modification
             
             # Get the full response content
             full_response = response.choices[0].message.content
-            print(f"DeepSeek response received (attempt {attempt})")
+            print(f"GPT-4o response received (attempt {attempt})")
             
             modified_sequence = extract_sequence_from_response(full_response)
             
@@ -102,6 +102,27 @@ Given the natural language reasoning above, infer the mutations and modification
             if not all(aa in valid_amino_acids for aa in modified_sequence):
                 print(f"Invalid amino acids found on attempt {attempt}, trying again...")
                 continue
+            
+            # Count and report differences between original and modified sequences
+            if len(original_sequence) == len(modified_sequence):
+                differences = sum(1 for a, b in zip(original_sequence, modified_sequence) if a != b)
+                print(f"Found {differences} mutations in the sequence")
+                
+                # List the specific mutations
+                if differences > 0:
+                    mutations = []
+                    for i, (orig, mod) in enumerate(zip(original_sequence, modified_sequence)):
+                        if orig != mod:
+                            mutations.append(f"{orig}{i+1}{mod}")
+                    print(f"Mutations: {', '.join(mutations)}")
+            else:
+                length_diff = len(modified_sequence) - len(original_sequence)
+                print(f"Sequence length changed by {length_diff} ({len(original_sequence)} → {len(modified_sequence)})")
+                # This could be an insertion or deletion - more complex to report precisely
+            
+            # If no differences, warn but still return the sequence
+            if modified_sequence == original_sequence:
+                print("WARNING: Modified sequence is identical to original sequence!")
                 
             return modified_sequence
             
@@ -109,7 +130,7 @@ Given the natural language reasoning above, infer the mutations and modification
         return None
         
     except Exception as e:
-        print(f"Error getting modified sequence from DeepSeek: {e}")
+        print(f"Error getting modified sequence from GPT-4o: {e}")
         return None
 
 def run_inference(sequence, enzyme_data, model, tokenizer, stability_calculator=None, device="cuda", max_iterations=3, use_pdb=False, use_applier=True, original_stability_score=None):
@@ -377,7 +398,7 @@ if __name__ == "__main__":
 
     # Example sequence and active site residues
     sequence = "MSHHWGYGKHNGPEHWHKDFPIAKGERQSPVDIDTHTAKYDPSLKPLSVSYDQATSLRILNNGHAFNVEFDDSQDKAVLKGGPLDGTYRLIQFHFHWGSLDGQGSEHTVDKKKYAAELHLVHWNTKYGDFGKAVQQPDGLAVLGIFLKVGSAKPGLQKVVDVLDSIKTKGKSADFTNFDPRGLLPESLDYWTYPGSRTTPPLLECVTWIVLKEPISVSSEQVLKFRKLNFNGEGEPEELMVDNWRPAQPLKNRQIKASFK"
-    active_site_residues = [sequence[63] + "64"]
+    active_site_residues = [sequence[63] + "64", sequence[18] + "19", sequence[197] + "198", sequence[199] + "200"]
 
     if sequence == "":
         print('ERROR: No sequence provided')
@@ -406,12 +427,8 @@ if __name__ == "__main__":
             "\nPositions 250 to 260 are disordered in the wild-type enzyme."+ 
             f"\n{sequence[93]}94, {sequence[95]}96, {sequence[118]}119 are involved with coordiunation of the zinc ion"+ 
             """\n\na recent study from McKenna's group reported hCA II variants addressing both enzyme thermal stability and catalytic efficiency [21]. In particular, starting from a previous study which identified 10 possible mutations to produce thermostable hCA II variants [99], the substitution of three surface leucine residues (Leu100His, Leu224Ser and Leu240Pro) was used to obtain a triple hCA II mutant (named TS1) with enhanced thermal stability with respect to the wild-type enzyme of about 7 °C. This mutant was then used as starting point to obtain new derivatives with improved catalytic activity. Among these, the variant obtained introducing the contemporary substitutions Tyr7Phe and Asn67Gln retained the same thermal stability as TS1 but showed an improvement in rate constants of proton transfer by about six-fold with respect to the native enzyme [21]. These substitutions were chosen, considering that the double mutant Tyr7Phe/Asn67Gln was previously shown to have a nine-fold increase in the rate of proton transfer compared to the wild-type enzyme [100,101].
-
-The substitution in hCA II of residues 23 and 203 with two cysteines (dsHCA II) [98] to reproduce a disulfide bridge conserved in many members of α-CA class [67,69,70,102,103,104,105,106] was also used to improve hCA II biotechnological properties. Indeed, thermal stability investigations of this variant showed that the melting temperature was enhanced of 14 °C compared to the wild-type enzyme, while the catalytic efficiency was similar to that of native enzyme (kcat/KM of 1.31 × 108 M−1·s−1) [98].
-
-Finally, considering that protein stability can be improved by increasing the rigidity of surface loops with the inclusion of proline residues [107] and enhancing surface compactness via loop deletion [108,109], novel hCA II variants have been designed [110]. In particular, adopting the first approach, residue Glu234, which is positioned in a surface loop, has been substituted with a proline residue. Thermal stability analysis of this variant indicated an enhanced melting temperature of about 3 °C compared to the wild-type enzyme [110]. On the other side, adopting the second approach, the region encompassing residues 230–240 has been deleted, since it forms an extended surface loop with peculiar destabilizing features [110]. In particular, it is characterized by high thermal fluctuations and the presence of two solvent exposed hydrophobic residues previously shown to affect the thermal stability of the enzyme [21]. The choice was further supported by the observation that in SspCA, one of the most thermostable α-CAs (see Paragraph 3.1), this loop is absent [67]. The thermal characterization of this variant revealed, as expected, an improvement of the melting temperature with respect to the wild-type enzyme.
-
-Altogether these data indicate that the punctual substitutions of critical residues can be effective to obtain active and stable hCA II variants that could be exploited in the harsh conditions required by current industrial processes for atmospheric CO2 sequestration.""", 
+            
+            It has also been noted that deletion of ~10 amino acid loops in CAII has led to greater thermal stability without harming catalytic activity""", 
         "reaction": [{
             "substrates": ["Carbon dioxide", "Water"],
             "products": ["Bicarbonate", "H+"]
@@ -423,32 +440,32 @@ Altogether these data indicate that the punctual substitutions of critical resid
     # Add known mutations from P40881 data
     enzyme_data["known_mutations"] = parse_mutagenesis_data("data/ca2_mutagenesis.json")
     
-    enzyme_data["known_mutations"].extend([
-        {
-            "mutation": "W19A",
-            "effect": "kcat/km at pH 7.5 is 2.5fold lower than wild-type value, kcat/km at pH 8.8 is 2.2fold lower than wild-type value"
-        },
-        {
-            "mutation": "Y200A", 
-            "effect": "kcat/km at pH 7.5 is 3.5fold higher than wild-type value, kcat/km at pH 8.8 is 3.3fold higher than wild-type value"
-        },
-        {
-            "mutation": "W19N",
-            "effect": "kcat/km at pH 7.5 is 3.2fold lower than wild-type value, kcat/km at pH 8.8 is 2.4fold lower than wild-type value"
-        },
-        {
-            "mutation": "W19F",
-            "effect": "kcat/km at pH 7.5 is 5fold lower than wild-type value, kcat/km at pH 8.8 is 5.2fold lower than wild-type value"
-        },
-        {
-            "mutation": "Y200S",
-            "effect": "kcat/km at pH 7.5 is 3fold higher than wild-type value, kcat/km at pH 8.8 is 3.3fold higher than wild-type value"
-        },
-        {
-            "mutation": "Y200F",
-            "effect": "kcat/km at pH 7.5 is 3.6fold higher than wild-type value, kcat/km at pH 8.8 is 2.5fold lower than wild-type value"
-        }
-    ])
+    # enzyme_data["known_mutations"].extend([
+    #     {
+    #         "mutation": "W19A",
+    #         "effect": "kcat/km at pH 7.5 is 2.5fold lower than wild-type value, kcat/km at pH 8.8 is 2.2fold lower than wild-type value"
+    #     },
+    #     {
+    #         "mutation": "Y200A", 
+    #         "effect": "kcat/km at pH 7.5 is 3.5fold higher than wild-type value, kcat/km at pH 8.8 is 3.3fold higher than wild-type value"
+    #     },
+    #     {
+    #         "mutation": "W19N",
+    #         "effect": "kcat/km at pH 7.5 is 3.2fold lower than wild-type value, kcat/km at pH 8.8 is 2.4fold lower than wild-type value"
+    #     },
+    #     {
+    #         "mutation": "W19F",
+    #         "effect": "kcat/km at pH 7.5 is 5fold lower than wild-type value, kcat/km at pH 8.8 is 5.2fold lower than wild-type value"
+    #     },
+    #     {
+    #         "mutation": "Y200S",
+    #         "effect": "kcat/km at pH 7.5 is 3fold higher than wild-type value, kcat/km at pH 8.8 is 3.3fold higher than wild-type value"
+    #     },
+    #     {
+    #         "mutation": "Y200F",
+    #         "effect": "kcat/km at pH 7.5 is 3.6fold higher than wild-type value, kcat/km at pH 8.8 is 2.5fold lower than wild-type value"
+    #     }
+    # ])
 
     original_stability_score = stability_calculator.calculate_stability(sequence)
 
