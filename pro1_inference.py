@@ -1,21 +1,13 @@
 import torch
 from unsloth import FastLanguageModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TextIteratorStreamer
-from peft import PeftModel, prepare_model_for_kbit_training
-from trl import AutoModelForCausalLMWithValueHead
 from stability_reward import StabilityRewardCalculator
 import re
 import threading
 import json
-from pathlib import Path
-from google import genai
 import os
 from dotenv import load_dotenv
-import biotite.structure as struc
-import biotite.structure.io.pdb as pdb
-import openai
 from openai import OpenAI
-from together import Together
 
 load_dotenv()
 
@@ -412,17 +404,9 @@ if __name__ == "__main__":
             "bicarbonate and water." +
             """\n\A study that worked well introduced a covalent cyclization and polymerization strategy for hmCA protein engineering to solve this problem. This method uses covalent peptide bonds between proteins. SpyCatcher and SpyTag are used as mediators of cyclization, and these components have been studied in many papers [12], [13]. The protein partner SpyCatcher and the peptide SpyTag are formed by the cleavage and manipulation of the CnaB2 domain of the FbaB protein of Streptococcus pyogenes. CnaB2 forms a spontaneous single isopeptide bond between Lys and Asp through the interaction of the preceding proteins and provides pH, thermal, and structural stability [14], [15]. In addition, DNA sequences encoding SpyCatcher and SpyTag can be recombinantly introduced into a DNA sequence encoding a protein of interest to form a fusion protein, which can be covalently linked through the SpyCatcher-SpyTag system [18]. Thus, the use of Catcher/Tag pairs can achieve bioconjugation between two recombinant proteins, which is limited or impossible with direct genetic fusion because of problems with protein folding, sub-optimal expression hosts, and specialized post-translational modifications [19].
 In this paper, SpyCatcher and SpyTag were attached to both ends of hmCA to form a ring through a covalent bond, thereby developing a biocatalyst that can remain active at temperatures where normal proteins are inactivated. It is intended for the manufacturing of heat-resistant and robust enzymes.y"""+ 
-"""Another study that worked well: first_pagesettingsOrder Article Reprints
-Open AccessArticle
+"""Another study that worked well:
 Improved Solubility and Stability of a Thermostable Carbonic Anhydrase via Fusion with Marine-Derived Intrinsically Disordered Solubility Enhancers
-by Byung Hoon JoORCID
-Division of Life Science, Research Institute of Life Science, and Anti-Aging Bio Cell Factory Regional Leading Research Center (ABC-RLRC), Gyeongsang National University, Jinju 52828, Republic of Korea
-Int. J. Mol. Sci. 2024, 25(2), 1139; https://doi.org/10.3390/ijms25021139
-Submission received: 13 December 2023 / Revised: 12 January 2024 / Accepted: 16 January 2024 / Published: 17 January 2024
-(This article belongs to the Special Issue Protein Stability Research)
-Downloadkeyboard_arrow_down Browse Figures Versions Notes
-
-Abstract
+Abstract:
 Carbonic anhydrase (CA), an enzyme catalyzing the reversible hydration reaction of carbon dioxide (CO2), is considered a promising biocatalyst for CO2 reduction. The α-CA of Thermovibrio ammonificans (taCA) has emerged as a compelling candidate due to its high thermostability, a critical factor for industrial applications. However, the low-level expression and poor in vitro solubility have hampered further utilization of taCA. Recently, these limitations have been addressed through the fusion of the NEXT tag, a marine-derived, intrinsically disordered small peptide that enhances protein expression and solubility. In this study, the solubility and stability of NEXT-taCA were further investigated. When the linker length between the NEXT tag and the taCA was shortened, the expression level decreased without compromising solubility-enhancing performance. A comparison between the NEXT tag and the NT11 tag demonstrated the NEXT tag’s superiority in improving both the expression and solubility of taCA. While the thermostability of taCA was lower than that of the extensively engineered DvCA10, the NEXT-tagged taCA exhibited a 30% improvement in long-term thermostability compared to the untagged taCA, suggesting that enhanced solubility can contribute to enzyme thermostability. Furthermore, the bioprospecting of two intrinsically disordered peptides (Hcr and Hku tags) as novel solubility-enhancing fusion tags was explored, demonstrating their performance in improving the expression and solubility of taCA. These efforts will advance the practical application of taCA and provide tools and insights for enzyme biochemistry and bioengineering.""", 
 
         "reaction": [{

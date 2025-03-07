@@ -1,7 +1,5 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TextIteratorStreamer
-from peft import PeftModel, prepare_model_for_kbit_training
-from trl import AutoModelForCausalLMWithValueHead
 from stability_reward import StabilityRewardCalculator
 import re
 import threading
@@ -11,8 +9,6 @@ from pathlib import Path
 from google import genai
 import os
 from dotenv import load_dotenv
-import biotite.structure as struc
-import biotite.structure.io.pdb as pdb
 
 load_dotenv()
 
