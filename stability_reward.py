@@ -15,7 +15,7 @@ import time
 class StabilityRewardCalculator:
     def __init__(self, protein_model_path="facebook/esmfold_v1", device="cuda"):
         self.device = torch.device(device)
-        # self.protein_model = self._load_protein_model(protein_model_path)
+        self.protein_model = self._load_protein_model(protein_model_path)
         self.cached_structures = {}
 
         # Initialize PyRosetta

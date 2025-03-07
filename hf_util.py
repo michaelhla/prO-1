@@ -29,14 +29,15 @@ def sync_with_hf_hub(local_path, repo_id, upload=False, subfolder=None):
     
     # Load API key from .env
     load_dotenv()
-    hf_token = os.getenv('HUGGINGFACE_API_KEY')
-    
-    if not hf_token:
+    if upload:
+        hf_token = os.getenv('HUGGINGFACE_API_KEY')
+        login(token=hf_token)
+    else:
+        hf_token = None
+
+    if not hf_token and upload:
         raise ValueError("HUGGINGFACE_API_KEY not found in .env file")
-        
-    # Login to Hugging Face
-    login(token=hf_token)
-    
+
     if upload:
         # Upload to Hub
         upload_folder(
