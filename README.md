@@ -15,7 +15,7 @@ It takes in a protein sequence + text description of the protein + effects of pr
 
 requirements: 
 - NVIDIA GPU instance with drivers installed, works best on A100 80GB but can run on smaller GPUs
-- at least 60 GB of storage
+- at least 60 GB of storage for 8b, 200 gb for 70b
 
 1. after cloning the repo and ssh'ing into the GPU instance, run:
 
