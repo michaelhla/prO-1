@@ -1,5 +1,10 @@
 # Pro-1
 
+[![GitHub](https://img.shields.io/badge/GitHub-michaelhla/pro--1-181717?logo=github)](https://github.com/michaelhla/pro-1)
+[![Twitter](https://img.shields.io/badge/Twitter-@hla__michael-1DA1F2?logo=twitter&style=social)](https://twitter.com/hla_michael)
+[![Hugging Face](https://img.shields.io/badge/🤗%20Hugging%20Face-mhla/pro--1-yellow)](https://huggingface.co/mhla/pro-1)
+[![Blog Post](https://img.shields.io/badge/Blog-pro--1-red)](https://michaelhla.com/blog/pro1)
+
 Pro-1 is a reasoning model trained using GRPO towards a physics based reward function for protein stability.
 
 It takes in a protein sequence + text description of the protein + effects of previous engineering attempts, reasons over the information given, and proposes modifications to improve the stability of the given sequence. 
