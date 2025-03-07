@@ -6,7 +6,7 @@ It takes in a protein sequence + text description of the protein + effects of pr
 
 ![Pro-1 hCA II](pro1-grpo.gif)
 
-Running Pro-1:
+# Running Pro-1:
 
 requirements: 
 - NVIDIA GPU instance with drivers installed, works best on A100 80GB but can run on smaller GPUs
